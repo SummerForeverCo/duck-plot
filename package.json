@@ -13,12 +13,17 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "@apache-arrow/ts": "^14.0.2",
+    "duckdb-async": "^1.0.0"
+  },
   "devDependencies": {
     "@types/node": "^22.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
     "vite": "^5.3.5",
-    "vitest": "^2.0.5"
+    "vitest": "^2.0.5",
+    "@duckdb/duckdb-wasm": "^1.28.1-dev91.0"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
