@@ -6,6 +6,7 @@ export const createDb = async (fileName) => {
   // Get the directory name of the current module
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
+  const tableName = fileName.replace(".csv", "").replace("-", "");
 
   const csvPath = path.join(__dirname, "data", fileName); // Constructing the absolute path to the CSV file
 
@@ -14,7 +15,7 @@ export const createDb = async (fileName) => {
 
   // Create a table and load CSV data into it
   await db.run(
-    `CREATE TABLE my_table AS SELECT * FROM read_csv_auto('${csvPath}')`
+    `CREATE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${csvPath}')`
   );
   return db;
 };

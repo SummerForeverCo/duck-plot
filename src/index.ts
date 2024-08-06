@@ -1,6 +1,7 @@
-// TODO: maybe I only need this in DEV if the user is passing in a ddb instance..?
 import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-import type { Table as Arrow } from "@apache-arrow/ts";
+import * as Plot from "@observablehq/plot";
+import * as fs from "node:fs/promises";
+import { JSDOM } from "jsdom";
 
 interface DataConfig {
   ddb: AsyncDuckDB;
@@ -24,7 +25,8 @@ interface PlotConfig {
   titleDisplay?: boolean;
 }
 
-// TODO: db type
+type MarkType = "dot" | "areaY" | "line" | "barX" | "barY";
+
 export const runQueryServer = async (db: any, sql: string): Promise<any[]> => {
   return new Promise((resolve, reject) => {
     db.all(sql, (err: string, res: any[]) => {
@@ -50,7 +52,6 @@ export const runQueryClient = async (
     console.error("Error executing query:", error);
     throw error;
   } finally {
-    // Ensure the connection is closed even if an error occurs
     await conn.close();
   }
 };
@@ -58,23 +59,24 @@ export const runQueryClient = async (
 export class DuckPlot {
   private dataConfig: DataConfig | null = null;
   private columnsConfig: ColumnsConfig | null = null;
-  private plotType: string | null = null;
+  private plotType: MarkType | null = null;
   private plotConfig: PlotConfig | null = null;
-  private conn: any;
+  private jsdom: JSDOM;
 
-  // Method overloads for data
+  constructor(jsdom: JSDOM) {
+    this.jsdom = jsdom;
+  }
+
   data(): DataConfig;
   data(config: DataConfig): this;
   data(config?: DataConfig): DataConfig | this {
     if (config) {
       this.dataConfig = config;
-      this.conn = this.dataConfig.ddb.connect();
       return this;
     }
     return this.dataConfig!;
   }
 
-  // Method overloads for columns
   columns(): ColumnsConfig;
   columns(config: ColumnsConfig): this;
   columns(config?: ColumnsConfig): ColumnsConfig | this {
@@ -85,7 +87,6 @@ export class DuckPlot {
     return this.columnsConfig!;
   }
 
-  // Method overloads for x
   x(): string;
   x(value: string): this;
   x(value?: string): string | this {
@@ -100,7 +101,6 @@ export class DuckPlot {
     return this.columnsConfig?.x!;
   }
 
-  // Method overloads for y
   y(): string;
   y(value: string): this;
   y(value?: string): string | this {
@@ -115,7 +115,6 @@ export class DuckPlot {
     return this.columnsConfig?.y!;
   }
 
-  // Method overloads for series
   series(): string;
   series(value: string): this;
   series(value?: string): string | this {
@@ -130,11 +129,9 @@ export class DuckPlot {
     return this.columnsConfig?.series!;
   }
 
-  // Method overloads for type
-  // TODO: chart type
-  type(): string;
-  type(value: string): this;
-  type(value?: string): string | this {
+  type(): MarkType;
+  type(value: MarkType): this;
+  type(value?: MarkType): MarkType | this {
     if (value) {
       this.plotType = value;
       return this;
@@ -142,8 +139,6 @@ export class DuckPlot {
     return this.plotType!;
   }
 
-  // Method overloads for config
-  // TODO default config
   config(): PlotConfig;
   config(config: PlotConfig): this;
   config(config?: PlotConfig): PlotConfig | this {
@@ -154,16 +149,33 @@ export class DuckPlot {
     return this.plotConfig!;
   }
 
-  // TODO: return an array regardless of web or server
-  prepareChartData(): Promise<any[]> | null {
-    if (!this.dataConfig) return null;
+  async prepareChartData(): Promise<any[]> {
+    if (!this.dataConfig) throw new Error("Data configuration is not set");
     return runQueryServer(
-      this.dataConfig?.ddb,
-      `select * from ${this.dataConfig?.table}`
+      this.dataConfig.ddb,
+      `SELECT * FROM ${this.dataConfig.table}`
     );
   }
 
-  async plot(): Promise<void> {
+  async plot(): Promise<SVGSVGElement | HTMLElement | null> {
+    if (!this.plotType) return null;
     const chartData = await this.prepareChartData();
+    const { window } = this.jsdom;
+    const document = window.document;
+
+    const plotConfig = {
+      marks: [
+        Plot[this.plotType](chartData, {
+          x: this.columnsConfig!.x,
+          y: this.columnsConfig!.y,
+          stroke: this.columnsConfig!.series,
+        }),
+      ],
+      document: document,
+    };
+    // TODO: store as this.plot
+    const plt = Plot.plot(plotConfig);
+    plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    return plt;
   }
 }
