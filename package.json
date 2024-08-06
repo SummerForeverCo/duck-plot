@@ -1,0 +1,32 @@
+{
+  "name": "@summerforeverco/duck-plot",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4",
+    "vite": "^5.3.5",
+    "vitest": "^2.0.5"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "main": "dist/duck-plot.cjs",
+  "module": "dist/duck-plot.es",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ]
+}
