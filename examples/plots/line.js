@@ -1,5 +1,5 @@
 import { createDb } from "../util/createDb.js";
-export async function incomePlot(duckplot) {
+export async function line(duckplot) {
   const plot = await createDb("income.csv")
     .then(async (db) => {
       const chart = duckplot
@@ -10,5 +10,10 @@ export async function incomePlot(duckplot) {
       return await chart.plot();
     })
     .catch(console.error);
-  return plot;
+  // for display
+  const codeString = `duckplot
+  .data({ ddb: db, table: "income" })
+  .columns({ x: "month", y: "consensus_income", series: "validator" })
+  .type("line");`;
+  return [plot, codeString];
 }
