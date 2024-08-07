@@ -1,6 +1,8 @@
 import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
+import { ChartData, ChartType } from "./types";
+import { prepareChartData } from "./prepareChartData";
 
 interface DataConfig {
   ddb: AsyncDuckDB;
@@ -23,8 +25,6 @@ interface PlotConfig {
   yAxisDisplay?: boolean;
   titleDisplay?: boolean;
 }
-
-type MarkType = "dot" | "areaY" | "line" | "barX" | "barY";
 
 export const runQueryServer = async (db: any, sql: string): Promise<any[]> => {
   return new Promise((resolve, reject) => {
@@ -58,7 +58,7 @@ export const runQueryClient = async (
 export class DuckPlot {
   private dataConfig: DataConfig | null = null;
   private columnsConfig: ColumnsConfig | null = null;
-  private plotType: MarkType | null = null;
+  private plotType: ChartType | null = null;
   private plotConfig: PlotConfig | null = null;
   private jsdom: JSDOM | undefined;
   private isServer: boolean;
@@ -130,9 +130,9 @@ export class DuckPlot {
     return this.columnsConfig?.series!;
   }
 
-  type(): MarkType;
-  type(value: MarkType): this;
-  type(value?: MarkType): MarkType | this {
+  type(): ChartType;
+  type(value: ChartType): this;
+  type(value?: ChartType): ChartType | this {
     if (value) {
       this.plotType = value;
       return this;
@@ -150,29 +150,57 @@ export class DuckPlot {
     return this.plotConfig!;
   }
 
-  async prepareChartData(): Promise<any[]> {
+  async prepareChartData(): Promise<ChartData> {
     if (!this.dataConfig) throw new Error("Data configuration is not set");
     const runner = this.isServer ? runQueryServer : runQueryClient;
 
-    return runner(
+    return prepareChartData(
       this.dataConfig.ddb,
-      `SELECT * FROM ${this.dataConfig.table}`
+      this.dataConfig.table,
+      this.columnsConfig!,
+      this.plotType!
     );
+    // return runner(
+    //   this.dataConfig.ddb,
+    //   `CREATE TABLE lzk5mx2l0nnnm42d7sj AS
+    //       SELECT
+    //           "month" as x,
+    //           "consensus_income" as y,
+
+    //       FROM
+    //           income
+    //   );`
+    // );
   }
 
   async plot(): Promise<SVGSVGElement | HTMLElement | null> {
     if (!this.plotType) return null;
     const chartData = await this.prepareChartData();
     const document = this.isServer ? this.jsdom!.window.document : undefined;
-
+    const labels = chartData.labels;
     const plotConfig = {
       marks: [
-        Plot[this.plotType](chartData, {
-          x: this.columnsConfig!.x,
-          y: this.columnsConfig!.y,
-          stroke: this.columnsConfig!.series,
-        }),
+        Plot[this.plotType as "dot" | "areaY" | "line" | "barX" | "barY"](
+          chartData,
+          {
+            ...(this.columnsConfig!.x ? { x: "x" } : {}),
+            ...(this.columnsConfig!.y ? { y: "y" } : {}),
+            ...(this.columnsConfig!.series
+              ? { stroke: this.columnsConfig!.series }
+              : {}),
+          }
+        ),
       ],
+      x: {
+        ...(this.plotConfig?.xAxisDisplay !== false
+          ? { label: this.plotConfig?.xAxisLabel || labels?.x }
+          : {}),
+      },
+      y: {
+        ...(this.plotConfig?.yAxisDisplay !== false
+          ? { label: this.plotConfig?.yAxisLabel || labels?.y }
+          : {}),
+      },
       ...(this.isServer ? { document: document } : {}),
     };
     // TODO: store as this.plot

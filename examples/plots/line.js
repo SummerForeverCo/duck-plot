@@ -4,7 +4,7 @@ export async function line(duckplot) {
     .then(async (db) => {
       const chart = duckplot
         .data({ ddb: db, table: "income" })
-        .columns({ x: "month", y: "consensus_income", series: "validator" })
+        .columns({ x: "month", y: "consensus_income" })
         .type("line");
 
       return await chart.plot();
