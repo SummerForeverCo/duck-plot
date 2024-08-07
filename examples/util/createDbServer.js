@@ -1,15 +1,15 @@
 import { Database } from "duckdb-async";
 import path from "path";
 import { fileURLToPath } from "url";
-import * as fs from "fs/promises";
-export const createDb = async (fileName) => {
+
+export const createDbServer = async (fileName) => {
   // Get the directory name of the current module
   const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
+  let __dirname = path.dirname(__filename);
+  __dirname = path.join(__dirname, "..");
   const tableName = fileName.replace(".csv", "").replace("-", "");
 
   const csvPath = path.join(__dirname, "data", fileName); // Constructing the absolute path to the CSV file
-
   // Create an in-memory DuckDB instance
   const db = await Database.create(":memory:");
 

@@ -1,6 +1,5 @@
 import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import * as Plot from "@observablehq/plot";
-import * as fs from "node:fs/promises";
 import { JSDOM } from "jsdom";
 
 interface DataConfig {
@@ -61,10 +60,12 @@ export class DuckPlot {
   private columnsConfig: ColumnsConfig | null = null;
   private plotType: MarkType | null = null;
   private plotConfig: PlotConfig | null = null;
-  private jsdom: JSDOM;
+  private jsdom: JSDOM | undefined;
+  private isServer: boolean;
 
-  constructor(jsdom: JSDOM) {
+  constructor(jsdom?: JSDOM) {
     this.jsdom = jsdom;
+    this.isServer = jsdom !== undefined;
   }
 
   data(): DataConfig;
@@ -151,7 +152,9 @@ export class DuckPlot {
 
   async prepareChartData(): Promise<any[]> {
     if (!this.dataConfig) throw new Error("Data configuration is not set");
-    return runQueryServer(
+    const runner = this.isServer ? runQueryServer : runQueryClient;
+
+    return runner(
       this.dataConfig.ddb,
       `SELECT * FROM ${this.dataConfig.table}`
     );
@@ -160,8 +163,7 @@ export class DuckPlot {
   async plot(): Promise<SVGSVGElement | HTMLElement | null> {
     if (!this.plotType) return null;
     const chartData = await this.prepareChartData();
-    const { window } = this.jsdom;
-    const document = window.document;
+    const document = this.isServer ? this.jsdom!.window.document : undefined;
 
     const plotConfig = {
       marks: [
@@ -171,7 +173,7 @@ export class DuckPlot {
           stroke: this.columnsConfig!.series,
         }),
       ],
-      document: document,
+      ...(this.isServer ? { document: document } : {}),
     };
     // TODO: store as this.plot
     const plt = Plot.plot(plotConfig);
