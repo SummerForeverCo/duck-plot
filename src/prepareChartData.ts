@@ -9,7 +9,7 @@ import {
 import { runQuery } from "./runQuery";
 import {
   allowAggregation,
-  arrowTableToArray,
+  formatResults,
   checkDistinct,
   columnTypes,
 } from "./helpers";
@@ -27,7 +27,6 @@ export async function prepareChartData(
 ): Promise<ChartData> {
   // Note, this function depends on the component props
   if (!ddb || !tableName) return [];
-  console.log("prepareChartData", ddb, tableName, config, type);
 
   let queryString: string;
   let labels: ChartData["labels"] = {};
@@ -56,7 +55,6 @@ export async function prepareChartData(
     const col = type === "barYGrouped" ? "fx" : "series";
     distinctCols.push(col);
   }
-  console.log("distinctCols", distinctCols);
   // Deteremine if we should aggregate
 
   const isDistinct = await checkDistinct(ddb, reshapeTableName, distinctCols);
@@ -86,10 +84,10 @@ export async function prepareChartData(
   let schema: DescribeSchema;
 
   data = await runQuery(ddb, queryString);
-  schema = (await runQuery(ddb, `DESCRIBE ${tableName}`)).toArray();
+  schema = await runQuery(ddb, `DESCRIBE ${tableName}`);
 
   // Format data as an array of objects
-  let formatted: ChartData = arrowTableToArray(data, schema);
+  let formatted: ChartData = formatResults(data, schema);
 
   if (!labels!.series) {
     labels!.series = toTitleCase(

@@ -9,7 +9,6 @@ import {
   Indexable,
   TypesObject,
 } from "./types";
-import { Table } from "@apache-arrow/ts";
 
 export async function checkDistinct(
   duckDB: AsyncDuckDB,
@@ -23,7 +22,7 @@ export async function checkDistinct(
   THEN TRUE ELSE FALSE END
   FROM ${tableName};`;
   const result = await runQuery(duckDB, query);
-  return Object.values(result.toArray()[0])[0];
+  return Object.values(result[0])[0];
 }
 
 const supportsAggregation = ["barY", "barX", "line", "area", "barYGrouped"];
@@ -35,25 +34,21 @@ export const columnTypes = async (
   db: AsyncDuckDB,
   name: string
 ): Promise<Map<string, string>> => {
-  const arrow = await runQuery(
+  const types = await runQuery(
     db,
     `select column_name, data_type from information_schema.columns where table_name = '${name}'`
   );
 
   const columns = new Map<string, string>();
-  for (let i = 0; i < arrow.numRows; i++) {
-    const row = arrow.get(i);
-    if (row) {
-      const [column_name, data_type] = row.toArray();
-      columns.set(column_name, data_type);
-    }
-  }
+  types.forEach((type: { column_name: string; data_type: string }) => {
+    columns.set(type.column_name, type.data_type);
+  });
 
   return columns;
 };
 
-export function arrowTableToArray(
-  arrowTable: Table,
+export function formatResults(
+  data: Indexable[],
   schema: DescribeSchema
 ): Record<string, any>[] {
   // Get types for each column
@@ -61,7 +56,7 @@ export function arrowTableToArray(
   schema.forEach(
     (d) => (types[d.column_name] = getTypeCategory(d.column_type))
   );
-  const selected = arrowTable?.toArray();
+  const selected = data;
   let formatted: ChartData = [];
   formatted =
     selected?.map((row: any) => {
