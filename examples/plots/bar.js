@@ -1,19 +1,9 @@
-import { createDb } from "../util/createDb.js";
-export async function bar(duckplot) {
-  const plot = await createDb("income.csv")
-    .then(async (db) => {
-      const chart = duckplot
-        .data({ ddb: db, table: "income" })
-        .columns({ x: "month", y: "consensus_income" })
-        .type("barY");
+import { renderPlot } from "../util/renderPlotClient.js";
+// This code is both displayed in the browser and executed
 
-      return await chart.plot();
-    })
-    .catch(console.error);
-  // for display
-  const codeString = `duckplot
+const codeString = `duckplot
   .data({ ddb: db, table: "income" })
-  .columns({ x: "month", y: "consensus_income", series: "validator" })
+  .columns({ x: "month", y: "consensus_income"})
   .type("barY");`;
-  return [plot, codeString];
-}
+
+export const bar = (duckplot) => renderPlot(duckplot, "income.csv", codeString);
