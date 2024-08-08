@@ -79,7 +79,7 @@ Gets or sets the plot type.
 
 Sets the configuration for the plot.
 
-- `config`: `{ xAxisLabel?: string, yAxisLabel?: string, height?: number, width?: number, xAxisDisplay?: boolean, yAxisDisplay?: boolean, titleDisplay?: boolean }`
+- `config`: `{ xLabel?: string, yLabel?: string, height?: number, width?: number, xDisplay?: boolean, yDisplay?: boolean, titleDisplay?: boolean }`
 
 #### `plot(): Promise<SVGSVGElement | HTMLElement | null>`
 
@@ -129,6 +129,8 @@ duckplot
 export const line = (duckplot) =>
   renderPlot(duckplot, "income.csv", codeString);
 ```
+
+If you're actively developing DuckPlot, you can run `npm run watch:build` to watch for changes in the `src/` directory and automatically recompile the TypeScript code.
 
 ## Implementation
 

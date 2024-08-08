@@ -9,17 +9,20 @@
     "build": "vite build && tsc",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "watch:build": "nodemon"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@duckdb/duckdb-wasm": "^1.28.1-dev91.0",
     "@observablehq/plot": "^0.6.16",
-    "duckdb-async": "^1.0.0",
-    "@duckdb/duckdb-wasm": "^1.28.1-dev91.0"
+    "d3-array": "^3.2.4",
+    "duckdb-async": "^1.0.0"
   },
   "devDependencies": {
+    "@types/d3-array": "^3.2.1",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^22.1.0",
     "jsdom": "^24.1.1",

@@ -3,6 +3,12 @@ import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
 import { ChartData, ChartType } from "./types";
 import { prepareChartData } from "./prepareChartData";
+import {
+  getMarkOptions,
+  getPlotMarkType,
+  getSorts,
+  getTopLevelPlotOptions,
+} from "./getPlotOptions";
 
 interface DataConfig {
   ddb: AsyncDuckDB;
@@ -17,13 +23,15 @@ interface ColumnsConfig {
 }
 
 interface PlotConfig {
-  xAxisLabel?: string;
-  yAxisLabel?: string;
+  xLabel?: string;
+  yLabel?: string;
   height?: number;
   width?: number;
-  xAxisDisplay?: boolean;
-  yAxisDisplay?: boolean;
+  xDisplay?: boolean;
+  yDisplay?: boolean;
   titleDisplay?: boolean;
+  color?: string;
+  r?: number;
 }
 
 export class DuckPlot {
@@ -136,35 +144,38 @@ export class DuckPlot {
     const chartData = await this.prepareChartData();
     const document = this.isServer ? this.jsdom!.window.document : undefined;
     const labels = chartData.labels;
-    const hasSeries =
-      this.columnsConfig?.series !== undefined ||
-      (Array.isArray(this.columnsConfig?.y) &&
-        this.columnsConfig?.y.length > 1);
-    const plotConfig = {
-      marks: [
-        Plot[this.plotType as "dot" | "areaY" | "line" | "barX" | "barY"](
-          chartData,
-          {
-            ...(this.columnsConfig!.x ? { x: "x" } : {}),
-            ...(this.columnsConfig!.y ? { y: "y" } : {}),
-            ...(hasSeries ? { stroke: "series" } : {}),
-          }
-        ),
-      ],
-      x: {
-        ...(this.plotConfig?.xAxisDisplay !== false
-          ? { label: this.plotConfig?.xAxisLabel || labels?.x }
-          : {}),
-      },
-      y: {
-        ...(this.plotConfig?.yAxisDisplay !== false
-          ? { label: this.plotConfig?.yAxisLabel || labels?.y }
-          : {}),
-      },
-      ...(this.isServer ? { document: document } : {}),
+    const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
+    const sorts = getSorts(currentColumns, chartData);
+    const plotMarkType = getPlotMarkType(this.plotType);
+    // TODO: maybe just pass plotConfig?
+    const primaryMarkOptions = getMarkOptions(currentColumns, this.plotType, {
+      color: this.plotConfig?.color,
+      r: this.plotConfig?.r,
+      xLabel: chartData?.labels?.x, // TODO: handle input labels
+      yLabel: chartData?.labels?.y,
+    });
+    const topLevelPlotOptions = getTopLevelPlotOptions(
+      chartData,
+      currentColumns,
+      sorts,
+      this.plotType,
+      {
+        width: 500,
+        height: 500,
+        xLabel: chartData?.labels?.x,
+        yLabel: chartData?.labels?.y, // TODO: handle input labels
+      }
+    );
+    const primaryMark = [Plot[plotMarkType](chartData, primaryMarkOptions)];
+    const options = {
+      ...topLevelPlotOptions,
+      marks: [Plot.frame(), ...primaryMark],
+      // marks: [...commonPlotMarks, ...primaryMark, ...facetMarks],
     };
+    console.log({ options });
+
     // TODO: store as this.plot
-    const plt = Plot.plot(plotConfig);
+    const plt = Plot.plot(options);
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     return plt;
   }

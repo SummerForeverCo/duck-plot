@@ -83,7 +83,7 @@ export async function prepareChartData(
   let data;
   let schema: DescribeSchema;
   data = await runQuery(ddb, queryString);
-  schema = await runQuery(ddb, `DESCRIBE ${tableName}`);
+  schema = await runQuery(ddb, `DESCRIBE ${reshapeTableName}`);
   // Format data as an array of objects
   let formatted: ChartData = formatResults(data, schema);
 
