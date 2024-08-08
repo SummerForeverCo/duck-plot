@@ -10,6 +10,9 @@ export default defineConfig(({ command, mode }) => {
         port: 8008,
         open: "/",
       },
+      optimizeDeps: {
+        exclude: ["@mapbox"],
+      },
     };
   } else {
     // Build specific config

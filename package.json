@@ -15,20 +15,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@apache-arrow/ts": "^14.0.2",
     "@observablehq/plot": "^0.6.16",
     "duckdb-async": "^1.0.0",
-    "node-polyfill-webpack-plugin": "^4.0.0"
+    "@duckdb/duckdb-wasm": "^1.28.1-dev91.0"
   },
   "devDependencies": {
-    "@duckdb/duckdb-wasm": "^1.28.1-dev91.0",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^22.1.0",
     "jsdom": "^24.1.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
     "vite": "^5.3.5",
-    "vite-plugin-node-polyfills": "^0.22.0",
     "vitest": "^2.0.5"
   },
   "publishConfig": {
