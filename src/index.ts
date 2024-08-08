@@ -4,6 +4,8 @@ import { JSDOM } from "jsdom";
 import { ChartData, ChartType } from "./types";
 import { prepareChartData } from "./prepareChartData";
 import {
+  getCommonMarks,
+  getFacetMarks,
   getMarkOptions,
   getPlotMarkType,
   getSorts,
@@ -167,10 +169,11 @@ export class DuckPlot {
       }
     );
     const primaryMark = [Plot[plotMarkType](chartData, primaryMarkOptions)];
+    const commonPlotMarks = getCommonMarks(this.plotType, currentColumns);
+    const facetMarks = getFacetMarks(chartData, currentColumns);
     const options = {
       ...topLevelPlotOptions,
-      marks: [Plot.frame(), ...primaryMark],
-      // marks: [...commonPlotMarks, ...primaryMark, ...facetMarks],
+      marks: [...commonPlotMarks, ...primaryMark, facetMarks],
     };
     console.log({ options });
 

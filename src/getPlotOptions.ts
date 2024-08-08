@@ -1,4 +1,5 @@
 import type { MarkOptions, PlotOptions } from "@observablehq/plot";
+import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
 import type { BasicColumnType, ChartData, ChartType } from "./types";
 export const colors = [
@@ -8,6 +9,10 @@ export const colors = [
   "hsla(137 87% 54%)", // green
   "hsla(22 100% 62%)", // orange
 ];
+const borderOptions = {
+  background: "hsla( 0 0% 100%)",
+  border: "hsla(220 6% 90%)",
+};
 // Get options for a specific mark (e.g., the line or area marks)
 export function getMarkOptions(
   currentColumns: string[] = [],
@@ -37,9 +42,9 @@ export function getMarkOptions(
       },
     },
     tip: {
-      // TODO: suppport background/border
-      //   fill: "hsla(var(--background))",
-      //   stroke: "hsla(var(--border))",
+      // TODO: suppport background/border as inputs?
+      fill: borderOptions.background,
+      stroke: borderOptions.border,
       // Display custom values, hide the auto generated values
       format: {
         xCustom: true,
@@ -269,4 +274,49 @@ export function getPlotMarkType(type: ChartType): MarkType {
     default:
       return type as MarkType;
   }
+}
+
+// TODO: input options type
+export function getCommonMarks(
+  type: ChartType,
+  currentColumns: string[],
+  inputOptions?: any
+) {
+  const options = { ...borderOptions, ...inputOptions };
+  return [
+    Plot.frame({
+      stroke: options.border,
+      fill: options.background,
+      rx: 4,
+      ry: 4,
+      ...(type === "barYGrouped" ? { facet: "super" } : {}),
+    }),
+    ...[
+      currentColumns?.includes("y")
+        ? Plot.gridY({
+            stroke: options.border,
+            strokeDasharray: "1.5,1.5",
+            strokeOpacity: 1,
+          })
+        : [],
+    ],
+  ];
+}
+
+export function getFacetMarks(data: ChartData, currentColumns: string[]) {
+  return currentColumns.includes("facet")
+    ? [
+        Plot.text(
+          data,
+          Plot.selectFirst({
+            text: (d) => d.facet,
+            fy: (d) => d.facet,
+            frameAnchor: "top-left",
+            facetAnchor: "left",
+            dy: 3,
+            dx: 3,
+          })
+        ),
+      ]
+    : [];
 }
