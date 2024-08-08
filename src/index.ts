@@ -136,6 +136,10 @@ export class DuckPlot {
     const chartData = await this.prepareChartData();
     const document = this.isServer ? this.jsdom!.window.document : undefined;
     const labels = chartData.labels;
+    const hasSeries =
+      this.columnsConfig?.series !== undefined ||
+      (Array.isArray(this.columnsConfig?.y) &&
+        this.columnsConfig?.y.length > 1);
     const plotConfig = {
       marks: [
         Plot[this.plotType as "dot" | "areaY" | "line" | "barX" | "barY"](
@@ -143,7 +147,7 @@ export class DuckPlot {
           {
             ...(this.columnsConfig!.x ? { x: "x" } : {}),
             ...(this.columnsConfig!.y ? { y: "y" } : {}),
-            ...(this.columnsConfig!.series ? { stroke: "series" } : {}),
+            ...(hasSeries ? { stroke: "series" } : {}),
           }
         ),
       ],
