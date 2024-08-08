@@ -1,4 +1,4 @@
-# DuckPlot
+# DuckPlot 🦆📈
 
 DuckPlot is a JavaScript library that allows you to quickly generate charts with
 [Observable Plot](https://github.com/observablehq/plot) when working with [DuckDB](https://duckdb.org/). It allows you to easily configure, prepare, and visualize your data, whether
