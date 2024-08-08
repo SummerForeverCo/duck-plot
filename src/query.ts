@@ -17,12 +17,12 @@ export function omit(obj: any, keys: Array<string | number>): any {
 // Determine what type of query we need to construct based on the config
 export function getTransformType(type: ChartType, { x, y, series }: Config) {
   if (type === "barX") {
-    if (x && x.length > 1) {
-      return series && series.length > 0 ? "unPivotWithSeries" : "unPivot";
+    if (Array.isArray(x) && x.length > 1) {
+      return series ? "unPivotWithSeries" : "unPivot";
     }
   } else {
-    if (y && y.length > 1) {
-      return series && series.length > 0 ? "unPivotWithSeries" : "unPivot";
+    if (Array.isArray(y) && y.length > 1) {
+      return series ? "unPivotWithSeries" : "unPivot";
     }
   }
   return "standard";
@@ -38,11 +38,11 @@ export function getStandardTransformQuery(
   // Very confusing case! for barYGrouped, we want the selected X to be fx, and
   // the selected series to be x.
   if (type === "barYGrouped") {
-    if (x?.length && !series?.length) {
+    if (x && !series) {
       select.push(standardColName({ x }, "x"));
     } else {
       select.push(standardColName({ x }, "x", "fx"));
-      if (series?.length) {
+      if (series) {
         select.push(maybeConcatCols(series, "series"));
         select.push(maybeConcatCols(series, "x"));
       }
@@ -233,7 +233,7 @@ export function maybeConcatCols(cols?: string[] | string, as?: string) {
       .map((d) => `"${d}"`)
       .join(", ")})${colName}`;
   }
-  return `"${cols[0]}"${colName}`;
+  return `"${colArr[0]}"${colName}`;
 }
 
 export function standardColName(obj: any, column: string, colName?: string) {

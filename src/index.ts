@@ -26,35 +26,6 @@ interface PlotConfig {
   titleDisplay?: boolean;
 }
 
-export const runQueryServer = async (db: any, sql: string): Promise<any[]> => {
-  return new Promise((resolve, reject) => {
-    db.all(sql, (err: string, res: any[]) => {
-      if (err) {
-        console.warn(err);
-        reject(err);
-      } else {
-        resolve(res);
-      }
-    });
-  });
-};
-
-export const runQueryClient = async (
-  db: AsyncDuckDB,
-  sql: string
-): Promise<any[]> => {
-  const conn = await db.connect();
-  try {
-    const arrow = await conn.query(sql);
-    return arrow.toArray();
-  } catch (error) {
-    console.error("Error executing query:", error);
-    throw error;
-  } finally {
-    await conn.close();
-  }
-};
-
 export class DuckPlot {
   private dataConfig: DataConfig | null = null;
   private columnsConfig: ColumnsConfig | null = null;
@@ -152,25 +123,12 @@ export class DuckPlot {
 
   async prepareChartData(): Promise<ChartData> {
     if (!this.dataConfig) throw new Error("Data configuration is not set");
-    const runner = this.isServer ? runQueryServer : runQueryClient;
-
     return prepareChartData(
       this.dataConfig.ddb,
       this.dataConfig.table,
       this.columnsConfig!,
       this.plotType!
     );
-    // return runner(
-    //   this.dataConfig.ddb,
-    //   `CREATE TABLE lzk5mx2l0nnnm42d7sj AS
-    //       SELECT
-    //           "month" as x,
-    //           "consensus_income" as y,
-
-    //       FROM
-    //           income
-    //   );`
-    // );
   }
 
   async plot(): Promise<SVGSVGElement | HTMLElement | null> {
@@ -185,9 +143,7 @@ export class DuckPlot {
           {
             ...(this.columnsConfig!.x ? { x: "x" } : {}),
             ...(this.columnsConfig!.y ? { y: "y" } : {}),
-            ...(this.columnsConfig!.series
-              ? { stroke: this.columnsConfig!.series }
-              : {}),
+            ...(this.columnsConfig!.series ? { stroke: "series" } : {}),
           }
         ),
       ],

@@ -7,6 +7,7 @@ export async function dot(duckplot) {
         .columns({
           x: "execution_income",
           y: "consensus_income",
+          series: "execution_income",
         })
         .type("dot");
 
@@ -16,7 +17,7 @@ export async function dot(duckplot) {
   // for display
   const codeString = `duckplot
     .data({ ddb: db, table: "income" })
-    .columns({ x: "execution_incomr", y: "consensus_income" })
+    .columns({ x: "execution_income", y: "consensus_income" })
     .type("dot")`;
   return [plot, codeString];
 }
