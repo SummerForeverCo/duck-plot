@@ -19,12 +19,17 @@ async function renderPlots() {
 
       const wrapper = document.createElement("div");
       wrapper.style.display = "flex";
-      wrapper.appendChild(plt[0]);
+      const plotWrapper = document.createElement("div");
+      plotWrapper.style.width = "50%";
+      plotWrapper.appendChild(plt[0]);
+      wrapper.appendChild(plotWrapper);
 
       const pre = document.createElement("pre");
       pre.style.backgroundColor = "#f4f4f4";
       pre.style.padding = "10px";
       pre.style.borderRadius = "5px";
+      pre.style.whiteSpace = "break-spaces";
+      pre.style.width = "50%";
       pre.innerHTML = plt[1];
       wrapper.appendChild(pre);
 

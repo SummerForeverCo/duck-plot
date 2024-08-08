@@ -87,7 +87,7 @@ export function getUnpivotQuery(
   const facetStr = facet ? maybeConcatCols(facet, "facet,") : "";
 
   return `${createStatment} ${selectStr}, ${facetStr} key AS series FROM "${tableName}"
-        UNPIVOT (value FOR key IN (${keysStr}));`;
+        UNPIVOT (value FOR key IN (${keysStr}))`;
 }
 
 export function getUnpivotWithSeriesQuery(
@@ -211,13 +211,13 @@ export function getAggregateInfo(
     }
     groupBy = columns.filter((d) => d !== "y");
   }
-
   return {
     queryString: buildSqlQuery({
       select: [...groupBy],
       aggregateSelection,
       from: tableName,
       groupBy,
+      orderBy: groupBy,
     }),
     labels,
   };

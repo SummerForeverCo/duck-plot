@@ -47,16 +47,6 @@ export function buildSqlQuery(options: SqlQueryOptions): string {
     sql += ` WHERE ${whereConditions.join(" AND")}`;
   }
 
-  // Handle ORDER BY clause
-  if (options.orderBy) {
-    sql += ` ORDER BY ${options.orderBy}`;
-  } else if (options.sort && options.sort.length > 0) {
-    const sortColumns = options.sort
-      .map((sortItem) => `"${sortItem.column}" ${sortItem.direction}`)
-      .join(", ");
-    sql += ` ORDER BY ${sortColumns}`;
-  }
-
   // Handle LIMIT clause
   if (options.limit) {
     sql += ` LIMIT ${options.limit}`;
@@ -65,6 +55,19 @@ export function buildSqlQuery(options: SqlQueryOptions): string {
   // Handle GROUP BY clause
   if (options.groupBy) {
     sql += ` GROUP BY ${options.groupBy.join(", ")}`;
+  }
+
+  // Handle ORDER BY clause
+  if (options.orderBy) {
+    const orderBy = Array.isArray(options.orderBy)
+      ? options.orderBy.join(", ")
+      : options.orderBy;
+    sql += ` ORDER BY ${orderBy}`;
+  } else if (options.sort && options.sort.length > 0) {
+    const sortColumns = options.sort
+      .map((sortItem) => `"${sortItem.column}" ${sortItem.direction}`)
+      .join(", ");
+    sql += ` ORDER BY ${sortColumns}`;
   }
 
   return sql;

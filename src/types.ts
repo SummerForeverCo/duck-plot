@@ -19,7 +19,7 @@ export type SqlQueryOptions = {
   aggregateSelection?: string;
   from?: string;
   where?: SqlWhere;
-  orderBy?: string;
+  orderBy?: string | string[];
   limit?: number;
   sort?: SqlSort[];
   groupBy?: string[];

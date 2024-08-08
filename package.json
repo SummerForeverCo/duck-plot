@@ -5,6 +5,7 @@
   "description": "",
   "scripts": {
     "dev": "vite",
+    "dev-server": "node examples/index.server.js",
     "build": "vite build && tsc",
     "preview": "vite preview",
     "test": "vitest run",
