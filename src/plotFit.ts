@@ -15,9 +15,11 @@ export function PlotFit(
 ): HTMLElement | SVGElement {
   const getWidth = function (element: HTMLElement | SVGElement): number {
     if (font && font.getAdvanceWidth) {
-      return font.getAdvanceWidth(element.textContent || "", 10);
+      const width = font.getAdvanceWidth(element.textContent || "", 10);
+      return width;
     } else {
       const { width } = element.getBoundingClientRect();
+      const rect = element.getBoundingClientRect();
       return width;
     }
   };
@@ -59,6 +61,15 @@ export function PlotFit(
   }
 
   const initialPlot = Plot.plot(config);
+
+  // If there's no font file for measurement, append the SVG to the DOM so we
+  // can measure the text elements
+  // Temporarily append the SVG to the DOM but keep it hidden
+  if (!font) {
+    initialPlot.style.position = "absolute";
+    initialPlot.style.visibility = "hidden";
+    document.body.appendChild(initialPlot);
+  }
   // Extract the x-axis tick labels
   let xNodes = initialPlot.querySelectorAll(
     '[aria-label="x-axis tick label"] text'
@@ -86,14 +97,13 @@ export function PlotFit(
     const height = 14;
     const computedWidth = getWidth(node as HTMLElement);
     const theta = (tickRotate * Math.PI) / 180; // Convert degrees to radians
-    const rotatedHeight = Math.abs(
-      computedWidth * Math.sin(theta) + height * Math.cos(theta)
-    );
+    const rotatedHeight = height + Math.abs(computedWidth * Math.sin(theta));
+
     maxHeight = Math.max(maxHeight, rotatedHeight);
 
     // Tracking the width as well to ensure we have enough margin LEFT
     const rotatedWidth = Math.abs(
-      computedWidth * Math.cos(theta) - height * Math.sin(theta)
+      computedWidth * Math.cos(theta) + height * Math.sin(theta)
     );
     maxWidthFromX =
       tickRotate === 0 ? 0 : Math.max(maxWidthFromX, rotatedWidth);
@@ -101,7 +111,7 @@ export function PlotFit(
   let style = (config.style || {}) as Partial<CSSStyleDeclaration>;
   config = {
     ...config,
-    marginBottom: hideTicks ? 20 : maxHeight + 25,
+    marginBottom: hideTicks ? 20 : maxHeight + 15,
     marginLeft: hideTicks ? 0 : Math.max(maxWidthFromX, maxYWidth),
     marginRight: 0,
     insetTop: 0,
