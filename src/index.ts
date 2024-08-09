@@ -151,12 +151,17 @@ export class DuckPlot {
     const sorts = getSorts(currentColumns, chartData);
     const plotMarkType = getPlotMarkType(this.plotType);
     // TODO: maybe just pass plotConfig?
-    const primaryMarkOptions = getMarkOptions(currentColumns, this.plotType, {
-      color: this.plotConfig?.color,
-      r: this.plotConfig?.r,
-      xLabel: this.plotConfig?.xLabel || chartData?.labels?.x, // TODO: handle input labels
-      yLabel: this.plotConfig?.yLabel || chartData?.labels?.y,
-    });
+    const primaryMarkOptions = getMarkOptions(
+      currentColumns,
+      this.plotType,
+      {
+        color: this.plotConfig?.color,
+        r: this.plotConfig?.r,
+        xLabel: this.plotConfig?.xLabel || chartData?.labels?.x, // TODO: handle input labels
+        yLabel: this.plotConfig?.yLabel || chartData?.labels?.y,
+      },
+      document === undefined // TODO: arg order / better varname
+    );
     const topLevelPlotOptions = getTopLevelPlotOptions(
       chartData,
       currentColumns,
@@ -177,8 +182,8 @@ export class DuckPlot {
     const options = {
       ...topLevelPlotOptions,
       marks: [...commonPlotMarks, ...primaryMark, facetMarks],
+      ...(document ? { document } : {}),
     };
-    console.log({ options });
 
     // TODO: store as this.plot
     const plt = Plot.plot(options);
