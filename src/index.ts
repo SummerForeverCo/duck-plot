@@ -11,6 +11,7 @@ import {
   getSorts,
   getTopLevelPlotOptions,
 } from "./getPlotOptions";
+import { PlotFit } from "./plotFit";
 
 interface DataConfig {
   ddb: AsyncDuckDB;
@@ -38,6 +39,7 @@ interface PlotConfig {
 }
 
 export class DuckPlot {
+  // TODO: rename these as _dataConfig, _columnsConfig, etc.
   private dataConfig: DataConfig | null = null;
   private columnsConfig: ColumnsConfig | null = null;
   private plotType: ChartType | null = null;
@@ -142,10 +144,9 @@ export class DuckPlot {
     );
   }
 
-  async plot(): Promise<SVGSVGElement | HTMLElement | null> {
+  async plot(): Promise<SVGElement | HTMLElement | null> {
     if (!this.plotType) return null;
     const chartData = await this.prepareChartData();
-    // TODO: pass in document
     const document = this.isServer ? this.jsdom!.window.document : undefined;
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
     const sorts = getSorts(currentColumns, chartData);
@@ -157,7 +158,7 @@ export class DuckPlot {
       {
         color: this.plotConfig?.color,
         r: this.plotConfig?.r,
-        xLabel: this.plotConfig?.xLabel || chartData?.labels?.x, // TODO: handle input labels
+        xLabel: this.plotConfig?.xLabel || chartData?.labels?.x,
         yLabel: this.plotConfig?.yLabel || chartData?.labels?.y,
       },
       document === undefined // TODO: arg order / better varname
@@ -170,7 +171,7 @@ export class DuckPlot {
       {
         width: this.plotConfig?.width || 500,
         height: this.plotConfig?.height || 500,
-        xLabel: this.plotConfig?.xLabel || chartData?.labels?.x, // TODO: handle input labels
+        xLabel: this.plotConfig?.xLabel || chartData?.labels?.x,
         yLabel: this.plotConfig?.yLabel || chartData?.labels?.y,
         xLabelDisplay: this.plotConfig?.xLabelDisplay ?? true,
         yLabelDisplay: this.plotConfig?.yLabelDisplay ?? true,
@@ -185,8 +186,9 @@ export class DuckPlot {
       ...(document ? { document } : {}),
     };
 
-    // TODO: store as this.plot
-    const plt = Plot.plot(options);
+    // TODO: store as this._plot
+    // TODO: add an option to NOT use PlotFit
+    const plt = PlotFit(options);
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     return plt;
   }
