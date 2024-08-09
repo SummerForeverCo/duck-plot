@@ -3,6 +3,7 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `duckplot
     .data({ ddb: db, table: "income" })
     .columns({ x: "execution_income", y: "consensus_income" })
-    .type("dot")`;
+    .type("dot")   
+    `;
 
 export const dot = (duckplot) => renderPlot(duckplot, "income.csv", codeString);

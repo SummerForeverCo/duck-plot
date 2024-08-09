@@ -29,11 +29,12 @@ interface PlotConfig {
   yLabel?: string;
   height?: number;
   width?: number;
-  xDisplay?: boolean;
-  yDisplay?: boolean;
-  titleDisplay?: boolean;
+  xLabelDisplay?: boolean;
+  yLabelDisplay?: boolean;
   color?: string;
   r?: number;
+  title?: string;
+  titleDisplay?: boolean;
 }
 
 export class DuckPlot {
@@ -144,8 +145,8 @@ export class DuckPlot {
   async plot(): Promise<SVGSVGElement | HTMLElement | null> {
     if (!this.plotType) return null;
     const chartData = await this.prepareChartData();
+    // TODO: pass in document
     const document = this.isServer ? this.jsdom!.window.document : undefined;
-    const labels = chartData.labels;
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
     const sorts = getSorts(currentColumns, chartData);
     const plotMarkType = getPlotMarkType(this.plotType);
@@ -153,8 +154,8 @@ export class DuckPlot {
     const primaryMarkOptions = getMarkOptions(currentColumns, this.plotType, {
       color: this.plotConfig?.color,
       r: this.plotConfig?.r,
-      xLabel: chartData?.labels?.x, // TODO: handle input labels
-      yLabel: chartData?.labels?.y,
+      xLabel: this.plotConfig?.xLabel || chartData?.labels?.x, // TODO: handle input labels
+      yLabel: this.plotConfig?.yLabel || chartData?.labels?.y,
     });
     const topLevelPlotOptions = getTopLevelPlotOptions(
       chartData,
@@ -162,10 +163,12 @@ export class DuckPlot {
       sorts,
       this.plotType,
       {
-        width: 500,
-        height: 500,
-        xLabel: chartData?.labels?.x,
-        yLabel: chartData?.labels?.y, // TODO: handle input labels
+        width: this.plotConfig?.width || 500,
+        height: this.plotConfig?.height || 500,
+        xLabel: this.plotConfig?.xLabel || chartData?.labels?.x, // TODO: handle input labels
+        yLabel: this.plotConfig?.yLabel || chartData?.labels?.y,
+        xLabelDisplay: this.plotConfig?.xLabelDisplay ?? true,
+        yLabelDisplay: this.plotConfig?.yLabelDisplay ?? true,
       }
     );
     const primaryMark = [Plot[plotMarkType](chartData, primaryMarkOptions)];

@@ -7,7 +7,7 @@ export async function renderPlot(duckplot, fileName, codeString) {
     const plot = await duckplot.plot();
     return [plot, codeString];
   } catch (error) {
-    console.error("Error creating line plot:", error);
+    console.error("Error creating plot:", error);
     return [null, codeString];
   }
 }
