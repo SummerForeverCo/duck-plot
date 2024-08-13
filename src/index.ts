@@ -18,6 +18,8 @@ import {
   getTopLevelPlotOptions,
 } from "./getPlotOptions";
 import { PlotFit } from "./plotFit";
+import { Category, renderLegend } from "./legendCategorical";
+import "./legend.css";
 
 export class DuckPlot {
   private _data: DataConfig | null = null;
@@ -179,19 +181,16 @@ export class DuckPlot {
     const wrapper = this._document.createElement("div");
     // TODO: add an option to NOT show legend
     if (currentColumns.includes("series")) {
-      const legendOptions = getLegendOptions(
-        chartData,
-        currentColumns,
-        chartData?.labels?.series
-      );
-
       const div = this._document.createElement("div");
-      // TODO: don't use plot
-      const legend = Plot.legend({
-        ...legendOptions,
-        ...(document ? { document } : {}),
-      });
-      legend.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+
+      // TODO: continuous legend rendered with plot
+      const categories = [...new Set(chartData.map((d) => d.series))];
+
+      const legend = renderLegend(
+        this._document,
+        categories,
+        this._config?.width || 500
+      );
       div.appendChild(legend);
       wrapper?.appendChild(div);
     }

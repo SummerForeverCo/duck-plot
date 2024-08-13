@@ -1,4 +1,5 @@
 import { DuckPlot } from "../dist/duck-plot.es";
+import "../dist/style.css";
 import * as plots from "./plots/index.js";
 
 // Running async so the plots can be rendered in order

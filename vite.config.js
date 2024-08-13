@@ -1,9 +1,8 @@
 import { defineConfig } from "vite";
 import path from "path";
 
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ command }) => {
   if (command === "serve") {
-    // Dev server specific config
     return {
       root: path.resolve(__dirname, "examples"),
       server: {
@@ -15,19 +14,16 @@ export default defineConfig(({ command, mode }) => {
       },
     };
   } else {
-    // Build specific config
     return {
-      test: {
-        include: ["test/*.{test,spec}.ts"], // Recursively include all .test.ts and .spec.ts files in the test directory
-        exclude: ["node_modules", "dist", "cypress"],
-      },
       build: {
         lib: {
-          entry: path.resolve(__dirname, "src/index.ts"),
-          name: "DuckPlot",
-          fileName: (format) => `duck-plot.${format}`,
-          formats: ["es", "cjs"],
+          entry: path.resolve(__dirname, "src/index.ts"), // Your entry file
+          name: "DuckPlot", // Global name for UMD/IIFE builds (not used in CJS/ES)
+          formats: ["cjs", "es"], // Generate both CommonJS and ES modules
+          fileName: (format) => `duck-plot.${format}`, // Output filenames
         },
+        minify: false, // Disable minification for easier inspection
+        emptyOutDir: true, // Clean the dist directory before building
       },
     };
   }

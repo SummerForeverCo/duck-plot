@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev-server": "node examples/index.server.js",
-    "build": "vite build && tsc",
+    "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

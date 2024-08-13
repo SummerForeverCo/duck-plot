@@ -1,16 +1,41 @@
 import { DuckPlot } from "../dist/duck-plot.cjs";
 import { JSDOM } from "jsdom";
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import * as plots from "./plots/index.js";
 import { font } from "./util/loadedFont.js";
+
+// Get the current file's directory using import.meta.url
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Resolve the path to the CSS file located in ../dist/style.css
+const cssPath = path.resolve(__dirname, "../dist/style.css");
+
+// Read the CSS file content
+const cssContent = fs.readFileSync(cssPath, "utf8");
+
 const jsdom = new JSDOM(`
 <!DOCTYPE html>
-<head><meta charset="UTF-8"></head>
-<body><div></div></body>`);
+<head>
+  <meta charset="UTF-8">
+  <style>
+    ${cssContent}
+  </style>
+</head>
+<body></body>`);
+
 for (const [name, plot] of Object.entries(plots)) {
   const duckPlot = new DuckPlot({ jsdom, font });
   console.log("generating", name);
   plot(duckPlot).then((plt) => {
-    fs.writeFileSync(`examples/server-output/${name}.html`, plt[0].outerHTML);
+    // Clear the body content before generating a new plot
+    jsdom.window.document.body.innerHTML = "";
+    jsdom.window.document.body.appendChild(plt[0]);
+    // Write the generated HTML content
+    const outputPath = `examples/server-output/${name}.html`;
+    fs.writeFileSync(outputPath, jsdom.serialize());
+    console.log(`Generated file: ${outputPath}`);
   });
 }
