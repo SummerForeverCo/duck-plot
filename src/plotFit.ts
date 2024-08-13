@@ -19,7 +19,6 @@ export function PlotFit(
       return width;
     } else {
       const { width } = element.getBoundingClientRect();
-      const rect = element.getBoundingClientRect();
       return width;
     }
   };

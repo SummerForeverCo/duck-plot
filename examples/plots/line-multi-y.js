@@ -4,6 +4,7 @@ const codeString = `
 duckplot
   .data({ ddb: db, table: "income" })
   .columns({ x: "month", y: ["consensus_income", "execution_income"]})
+  .config({yLabel: "Income"})
   .type("line")
 `;
 

@@ -1,3 +1,5 @@
+import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
+
 export type ChartType =
   | "dot"
   | "areaY"
@@ -56,4 +58,29 @@ export type DescribeSchema = ColumnSchema[];
 
 export interface TypesObject {
   [key: string]: BasicColumnType;
+}
+
+export interface DataConfig {
+  ddb: AsyncDuckDB;
+  table: string;
+}
+
+export interface ColumnsConfig {
+  x: string;
+  y: string;
+  series: string;
+  facet?: string;
+}
+
+export interface PlotConfig {
+  xLabel?: string;
+  yLabel?: string;
+  height?: number;
+  width?: number;
+  xLabelDisplay?: boolean;
+  yLabelDisplay?: boolean;
+  color?: string;
+  r?: number;
+  title?: string;
+  titleDisplay?: boolean;
 }

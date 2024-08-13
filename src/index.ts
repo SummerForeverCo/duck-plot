@@ -1,42 +1,23 @@
-import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
-import { ChartData, ChartType } from "./types";
+import {
+  ChartData,
+  ChartType,
+  ColumnsConfig,
+  DataConfig,
+  PlotConfig,
+} from "./types";
 import { prepareChartData } from "./prepareChartData";
 import {
   getCommonMarks,
   getFacetMarks,
+  getLegendOptions,
   getMarkOptions,
   getPlotMarkType,
   getSorts,
   getTopLevelPlotOptions,
 } from "./getPlotOptions";
 import { PlotFit } from "./plotFit";
-
-interface DataConfig {
-  ddb: AsyncDuckDB;
-  table: string;
-}
-
-interface ColumnsConfig {
-  x: string;
-  y: string;
-  series: string;
-  facet?: string;
-}
-
-interface PlotConfig {
-  xLabel?: string;
-  yLabel?: string;
-  height?: number;
-  width?: number;
-  xLabelDisplay?: boolean;
-  yLabelDisplay?: boolean;
-  color?: string;
-  r?: number;
-  title?: string;
-  titleDisplay?: boolean;
-}
 
 export class DuckPlot {
   private _data: DataConfig | null = null;
@@ -46,11 +27,15 @@ export class DuckPlot {
   private _jsdom: JSDOM | undefined;
   private _font: any;
   private _isServer: boolean;
+  private _document: Document;
 
   constructor({ jsdom, font }: { jsdom?: JSDOM; font?: any } = {}) {
     this._jsdom = jsdom;
     this._font = font;
     this._isServer = jsdom !== undefined;
+    this._document = this._isServer
+      ? this._jsdom!.window.document
+      : window.document;
   }
 
   data(): DataConfig;
@@ -191,6 +176,30 @@ export class DuckPlot {
     // TODO: add an option to NOT use PlotFit
     const plt = PlotFit(options, {}, this._font);
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    const legendOptions = getLegendOptions(
+      chartData,
+      currentColumns,
+      chartData?.labels?.series
+    );
+
+    if (currentColumns.includes("series")) {
+      const fo = this._document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "foreignObject"
+      );
+      // TODO set these as defaults
+      fo.setAttribute("width", `${this._config?.width || 500}`);
+      fo.setAttribute("height", `${this._config?.height || 500}`);
+      fo.setAttribute("x", `0`);
+      fo.setAttribute("y", `-25`);
+      const legend = Plot.legend({
+        ...legendOptions,
+        ...(document ? { document } : {}),
+      });
+      legend.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      fo.appendChild(legend);
+      plt?.appendChild(fo);
+    }
     return plt;
   }
 }
