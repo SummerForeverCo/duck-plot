@@ -176,30 +176,26 @@ export class DuckPlot {
     // TODO: add an option to NOT use PlotFit
     const plt = PlotFit(options, {}, this._font);
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-    const legendOptions = getLegendOptions(
-      chartData,
-      currentColumns,
-      chartData?.labels?.series
-    );
-
+    const wrapper = this._document.createElement("div");
+    // TODO: add an option to NOT show legend
     if (currentColumns.includes("series")) {
-      const fo = this._document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "foreignObject"
+      const legendOptions = getLegendOptions(
+        chartData,
+        currentColumns,
+        chartData?.labels?.series
       );
-      // TODO set these as defaults
-      fo.setAttribute("width", `${this._config?.width || 500}`);
-      fo.setAttribute("height", `${this._config?.height || 500}`);
-      fo.setAttribute("x", `0`);
-      fo.setAttribute("y", `-25`);
+
+      const div = this._document.createElement("div");
+      // TODO: don't use plot
       const legend = Plot.legend({
         ...legendOptions,
         ...(document ? { document } : {}),
       });
       legend.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-      fo.appendChild(legend);
-      plt?.appendChild(fo);
+      div.appendChild(legend);
+      wrapper?.appendChild(div);
     }
-    return plt;
+    wrapper.appendChild(plt);
+    return wrapper;
   }
 }

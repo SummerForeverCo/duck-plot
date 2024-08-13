@@ -11,6 +11,6 @@ for (const [name, plot] of Object.entries(plots)) {
   const duckPlot = new DuckPlot({ jsdom, font });
   console.log("generating", name);
   plot(duckPlot).then((plt) => {
-    fs.writeFileSync(`examples/server-output/${name}.svg`, plt[0].outerHTML);
+    fs.writeFileSync(`examples/server-output/${name}.html`, plt[0].outerHTML);
   });
 }
