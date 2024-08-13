@@ -146,8 +146,8 @@ export class DuckPlot {
       {
         color: this._config?.color,
         r: this._config?.r,
-        xLabel: this._config?.xLabel || chartData?.labels?.x,
-        yLabel: this._config?.yLabel || chartData?.labels?.y,
+        xLabel: this._config?.xLabel ?? chartData?.labels?.x,
+        yLabel: this._config?.yLabel ?? chartData?.labels?.y,
       },
       document === undefined // TODO: arg order / better varname
     );
@@ -159,8 +159,8 @@ export class DuckPlot {
       {
         width: this._config?.width || 500,
         height: this._config?.height || 500,
-        xLabel: this._config?.xLabel || chartData?.labels?.x,
-        yLabel: this._config?.yLabel || chartData?.labels?.y,
+        xLabel: this._config?.xLabel ?? chartData?.labels?.x,
+        yLabel: this._config?.yLabel ?? chartData?.labels?.y,
         xLabelDisplay: this._config?.xLabelDisplay ?? true,
         yLabelDisplay: this._config?.yLabelDisplay ?? true,
       }
