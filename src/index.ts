@@ -30,6 +30,8 @@ export class DuckPlot {
   private _font: any;
   private _isServer: boolean;
   private _document: Document;
+  private _newDataProps: boolean = true;
+  private _chartData: ChartData = [];
 
   constructor({ jsdom, font }: { jsdom?: JSDOM; font?: any } = {}) {
     this._jsdom = jsdom;
@@ -45,6 +47,7 @@ export class DuckPlot {
   data(config?: DataConfig): DataConfig | this {
     if (config) {
       this._data = config;
+      this._newDataProps = true; // when changed, we need to requery the data
       return this;
     }
     return this._data!;
@@ -55,6 +58,7 @@ export class DuckPlot {
   columns(config?: ColumnsConfig): ColumnsConfig | this {
     if (config) {
       this._columns = config;
+      this._newDataProps = true; // when changed, we need to requery the data
       return this;
     }
     return this._columns!;
@@ -107,6 +111,7 @@ export class DuckPlot {
   type(value?: ChartType): ChartType | this {
     if (value) {
       this._type = value;
+      this._newDataProps = true; // when changed, we need to requery the data
       return this;
     }
     return this._type!;
@@ -124,6 +129,7 @@ export class DuckPlot {
 
   async prepareChartData(): Promise<ChartData> {
     if (!this._data) throw new Error("Data configuration is not set");
+    this._newDataProps = false;
     return prepareChartData(
       this._data.ddb,
       this._data.table,
@@ -138,7 +144,10 @@ export class DuckPlot {
     const plotHeight = hasLegend
       ? (this._config?.height || 281) - 28 // legend height
       : this._config?.height || 281;
-    const chartData = await this.prepareChartData();
+    const chartData = this._newDataProps
+      ? await this.prepareChartData()
+      : this._chartData;
+    this._chartData = chartData;
     const document = this._isServer ? this._jsdom!.window.document : undefined;
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
     const sorts = getSorts(currentColumns, chartData);
