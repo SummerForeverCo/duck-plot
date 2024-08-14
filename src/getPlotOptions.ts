@@ -149,6 +149,7 @@ export function getTopLevelPlotOptions(
         ? { axis: null }
         : {
             label: !options.xLabelDisplay ? null : options.xLabel,
+            tickSize: options.hideTicks ? 0 : 6,
             labelArrow:
               !options.xLabelDisplay || !options.xLabel ? "none" : true,
             ...(currentColumns.includes("x") &&
@@ -165,6 +166,7 @@ export function getTopLevelPlotOptions(
       label: !options.yLabelDisplay ? null : options.yLabel,
       labelArrow: !options.yLabelDisplay || !options.yLabel ? "none" : true,
       labelAnchor: "top",
+      tickSize: options.hideTicks ? 0 : 6,
       ...(currentColumns.includes("y") &&
         getTickFormatter(
           data?.types?.y,

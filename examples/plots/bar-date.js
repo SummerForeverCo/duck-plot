@@ -5,7 +5,7 @@ const codeString = `duckplot
   .data({ ddb: db, table: "income" })
   .columns({ x: "month", y: "consensus_income", series: "month"})
   .type("barY")
-  .config({legendLabel: "Date"})
+  .config({legendLabel: "Date", hideTicks: true})
   `;
 
 export const barDate = (duckplot) =>

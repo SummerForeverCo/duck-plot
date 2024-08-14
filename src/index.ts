@@ -19,7 +19,7 @@ import {
   getTopLevelPlotOptions,
 } from "./getPlotOptions";
 import { PlotFit } from "./plotFit";
-import { Category, legendCategorical } from "./legendCategorical";
+import { legendCategorical } from "./legendCategorical";
 import "./legend.css";
 import { legendContinuous } from "./legendContinuous";
 
@@ -186,6 +186,7 @@ export class DuckPlot {
         yLabel: this._config?.yLabel ?? chartData?.labels?.y,
         xLabelDisplay: this._config?.xLabelDisplay ?? true,
         yLabelDisplay: this._config?.yLabelDisplay ?? true,
+        hideTicks: this._config?.hideTicks ?? false,
       }
     );
 
