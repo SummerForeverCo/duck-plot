@@ -136,8 +136,8 @@ export class DuckPlot {
     if (!this._type) return null;
     const hasLegend = this._columns?.series !== undefined;
     const plotHeight = hasLegend
-      ? (this._config?.height || 500) - 28 // legend height
-      : this._config?.height || 500;
+      ? (this._config?.height || 281) - 28 // legend height
+      : this._config?.height || 281;
     const chartData = await this.prepareChartData();
     const document = this._isServer ? this._jsdom!.window.document : undefined;
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
