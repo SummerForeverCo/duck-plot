@@ -47,7 +47,9 @@ export function renderLegend(
 
   const collapsedCategoriesDiv = document.createElement("div");
   collapsedCategoriesDiv.className = "dp-collapsed-categories dp-category";
-  collapsedCategoriesDiv.addEventListener("click", () => showPopover(width));
+  collapsedCategoriesDiv.addEventListener("click", () =>
+    showPopover(container, width)
+  );
 
   const popoverDiv = document.createElement("div");
   popoverDiv.className = "dp-popover";
@@ -121,8 +123,8 @@ function updateLegendDisplay(container: HTMLDivElement, font: any): void {
   }
 }
 
-function showPopover(width: number): void {
-  const popover = document.getElementById("dp-popover") as HTMLDivElement;
+function showPopover(container: HTMLDivElement, width: number): void {
+  const popover = container.querySelector(".dp-popover") as HTMLDivElement;
   if (popover.style.display === "block") {
     popover.style.display = "none";
   } else {
