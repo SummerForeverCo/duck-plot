@@ -3,7 +3,7 @@ import { renderPlot } from "../util/renderPlotClient.js";
 
 const codeString = `duckplot
   .data({ ddb: db, table: "income" })
-  .columns({ x: "month", y: "consensus_income"})
+  .columns({ x: "month", y: "consensus_income", series: "month"})
   .type("barY");`;
 
 export const barDate = (duckplot) =>

@@ -5,7 +5,7 @@ export interface Category {
   color: string;
 }
 
-export function renderLegend(
+export function legendCategorical(
   document: Document,
   categories: string[],
   width: number,

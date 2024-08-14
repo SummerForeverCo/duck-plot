@@ -12,14 +12,16 @@ import {
   getCommonMarks,
   getFacetMarks,
   getLegendOptions,
+  getLegendType,
   getMarkOptions,
   getPlotMarkType,
   getSorts,
   getTopLevelPlotOptions,
 } from "./getPlotOptions";
 import { PlotFit } from "./plotFit";
-import { Category, renderLegend } from "./legendCategorical";
+import { Category, legendCategorical } from "./legendCategorical";
 import "./legend.css";
+import { legendContinuous } from "./legendContinuous";
 
 export class DuckPlot {
   private _data: DataConfig | null = null;
@@ -140,10 +142,7 @@ export class DuckPlot {
 
   async render(): Promise<SVGElement | HTMLElement | null> {
     if (!this._type) return null;
-    const hasLegend = this._columns?.series !== undefined;
-    const plotHeight = hasLegend
-      ? (this._config?.height || 281) - 28 // legend height
-      : this._config?.height || 281;
+
     const chartData = this._newDataProps
       ? await this.prepareChartData()
       : this._chartData;
@@ -152,6 +151,12 @@ export class DuckPlot {
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
     const sorts = getSorts(currentColumns, chartData);
     const plotMarkType = getPlotMarkType(this._type);
+    const hasLegend = this._columns?.series !== undefined;
+    const legendType = getLegendType(chartData, currentColumns);
+    const legendHeight = legendType === "continuous" ? 50 : 28;
+    const plotHeight = hasLegend
+      ? (this._config?.height || 281) - legendHeight
+      : this._config?.height || 281;
     // TODO: maybe just pass plotConfig?
     const primaryMarkOptions = getMarkOptions(
       currentColumns,
@@ -178,6 +183,7 @@ export class DuckPlot {
         yLabelDisplay: this._config?.yLabelDisplay ?? true,
       }
     );
+
     const primaryMark = [Plot[plotMarkType](chartData, primaryMarkOptions)];
     const commonPlotMarks = getCommonMarks(this._type, currentColumns);
     const facetMarks = getFacetMarks(chartData, currentColumns);
@@ -187,24 +193,33 @@ export class DuckPlot {
       ...(document ? { document } : {}),
     };
 
-    // TODO: store as this._plot
+    // TODO: store as this._plot?
     // TODO: add an option to NOT use PlotFit
     const plt = PlotFit(options, {}, this._font);
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     const wrapper = this._document.createElement("div");
     // TODO: add an option to NOT show legend
-    if (currentColumns.includes("series")) {
+    if (hasLegend) {
+      let legend: HTMLDivElement;
       const div = this._document.createElement("div");
 
-      // TODO: continuous legend rendered with plot
-      const categories = [...new Set(chartData.map((d) => d.series))];
+      if (legendType === "categorical") {
+        const categories = [...new Set(chartData.map((d) => d.series))];
 
-      const legend = renderLegend(
-        this._document,
-        categories,
-        this._config?.width || 500,
-        this._font
-      );
+        legend = legendCategorical(
+          this._document,
+          categories,
+          this._config?.width || 500,
+          this._font
+        );
+      } else {
+        const legendOptions = getLegendOptions(
+          chartData,
+          currentColumns,
+          chartData.labels?.series // TODO: override with config
+        );
+        legend = legendContinuous(legendOptions);
+      }
       div.appendChild(legend);
       wrapper?.appendChild(div);
     }

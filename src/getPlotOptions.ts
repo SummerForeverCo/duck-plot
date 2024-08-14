@@ -241,7 +241,7 @@ export function getTickFormatter(
 export function getLegendOptions(
   chartData: any,
   currentColumns: string[],
-  legend?: string,
+  label?: string,
   colors?: string[]
 ): any {
   if (!chartData || !chartData.length || !currentColumns.includes("series")) {
@@ -249,17 +249,21 @@ export function getLegendOptions(
   }
   const range = colors ?? defaultOptions.colors;
   const values = chartData.map((d: any) => d.series);
+  const formatter =
+    chartData.types.series === "date" ? (d: any) => new Date(d) : (d: any) => d;
+
   return {
     color: {
-      // TODO: get label for categorical data, and test with continuous legend
-      label: legend,
+      label,
       ...(chartData.types.series === "string"
         ? // TODO: should we get these values with duckdb? might be too slow
           { range, type: "categorical", domain: [...new Set(values)] }
         : {
             scheme: "RdPu",
-            type: "linear",
-            domain: [Math.min(...values), Math.max(...values)],
+            domain: [
+              formatter(Math.min(...values)),
+              formatter(Math.max(...values)),
+            ],
           }),
     },
   };
