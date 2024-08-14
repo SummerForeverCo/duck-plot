@@ -303,7 +303,7 @@ export function getCommonMarks(
   return [
     Plot.frame({
       stroke: options.border,
-      fill: options.background,
+      // fill: options.background,
       rx: 4,
       ry: 4,
       ...(type === "barYGrouped" ? { facet: "super" } : {}),

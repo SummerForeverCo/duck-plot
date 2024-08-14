@@ -2,6 +2,19 @@ import { DuckPlot } from "../dist/duck-plot.es";
 import "../dist/style.css";
 import * as plots from "./plots/index.js";
 
+// Add a dark mode toggle
+const darkModeToggle = document.createElement("button");
+darkModeToggle.innerHTML = "Toggle Dark Mode";
+darkModeToggle.style.cursor = "pointer";
+let darkMode = false;
+darkModeToggle.onclick = () => {
+  darkMode = !darkMode;
+  const backgroundColor = darkMode ? "black" : "white";
+  const color = darkMode ? "white" : "black";
+  document.body.style.backgroundColor = backgroundColor;
+  document.body.style.color = color;
+};
+document.body.append(darkModeToggle);
 // Running async so the plots can be rendered in order
 async function renderPlots() {
   const sortedPlots = Object.entries(plots).sort(([a], [b]) =>
@@ -26,7 +39,7 @@ async function renderPlots() {
       wrapper.appendChild(plotWrapper);
 
       const pre = document.createElement("pre");
-      pre.style.backgroundColor = "#f4f4f4";
+      pre.style.border = "1px solid";
       pre.style.padding = "10px";
       pre.style.borderRadius = "5px";
       pre.style.whiteSpace = "break-spaces";
