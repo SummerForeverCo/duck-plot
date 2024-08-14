@@ -4,7 +4,9 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `duckplot
   .data({ ddb: db, table: "income" })
   .columns({ x: "month", y: "consensus_income", series: "month"})
-  .type("barY");`;
+  .type("barY")
+  .config({legendLabel: "Date"})
+  `;
 
 export const barDate = (duckplot) =>
   renderPlot(duckplot, "income.csv", codeString);

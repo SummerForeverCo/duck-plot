@@ -151,9 +151,14 @@ export class DuckPlot {
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
     const sorts = getSorts(currentColumns, chartData);
     const plotMarkType = getPlotMarkType(this._type);
-    const hasLegend = this._columns?.series !== undefined;
+    const legendDisplay = this._config?.legendDisplay ?? true;
+    const hasLegend = chartData.types?.series !== undefined && legendDisplay;
     const legendType = getLegendType(chartData, currentColumns);
-    const legendHeight = legendType === "continuous" ? 50 : 28;
+    const legendLabel = this._config?.legendLabel ?? chartData.labels?.series;
+
+    // Different legend height for continuous, leave space for categorical label
+    const legendHeight =
+      legendType === "continuous" ? 50 : legendLabel ? 44 : 28;
     const plotHeight = hasLegend
       ? (this._config?.height || 281) - legendHeight
       : this._config?.height || 281;
@@ -198,7 +203,6 @@ export class DuckPlot {
     const plt = PlotFit(options, {}, this._font);
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     const wrapper = this._document.createElement("div");
-    // TODO: add an option to NOT show legend
     if (hasLegend) {
       let legend: HTMLDivElement;
       const div = this._document.createElement("div");
@@ -209,14 +213,15 @@ export class DuckPlot {
         legend = legendCategorical(
           this._document,
           categories,
-          this._config?.width || 500,
+          this._config?.width || 500, // TODO: default width
+          legendLabel,
           this._font
         );
       } else {
         const legendOptions = getLegendOptions(
           chartData,
           currentColumns,
-          chartData.labels?.series // TODO: override with config
+          legendLabel
         );
         legend = legendContinuous(legendOptions);
       }

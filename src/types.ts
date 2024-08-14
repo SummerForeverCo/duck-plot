@@ -75,10 +75,12 @@ export interface ColumnsConfig {
 export interface PlotConfig {
   xLabel?: string;
   yLabel?: string;
-  height?: number;
+  legendLabel?: string;
   width?: number;
+  height?: number;
   xLabelDisplay?: boolean;
   yLabelDisplay?: boolean;
+  legendDisplay?: boolean;
   color?: string;
   r?: number;
   title?: string;

@@ -9,7 +9,8 @@ export function legendCategorical(
   document: Document,
   categories: string[],
   width: number,
-  font: any // for measuring text width on the server
+  label?: string,
+  font?: any // for measuring text width on the server
 ): HTMLDivElement {
   // Create a hidden container for measurement
   const hiddenContainer = document.createElement("div");
@@ -19,9 +20,16 @@ export function legendCategorical(
   hiddenContainer.style.overflow = "hidden";
   document.body.appendChild(hiddenContainer);
 
+  const legend = document.createElement("div");
   const container = document.createElement("div");
   container.style.maxWidth = `${width}px`;
   container.className = "dp-categories-container";
+  if (label) {
+    const legendLabel = document.createElement("div");
+    legendLabel.className = "dp-legend-label";
+    legendLabel.innerHTML = label || "";
+    legend.appendChild(legendLabel);
+  }
 
   const categoriesDiv = document.createElement("div");
   categoriesDiv.className = "dp-categories";
@@ -62,7 +70,8 @@ export function legendCategorical(
   hiddenContainer.appendChild(container);
   updateLegendDisplay(container, font);
   hiddenContainer.remove();
-  return container;
+  legend.appendChild(container);
+  return legend;
 }
 
 function updateLegendDisplay(container: HTMLDivElement, font: any): void {
