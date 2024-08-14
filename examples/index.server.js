@@ -28,7 +28,6 @@ const jsdom = new JSDOM(`
 
 for (const [name, plot] of Object.entries(plots)) {
   const duckPlot = new DuckPlot({ jsdom, font });
-  console.log("generating", name);
   plot(duckPlot).then((plt) => {
     // Clear the body content before generating a new plot
     jsdom.window.document.body.innerHTML = "";

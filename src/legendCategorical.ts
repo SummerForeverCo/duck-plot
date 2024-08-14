@@ -130,12 +130,5 @@ function showPopover(width: number): void {
     popover.style.position = "absolute";
     popover.style.left = `${width}px`;
     popover.style.top = `0px`;
-    console.log(popover);
   }
-}
-
-function hidePopover(): void {
-  console.log("HIDE POPEVER");
-  const popover = document.getElementById("dp-popover") as HTMLDivElement;
-  // popover.style.display = "none";
 }

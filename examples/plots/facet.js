@@ -3,7 +3,8 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `
 duckplot
   .data({ ddb: db, table: "income" })
-  .columns({ x: "month", y: "consensus_income", facet: "validator"})
+  .columns({ x: "month", y: "consensus_income", facet: "validator", series: "validator"})
+  .config({width: 600, height: 800})
   .type("line")
 `;
 

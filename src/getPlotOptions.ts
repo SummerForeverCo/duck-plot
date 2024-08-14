@@ -183,7 +183,7 @@ export function getTopLevelPlotOptions(
     style: {
       overflow: "visible",
     },
-    ...(sorts.facet
+    ...(currentColumns.includes("facet")
       ? { fy: { ...sorts.facet, axis: null, label: null }, insetTop: 12 }
       : {}),
     ...(currentColumns.includes("series")
