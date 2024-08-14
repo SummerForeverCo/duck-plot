@@ -62,7 +62,7 @@ duckPlot
   .data({ ddb: db, table: "my_table" })
   .columns({ x: "date", y: "cost", series: "company", facet: "department" })
   .type("line");
-const svg = await duckPlot.plot();
+const svg = await duckPlot.render();
 document.body.appendChild(svg);
 ```
 

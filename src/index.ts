@@ -132,7 +132,7 @@ export class DuckPlot {
     );
   }
 
-  async plot(): Promise<SVGElement | HTMLElement | null> {
+  async render(): Promise<SVGElement | HTMLElement | null> {
     if (!this._type) return null;
     const hasLegend = this._columns?.series !== undefined;
     const plotHeight = hasLegend
