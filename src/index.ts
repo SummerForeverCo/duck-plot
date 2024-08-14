@@ -134,6 +134,10 @@ export class DuckPlot {
 
   async plot(): Promise<SVGElement | HTMLElement | null> {
     if (!this._type) return null;
+    const hasLegend = this._columns?.series !== undefined;
+    const plotHeight = hasLegend
+      ? (this._config?.height || 500) - 28 // legend height
+      : this._config?.height || 500;
     const chartData = await this.prepareChartData();
     const document = this._isServer ? this._jsdom!.window.document : undefined;
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
@@ -158,7 +162,7 @@ export class DuckPlot {
       this._type,
       {
         width: this._config?.width || 500,
-        height: this._config?.height || 500,
+        height: plotHeight,
         xLabel: this._config?.xLabel ?? chartData?.labels?.x,
         yLabel: this._config?.yLabel ?? chartData?.labels?.y,
         xLabelDisplay: this._config?.xLabelDisplay ?? true,
