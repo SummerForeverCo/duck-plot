@@ -3,11 +3,11 @@ import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
 import type { BasicColumnType, ChartData, ChartType } from "./types";
 export const colors = [
-  "hsla(317 100% 50%)", // pink
-  "hsla(194 100% 50%)", // blue
-  "hsla(54 100% 50%)", // yellow
-  "hsla(137 87% 54%)", // green
-  "hsla(22 100% 62%)", // orange
+  "rgba(255, 0, 184, 1)", // pink (hsla(317, 100%, 50%))
+  "rgba(0, 183, 255, 1)", // blue (hsla(194, 100%, 50%))
+  "rgba(255, 237, 0, 1)", // yellow (hsla(54, 100%, 50%))
+  "rgba(0, 202, 99, 1)", // green (hsla(137, 87%, 54%))
+  "rgba(255, 83, 0, 1)", // orange (hsla(22, 100%, 62%))
 ];
 const borderOptions = {
   background: "hsla( 0 0% 100%)",
@@ -149,6 +149,8 @@ export function getTopLevelPlotOptions(
         ? { axis: null }
         : {
             label: !options.xLabelDisplay ? null : options.xLabel,
+            labelArrow:
+              !options.xLabelDisplay || !options.xLabel ? "none" : true,
             ...(currentColumns.includes("x") &&
               getTickFormatter(
                 data?.types?.x,
@@ -161,6 +163,7 @@ export function getTopLevelPlotOptions(
           },
     y: {
       label: !options.yLabelDisplay ? null : options.yLabel,
+      labelArrow: !options.yLabelDisplay || !options.yLabel ? "none" : true,
       labelAnchor: "top",
       ...(currentColumns.includes("y") &&
         getTickFormatter(

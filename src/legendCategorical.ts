@@ -8,7 +8,8 @@ export interface Category {
 export function renderLegend(
   document: Document,
   categories: string[],
-  width: number
+  width: number,
+  font: any // for measuring text width on the server
 ): HTMLDivElement {
   // Create a hidden container for measurement
   const hiddenContainer = document.createElement("div");
@@ -57,12 +58,23 @@ export function renderLegend(
   container.appendChild(popoverDiv);
 
   hiddenContainer.appendChild(container);
-  updateLegendDisplay(container);
+  updateLegendDisplay(container, font);
   hiddenContainer.remove();
   return container;
 }
 
-function updateLegendDisplay(container: HTMLDivElement): void {
+function updateLegendDisplay(container: HTMLDivElement, font: any): void {
+  // Measurement differes between server and client
+  const getWidth = function (element: HTMLDivElement): number {
+    if (font && font.getAdvanceWidth) {
+      const width =
+        font.getAdvanceWidth(element.textContent || "", 10) + 12 + 12;
+      return width;
+    } else {
+      const width = element.offsetWidth;
+      return width;
+    }
+  };
   const categoriesDiv = container.querySelector(
     ".dp-categories"
   ) as HTMLDivElement;
@@ -87,7 +99,7 @@ function updateLegendDisplay(container: HTMLDivElement): void {
 
   // Calculate how many categories can fit
   categoryDivs.forEach((category, i) => {
-    categoriesWidth += category.offsetWidth + 10; // Adding gap
+    categoriesWidth += getWidth(category) + 10; // Adding gap
     if (categoriesWidth > containerWidth) {
       // category.style.display = "none";
 

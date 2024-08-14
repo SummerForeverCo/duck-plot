@@ -189,7 +189,8 @@ export class DuckPlot {
       const legend = renderLegend(
         this._document,
         categories,
-        this._config?.width || 500
+        this._config?.width || 500,
+        this._font
       );
       div.appendChild(legend);
       wrapper?.appendChild(div);
