@@ -13,6 +13,7 @@ import {
   checkDistinct,
   columnTypes,
 } from "./helpers";
+import { Database } from "duckdb-async";
 
 export function getUniqueName() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -20,7 +21,7 @@ export function getUniqueName() {
 
 // Query the local duckdb database and format the result based on the settings
 export async function prepareChartData(
-  ddb: AsyncDuckDB,
+  ddb: AsyncDuckDB | Database,
   tableName: string | undefined,
   config: Config,
   type: ChartType

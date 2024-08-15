@@ -1,4 +1,4 @@
-import { DuckPlot } from "../dist/duck-plot.cjs";
+import { DuckPlot } from "../dist/index.cjs";
 import { JSDOM } from "jsdom";
 import fs from "fs";
 import path from "path";
@@ -28,13 +28,26 @@ const jsdom = new JSDOM(`
 
 for (const [name, plot] of Object.entries(plots)) {
   const duckPlot = new DuckPlot({ jsdom, font });
-  plot(duckPlot).then((plt) => {
+
+  try {
+    // Wrap the plot function call and the rest of the operations in a try block
+    const plt = await plot(duckPlot);
+
     // Clear the body content before generating a new plot
     jsdom.window.document.body.innerHTML = "";
-    jsdom.window.document.body.appendChild(plt[0]);
+
+    // Append the plot to the body
+    if (plt && plt[0]) {
+      jsdom.window.document.body.appendChild(plt[0]);
+    } else {
+      throw new Error("Plot rendering returned an unexpected result");
+    }
+
     // Write the generated HTML content
     const outputPath = `examples/server-output/${name}.html`;
     fs.writeFileSync(outputPath, jsdom.serialize());
     console.log(`Generated file: ${outputPath}`);
-  });
+  } catch (error) {
+    console.error(`Error processing plot '${name}':`, error);
+  }
 }

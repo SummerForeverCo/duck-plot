@@ -1,15 +1,19 @@
 import type { AsyncDuckDB, AsyncDuckDBConnection } from "@duckdb/duckdb-wasm";
+import { Database } from "duckdb-async";
 
-export const runQuery = async (db: AsyncDuckDB, sql: string): Promise<any> => {
+export const runQuery = async (
+  db: AsyncDuckDB | Database,
+  sql: string
+): Promise<any> => {
   if (typeof window !== "undefined") {
     // Client-side
-    return runQueryClient(db, sql);
+    return runQueryClient(db as AsyncDuckDB, sql);
   } else {
     // Server-side
-    return runQueryServer(db, sql);
+    return runQueryServer(db as Database, sql);
   }
 };
-const runQueryServer = async (db: any, sql: string): Promise<any[]> => {
+const runQueryServer = async (db: Database, sql: string): Promise<any[]> => {
   return new Promise((resolve, reject) => {
     db.all(sql, (err: string, res: any[]) => {
       if (err) {

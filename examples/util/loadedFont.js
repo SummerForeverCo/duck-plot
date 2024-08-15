@@ -1,17 +1,11 @@
-// This loads a font file so that the opentype library can measure text width
-// (see src/PlotFit.js)
 import { readFileSync } from "fs";
-import { dirname, resolve } from "path";
-import { fileURLToPath } from "url";
-
+import { resolve } from "path";
 import opentype from "opentype.js";
 
-// Convert the module's URL to a file path
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 const loadSync = (relativePath) => {
-  const absolutePath = resolve(__dirname, relativePath);
+  // Resolve the absolute path based on the current file's directory
+  const absolutePath = resolve(process.cwd(), relativePath);
+
   const buffer = readFileSync(absolutePath);
   // Convert the buffer to an ArrayBuffer
   const arrayBuffer = buffer.buffer.slice(
@@ -20,4 +14,6 @@ const loadSync = (relativePath) => {
   );
   return opentype.parse(arrayBuffer);
 };
-export const font = loadSync("../fonts/abc-favorit/ABCFavorit-Medium.otf");
+
+// Adjust the relative path to be based on the project's root directory
+export const font = loadSync("public/fonts/abc-favorit/ABCFavorit-Medium.otf");

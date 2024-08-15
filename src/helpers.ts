@@ -9,9 +9,10 @@ import {
   Indexable,
   TypesObject,
 } from "./types";
+import { Database } from "duckdb-async";
 
 export async function checkDistinct(
-  duckDB: AsyncDuckDB,
+  duckDB: AsyncDuckDB | Database,
   tableName: string,
   cols: string | undefined | (string | undefined)[]
 ) {
@@ -31,7 +32,7 @@ export function allowAggregation(chartType?: ChartType) {
 }
 
 export const columnTypes = async (
-  db: AsyncDuckDB,
+  db: AsyncDuckDB | Database,
   name: string
 ): Promise<Map<string, string>> => {
   const types = await runQuery(

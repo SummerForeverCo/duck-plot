@@ -31,13 +31,14 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
     "vite": "^5.3.5",
+    "vite-plugin-dts": "^4.0.3",
     "vitest": "^2.0.5"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
-  "main": "dist/duck-plot.cjs",
-  "module": "dist/duck-plot.es",
+  "main": "dist/index.cjs",
+  "module": "dist/index.es",
   "types": "dist/index.d.ts",
   "files": [
     "dist"

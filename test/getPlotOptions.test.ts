@@ -198,7 +198,6 @@ describe("getTopLevelPlotOptions", () => {
   it("should handle facet sort option and insetTop if provided", () => {
     const sorts = { facet: { domain: ["a", "b", "c"] } };
     const result = getTopLevelPlotOptions([], ["facet"], sorts, "barY", {});
-    console.log("RESULT", result);
     expect(result.fy).toEqual(
       expect.objectContaining({
         domain: ["a", "b", "c"],

@@ -3,7 +3,8 @@
     "target": "ESNext",
     "module": "ESNext",
     "declaration": true,
-    "outDir": "dist",
+    "emitDeclarationOnly": true, // Only emit type declarations
+    "outDir": "dist", // Output to the dist directory
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,

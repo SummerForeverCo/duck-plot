@@ -1,4 +1,5 @@
 import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
+import { Database } from "duckdb-async";
 
 export type ChartType =
   | "dot"
@@ -61,7 +62,7 @@ export interface TypesObject {
 }
 
 export interface DataConfig {
-  ddb: AsyncDuckDB;
+  ddb: AsyncDuckDB | Database;
   table: string;
 }
 
@@ -81,7 +82,7 @@ export interface PlotConfig {
   xLabelDisplay?: boolean;
   yLabelDisplay?: boolean;
   legendDisplay?: boolean;
-  hideTicks: boolean;
+  hideTicks?: boolean;
   color?: string;
   r?: number;
   // TODO: support these?

@@ -1,4 +1,4 @@
-import { DuckPlot } from "../dist/duck-plot.es";
+import { DuckPlot } from "../dist/index.es";
 import "../dist/style.css";
 import * as plots from "./plots/index.js";
 

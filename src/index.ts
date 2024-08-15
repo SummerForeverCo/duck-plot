@@ -224,7 +224,10 @@ export class DuckPlot {
           currentColumns,
           legendLabel
         );
-        legend = legendContinuous(legendOptions);
+        legend = legendContinuous({
+          ...legendOptions,
+          ...(document ? { document } : {}),
+        });
       }
       div.appendChild(legend);
       wrapper?.appendChild(div);

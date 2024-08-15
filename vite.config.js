@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import path from "path";
+import dts from "vite-plugin-dts";
 
 export default defineConfig(({ command, mode }) => {
   if (mode === "test") {
@@ -20,14 +21,21 @@ export default defineConfig(({ command, mode }) => {
     return {
       build: {
         lib: {
-          entry: path.resolve(__dirname, "src/index.ts"), // Your entry file
-          name: "DuckPlot", // Global name for UMD/IIFE builds (not used in CJS/ES)
-          formats: ["cjs", "es"], // Generate both CommonJS and ES modules
-          fileName: (format) => `duck-plot.${format}`, // Output filenames
+          entry: path.resolve(__dirname, "src/index.ts"),
+          name: "DuckPlot",
+          formats: ["cjs", "es"],
+          fileName: (format) => `index.${format}`,
         },
-        minify: false, // Disable minification for easier inspection
-        emptyOutDir: true, // Clean the dist directory before building
+        minify: false,
+        emptyOutDir: true,
       },
+      plugins: [
+        dts({
+          outputDir: "dist",
+          rollupTypes: true,
+          insertTypesEntry: true, // Add this to create an entry point for types
+        }),
+      ],
     };
   }
 });
