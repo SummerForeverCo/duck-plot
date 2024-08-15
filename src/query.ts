@@ -18,11 +18,11 @@ export function omit(obj: any, keys: Array<string | number>): any {
 export function getTransformType(type: ChartType, { x, y, series }: Config) {
   if (type === "barX") {
     if (Array.isArray(x) && x.length > 1) {
-      return series ? "unPivotWithSeries" : "unPivot";
+      return series?.length ? "unPivotWithSeries" : "unPivot";
     }
   } else {
     if (Array.isArray(y) && y.length > 1) {
-      return series ? "unPivotWithSeries" : "unPivot";
+      return series?.length ? "unPivotWithSeries" : "unPivot";
     }
   }
   return "standard";
@@ -87,7 +87,7 @@ export function getUnpivotQuery(
   const facetStr = facet ? maybeConcatCols(facet, "facet,") : "";
 
   return `${createStatment} ${selectStr}, ${facetStr} key AS series FROM "${tableName}"
-        UNPIVOT (value FOR key IN (${keysStr}))`;
+        UNPIVOT (value FOR key IN (${keysStr}));`;
 }
 
 export function getUnpivotWithSeriesQuery(

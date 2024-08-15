@@ -1,7 +1,10 @@
 import { defineConfig } from "vite";
 import path from "path";
 
-export default defineConfig(({ command }) => {
+export default defineConfig(({ command, mode }) => {
+  if (mode === "test") {
+    return {};
+  }
   if (command === "serve") {
     return {
       root: path.resolve(__dirname, "examples"),
