@@ -47,7 +47,7 @@ This demonstrates the major features of the library:
 - Supports both **client and server** environments
 - Uses a **method chaining** API for easy configuration
 
-## Installation <span style="color: red">NPM build not ready yet</span>
+## Installation (⚠️ NPM build not actually ready yet)
 
 You can install DuckPlot via npm:
 
