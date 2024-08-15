@@ -150,8 +150,9 @@ export function getTopLevelPlotOptions(
         : {
             label: !options.xLabelDisplay ? null : options.xLabel,
             tickSize: options.hideTicks ? 0 : 6,
-            labelArrow:
-              !options.xLabelDisplay || !options.xLabel ? "none" : true,
+            ...(!options.xLabelDisplay || !options.xLabel
+              ? { labelArrow: "none" }
+              : {}),
             ...(currentColumns.includes("x") &&
               getTickFormatter(
                 data?.types?.x,

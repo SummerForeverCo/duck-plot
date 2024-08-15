@@ -1,4 +1,4 @@
-import { DuckPlot } from "../dist/duck-plot.cjs";
+import { DuckPlot } from "../dist/index.cjs";
 import { JSDOM } from "jsdom";
 import fs from "fs";
 import path from "path";
@@ -45,6 +45,15 @@ async function makePlots() {
   });
   const labeled = await duckPlot.render();
   savePlot(jsdom, labeled, "labeled");
+
+  duckPlot
+    .data({ ddb: db, table: "taxi" }) // DuckDB instance and table name
+    .columns({ x: "Borough", y: "Count", series: "Borough" }) // Columns of interest
+    .config({ width: 400, xLabel: null })
+    .type("barY");
+
+  const series = await duckPlot.render();
+  savePlot(jsdom, series, "series");
 }
 makePlots();
 

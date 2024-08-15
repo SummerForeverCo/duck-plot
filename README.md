@@ -23,24 +23,31 @@ Imagine you have this table of taxi rides in your DuckDB instance:
 
 To generate this chart of the number of taxi rides per borough, you can use
 DuckPlot:
-![Bar chart of taxi rides by borough](public/bar.svg)
 
-```javascript
+<div style="display: flex; align-items: flex-start;">
+  <img src="public/bar.png" alt="Bar chart of taxi rides by borough" style="width: 50%;"/>
+  <pre style="margin-left: 20px;">
+<code>
 duckplot
-  .data({ ddb: db, table: "income" }) // DuckDB instance and table name
-  .columns({ x: "month", y: "consensus_income" }) // Columns of interest
-  .type("barY") // Plot type
-  .plot(); // Generate the plot
-```
+  .data({ ddb: db, table: "taxi" }) // DuckDB instance and table name
+  .columns({ x: "Borough", y: "Count", series: "Borough" }) // Columns of interest
+  .type("barY") // Observable Plot mark type
+  .render(); // Generate the plot
+</code>
+  </pre>
+</div>
 
 This demonstrates the major features of the library:
 
-- Performs **data transformations** and aggregations with DuckDB before plotting
+- Performs **data transformations** and aggregations with DuckDB before
+  rendering
+- Automatically **adjusts the margins** and axis ticks labels for better
+  readability
+- Creates **custom legends** for categorical data
+- Supports both **client and server** environments
 - Uses a **method chaining** API for easy configuration
-- Automatically **adjusts the margins** and axis ticks labels for better readability
-- Supports both server and client environments
 
-## Installation
+## Installation <span style="color: red">NPM build not ready yet</span>
 
 You can install DuckPlot via npm:
 
@@ -66,80 +73,79 @@ const svg = await duckPlot.render();
 document.body.appendChild(svg);
 ```
 
-### API
+### DuckPlot Class Methods
 
-#### `data(config: DataConfig): this`
+The `DuckPlot` class offers a set of methods to configure and render your plots effectively. Below are the primary methods available:
 
-Sets the DuckDB instance and table name.
+**`.data({ddb: AsyncDuckDB, table: string})`**
 
-- `config`: `{ ddb: AsyncDuckDB, table: string }`
+- **Description:** Sets the DuckDB instance and the table name.
+- **Parameters:**
+  - `ddb`: The instance of `AsyncDuckDB`.
+  - `table`: The name of the table to be used for plotting.
 
-#### `columns(config: ColumnsConfig): this`
+**`.columns({x: string, y: string, series?: string, facet?: string})`**
 
-Sets the columns of interest for the plot.
+- **Description:** Defines the columns of interest for the plot.
+- **Parameters:**
+  - `x`: The column to be used for the x-axis.
+  - `y`: The column to be used for the y-axis.
+  - `series` _(optional)_: The column used to group data by series.
+  - `facet` _(optional)_: The column used for faceting the plot.
 
-- `config`: `{ x: string, y: string, series: string, facet?: string }`
+**`.type("line" | "barY" | "areaY" | "dot" | "barX")`**
 
-#### `x(value?: string): string | this`
+- **Description:** Sets the type of plot. Options correspond to Observable Plot mark types.
+- **Parameters:**
+  - The type of plot, chosen from `"line"`, `"barY"`, `"areaY"`, `"dot"`, or `"barX"`.
 
-Gets or sets the x-axis column.
+**`.config({xLabel?: string, yLabel?: string, legendLabel?: string, width?: number, height?: number, xLabelDisplay?: boolean, yLabelDisplay?: boolean, legendDisplay?: boolean, hideTicks?: boolean, color?: string, r?: number})`**
 
-- `value`: `string` (optional)
+- **Description:** Configures various settings for the plot.
+- **Parameters:**
+  - `xLabel` _(optional)_: Label for the x-axis.
+  - `yLabel` _(optional)_: Label for the y-axis.
+  - `legendLabel` _(optional)_: Label for the legend.
+  - `width` _(optional)_: Width of the plot.
+  - `height` _(optional)_: Height of the plot.
+  - `xLabelDisplay` _(optional)_: Boolean to display the x-axis label.
+  - `yLabelDisplay` _(optional)_: Boolean to display the y-axis label.
+  - `legendDisplay` _(optional)_: Boolean to display the legend.
+  - `hideTicks` _(optional)_: Boolean to hide axis ticks.
+  - `color` _(optional)_: Color used for the plot elements.
+  - `r` _(optional)_: Radius for dot elements in the plot.
 
-#### `y(value?: string): string | this`
+**`.render()`**
 
-Gets or sets the y-axis column.
+- **Description:** Prepares and generates the plot.
+- **Returns:** An HTML `Div` element containing the rendered plot.
 
-- `value`: `string` (optional)
-
-#### `series(value?: string): string | this`
-
-Gets or sets the series column.
-
-- `value`: `string` (optional)
-
-#### `type(value?: ChartType): ChartType | this`
-
-Gets or sets the plot type.
-
-- `value`: `"line" | "bar" | "dot" | "areaY" | "barX" | "barY"` (optional)
-
-#### `config(config: PlotConfig): this`
-
-Sets the configuration for the plot.
-
-- `config`: `{ xLabel?: string, yLabel?: string, height?: number, width?: number, xDisplay?: boolean, yDisplay?: boolean, titleDisplay?: boolean }`
-
-#### `plot(): Promise<SVGSVGElement | HTMLElement | null>`
-
-Prepares and generates the plot. Returns an SVG element or an HTMLElement depending on the environment.
-
-### Conditional Server and Client Code
-
-To handle both server and client environments, check for the presence of `window` to distinguish between Node.js and browser environments:
+The `.data`, `.columns`, `.type`, and `.config` methods are **getter**/**setter** methods, meaning they can be used to both set and get the values. For example, you can use the `.data` method to set the data source and the `.data` method without any parameters to get the data source.
 
 ```javascript
-const isServer = typeof window === "undefined";
+const duckPlot = new DuckPlot().data({ ddb: db, table: "my_table" }); // sets the data source
 
-if (isServer) {
-  const fs = require("fs");
-  await fs.promises.writeFile("plot.svg", svg.outerHTML, "utf8");
-  console.log("SVG file has been saved.");
-} else {
-  document.body.appendChild(svg);
-}
+duckPlot.data(); // gets the data source
 ```
 
 ## Data Transformations
 
+TODO: Add a description of the data transformations that DuckPlot can perform.
+
+**Note**: Data transformations are only re-run when necessary, so if you update
+the `.config` and re-render the plot, the data transformations will not be re-run.
+
 ## Development
 
-After making changes to any `src/` files, run `npm run build` to compile the
-TypeScript code and view your examples:
+To locally develop DuckPlot, clone the repository and install the dependencies
+with `npm install`.
 
 - To view examples in the browser, run `npm run dev` and open `http://localhost:8008/`
 - To view examples in the server, run `npm run dev-server` and view
-  the outputted `.svg` files in `examples/server-output`
+  the outputted `.html` files in `examples/server-output`
+
+- For an example creating multiple plots from a single data source, run `npm run
+dev-multi-chart`, and see the outputted files in `examples/server-output`
 
 Examples can be easily added to the `examples/` directory (and need to be
 exported by the `examples/plots/index.js` file) to test new features. For
@@ -161,10 +167,18 @@ export const line = (duckplot) =>
 
 If you're actively developing DuckPlot, you can run `npm run watch:build` to watch for changes in the `src/` directory and automatically recompile the TypeScript code.
 
-## Implementation
+## Testing
+
+Run `npm run test` to test
+
+## Implementation notes
 
 Because DuckDB has different APIs for
 [WASM](https://duckdb.org/docs/api/wasm/overview.html) and [Node.js](https://duckdb.org/docs/api/nodejs/overview), DuckPlot uses a conditional import to load the appropriate DuckDB API based on the environment.
+
+Performing axis adjustments on the server requires measuring the text width of
+the axis labels. This is done using `opentype.js`. You can pass in your own font
+for more precise measurements.
 
 ## License
 
