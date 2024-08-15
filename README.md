@@ -24,9 +24,9 @@ Imagine you have this table of taxi rides in your DuckDB instance:
 To generate this chart of the number of taxi rides per borough, you can use
 DuckPlot:
 
-<div style="display: flex; align-items: flex-start;">
-  <img src="public/bar.png" alt="Bar chart of taxi rides by borough" style="width: 50%;"/>
-  <pre style="margin-left: 20px;">
+<div style="display: flex; align-items: flex-start; flex-wrap: no-wrap;">
+  <img src="public/bar.png" alt="Bar chart of taxi rides by borough" width="300px"/>
+  <pre style="margin-left: 10px;">
 <code>
 duckplot
   .data({ ddb: db, table: "taxi" }) // DuckDB instance and table name
