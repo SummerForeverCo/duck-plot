@@ -39,9 +39,8 @@ async function makePlots() {
 
   // Update the config
   duckPlot.config({
-    xLabel: null,
-    yLabel: "Count",
-    title: "Taxi rides by borough",
+    xLabelDisplay: false,
+    yLabel: "Taxi rides by borough",
   });
   const labeled = await duckPlot.render();
   savePlot(jsdom, labeled, "labeled");
