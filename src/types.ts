@@ -61,11 +61,6 @@ export interface TypesObject {
   [key: string]: BasicColumnType;
 }
 
-export interface DataConfig {
-  ddb: AsyncDuckDB | Database;
-  table: string;
-}
-
 export interface ColumnsConfig {
   x: string;
   y: string;

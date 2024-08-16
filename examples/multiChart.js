@@ -27,11 +27,11 @@ const jsdom = new JSDOM(`
 <body></body>`);
 
 async function makePlots() {
-  const duckPlot = new DuckPlot({ jsdom, font });
   const db = await createDb("taxi.csv");
+  const duckPlot = new DuckPlot(db, { jsdom, font });
 
   duckPlot
-    .data({ ddb: db, table: "taxi" })
+    .table("taxi")
     .columns({ x: "date", y: "count", series: "Borough" })
     .type("line");
   const line = await duckPlot.render();
@@ -46,7 +46,7 @@ async function makePlots() {
   savePlot(jsdom, labeled, "labeled");
 
   duckPlot
-    .data({ ddb: db, table: "taxi" }) // DuckDB instance and table name
+    .table("taxi")
     .columns({ x: "Borough", y: "Count", series: "Borough" }) // Columns of interest
     .config({ width: 400, xLabel: null })
     .type("barY");

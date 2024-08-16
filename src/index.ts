@@ -1,12 +1,6 @@
 import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
-import {
-  ChartData,
-  ChartType,
-  ColumnsConfig,
-  DataConfig,
-  PlotConfig,
-} from "./types";
+import { ChartData, ChartType, ColumnsConfig, PlotConfig } from "./types";
 import { prepareChartData } from "./prepareChartData";
 import {
   getCommonMarks,
@@ -22,9 +16,11 @@ import { PlotFit } from "./plotFit";
 import { legendCategorical } from "./legendCategorical";
 import "./legend.css";
 import { legendContinuous } from "./legendContinuous";
+import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 
 export class DuckPlot {
-  private _data: DataConfig | null = null;
+  private _ddb: AsyncDuckDB | null = null;
+  private _table: string | null = null;
   private _columns: ColumnsConfig | null = null;
   private _type: ChartType | null = null;
   private _config: PlotConfig | null = null;
@@ -35,7 +31,11 @@ export class DuckPlot {
   private _newDataProps: boolean = true;
   private _chartData: ChartData = [];
 
-  constructor({ jsdom, font }: { jsdom?: JSDOM; font?: any } = {}) {
+  constructor(
+    ddb: AsyncDuckDB,
+    { jsdom, font }: { jsdom?: JSDOM; font?: any } = {}
+  ) {
+    this._ddb = ddb;
     this._jsdom = jsdom;
     this._font = font;
     this._isServer = jsdom !== undefined;
@@ -44,20 +44,23 @@ export class DuckPlot {
       : window.document;
   }
 
-  data(): DataConfig;
-  data(config: DataConfig): this;
-  data(config?: DataConfig): DataConfig | this {
-    if (config) {
-      this._data = config;
-      this._newDataProps = true; // when changed, we need to requery the data
+  table(): string;
+  table(table: string): this;
+  table(table?: string): string | this {
+    if (table) {
+      if (table !== this._table) {
+        this._table = table;
+        this._newDataProps = true; // when changed, we need to requery the data
+      }
       return this;
     }
-    return this._data!;
+    return this._table!;
   }
 
   columns(): ColumnsConfig;
   columns(config: ColumnsConfig): this;
   columns(config?: ColumnsConfig): ColumnsConfig | this {
+    // Check for no changes
     if (config) {
       this._columns = config;
       this._newDataProps = true; // when changed, we need to requery the data
@@ -130,11 +133,12 @@ export class DuckPlot {
   }
 
   async prepareChartData(): Promise<ChartData> {
-    if (!this._data) throw new Error("Data configuration is not set");
+    if (!this._ddb || !this._table)
+      throw new Error("Database and table not set");
     this._newDataProps = false;
     return prepareChartData(
-      this._data.ddb,
-      this._data.table,
+      this._ddb,
+      this._table,
       this._columns!,
       this._type!
     );

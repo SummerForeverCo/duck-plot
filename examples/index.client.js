@@ -22,9 +22,8 @@ async function renderPlots() {
   );
 
   for (const [name, plot] of sortedPlots) {
-    const duckPlot = new DuckPlot();
     try {
-      const plt = await plot(duckPlot);
+      const plt = await plot();
       const label = document.createElement("h2");
       label.innerHTML = name;
       label.style.fontFamily = "sans-serif";

@@ -29,7 +29,7 @@ DuckPlot:
   <pre style="margin-left: 10px;">
 <code>
 duckplot
-  .data({ ddb: db, table: "taxi" }) // DuckDB instance and table name
+  .table("taxi")
   .columns({ x: "Borough", y: "Count", series: "Borough" }) // Columns of interest
   .type("barY") // Observable Plot mark type
   .render(); // Generate the plot
@@ -63,10 +63,10 @@ Here’s a basic example of how to use DuckPlot to create a line plot.
 
 ```javascript
 import { DuckPlot } from "duck-plot";
-// Assumes you have a DuckDB instance named `db` and a table named `my_table`
-const duckPlot = new DuckPlot();
+// Assumes you have a DuckDB instance named `dbd` and a table named `my_table`
+const duckPlot = new DuckPlot(ddb);
 duckPlot
-  .data({ ddb: db, table: "my_table" })
+  .table("my_table")
   .columns({ x: "date", y: "cost", series: "company", facet: "department" })
   .type("line");
 const svg = await duckPlot.render();
@@ -75,13 +75,36 @@ document.body.appendChild(svg);
 
 ### DuckPlot Class Methods
 
-The `DuckPlot` class offers a set of methods to configure and render your plots effectively. Below are the primary methods available:
+**Constructor Arguments:**
 
-**`.data({ddb: AsyncDuckDB, table: string})`**
+```javascript
+constructor(
+  ddb: AsyncDuckDB,
+  { jsdom, font }: { jsdom?: JSDOM; font?: any } = {}
+)
+```
 
-- **Description:** Sets the DuckDB instance and the table name.
+- **`ddb: AsyncDuckDB`**
+
+  - **Description:** The DuckDB instance to be used for querying and data manipulation.
+  - **Type:** `AsyncDuckDB`
+
+- **`{ jsdom, font }: { jsdom?: JSDOM; font?: any }`**
+  - **Description:** An optional configuration object for server-side rendering.
+  - **Parameters:**
+    - **`jsdom` _(optional)_**: An instance of JSDOM for creating a simulated DOM environment when running on the server.
+      - **Type:** `JSDOM`
+    - **`font` _(optional)_**: An opentype.js loaded font object used for
+      measuring text length on the server
+      - **Type:** `any`
+
+The `DuckPlot` class offers a set of methods to configure and render your plots
+effectively. Below are the primary methods available:
+
+**`.table(string?)`**
+
+- **Description:** Sets the table name.
 - **Parameters:**
-  - `ddb`: The instance of `AsyncDuckDB`.
   - `table`: The name of the table to be used for plotting.
 
 **`.columns({x: string, y: string, series?: string, facet?: string})`**
