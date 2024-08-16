@@ -17,6 +17,7 @@ import { legendCategorical } from "./legendCategorical";
 import "./legend.css";
 import { legendContinuous } from "./legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
+import equal from "fast-deep-equal";
 
 export class DuckPlot {
   private _ddb: AsyncDuckDB | null = null;
@@ -62,61 +63,23 @@ export class DuckPlot {
   columns(config?: ColumnsConfig): ColumnsConfig | this {
     // Check for no changes
     if (config) {
-      this._columns = config;
-      this._newDataProps = true; // when changed, we need to requery the data
+      if (!equal(config, this._columns)) {
+        this._columns = config;
+        this._newDataProps = true; // when changed, we need to requery the data
+      }
       return this;
     }
     return this._columns!;
-  }
-
-  x(): string;
-  x(value: string): this;
-  x(value?: string): string | this {
-    if (value) {
-      if (this._columns) {
-        this._columns.x = value;
-      } else {
-        this._columns = { x: value, y: "", series: "" };
-      }
-      return this;
-    }
-    return this._columns?.x!;
-  }
-
-  y(): string;
-  y(value: string): this;
-  y(value?: string): string | this {
-    if (value) {
-      if (this._columns) {
-        this._columns.y = value;
-      } else {
-        this._columns = { x: "", y: value, series: "" };
-      }
-      return this;
-    }
-    return this._columns?.y!;
-  }
-
-  series(): string;
-  series(value: string): this;
-  series(value?: string): string | this {
-    if (value) {
-      if (this._columns) {
-        this._columns.series = value;
-      } else {
-        this._columns = { x: "", y: "", series: value };
-      }
-      return this;
-    }
-    return this._columns?.series!;
   }
 
   type(): ChartType;
   type(value: ChartType): this;
   type(value?: ChartType): ChartType | this {
     if (value) {
-      this._type = value;
-      this._newDataProps = true; // when changed, we need to requery the data
+      if (this._type !== value) {
+        this._type = value;
+        this._newDataProps = true; // when changed, we need to requery the data
+      }
       return this;
     }
     return this._type!;
@@ -126,7 +89,9 @@ export class DuckPlot {
   config(config: PlotConfig): this;
   config(config?: PlotConfig): PlotConfig | this {
     if (config) {
-      this._config = config;
+      if (!equal(config, this._config)) {
+        this._config = config;
+      }
       return this;
     }
     return this._config!;
