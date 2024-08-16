@@ -34,7 +34,6 @@ export function getMarkOptions(
     ? {
         tip: {
           // TODO: suppport background/border as inputs?
-          fill: borderOptions.background,
           stroke: borderOptions.border,
           // Display custom values, hide the auto generated values
           format: {
