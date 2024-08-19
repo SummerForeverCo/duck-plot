@@ -80,6 +80,7 @@ export interface PlotConfig {
   hideTicks?: boolean;
   color?: string;
   r?: number;
+  tip?: boolean;
   // TODO: support these?
   // title?: string;
   // titleDisplay?: boolean;

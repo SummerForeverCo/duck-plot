@@ -132,17 +132,13 @@ export class DuckPlot {
       ? (this._config?.height || 281) - legendHeight
       : this._config?.height || 281;
     // TODO: maybe just pass plotConfig?
-    const primaryMarkOptions = getMarkOptions(
-      currentColumns,
-      this._type,
-      {
-        color: this._config?.color,
-        r: this._config?.r,
-        xLabel: this._config?.xLabel ?? chartData?.labels?.x,
-        yLabel: this._config?.yLabel ?? chartData?.labels?.y,
-      },
-      document === undefined // TODO: arg order / better varname
-    );
+    const primaryMarkOptions = getMarkOptions(currentColumns, this._type, {
+      color: this._config?.color,
+      r: this._config?.r,
+      tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
+      xLabel: this._config?.xLabel ?? chartData?.labels?.x,
+      yLabel: this._config?.yLabel ?? chartData?.labels?.y,
+    });
     const topLevelPlotOptions = getTopLevelPlotOptions(
       chartData,
       currentColumns,

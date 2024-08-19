@@ -22,32 +22,33 @@ export function getMarkOptions(
     xLabel?: string;
     yLabel?: string;
     r?: number;
-  },
-  interactive?: boolean
+    tip?: boolean;
+  }
 ) {
   const color = options.color || colors[0];
   const stroke = currentColumns.includes("series") ? "series" : color;
   const fill = currentColumns.includes("series") ? "series" : color;
   const fx =
     type === "barYGrouped" && currentColumns.includes("fx") ? "fx" : undefined;
-  const tip = interactive
-    ? {
-        tip: {
-          // TODO: suppport background/border as inputs?
-          stroke: borderOptions.border,
-          // Display custom values, hide the auto generated values
-          format: {
-            xCustom: true,
-            yCustom: true,
-            color: true,
-            x: false,
-            y: false,
-            fy: false,
-            z: false, // Hide the auto generated "series" for area charts
+  const tip =
+    options.tip !== false
+      ? {
+          tip: {
+            // TODO: suppport background/border as inputs?
+            stroke: borderOptions.border,
+            // Display custom values, hide the auto generated values
+            format: {
+              xCustom: true,
+              yCustom: true,
+              color: true,
+              x: false,
+              y: false,
+              fy: false,
+              z: false, // Hide the auto generated "series" for area charts
+            },
           },
-        },
-      }
-    : {};
+        }
+      : {};
   return {
     // Create custom labels for x and y (important if the labels are custom but hidden!)
     channels: {
