@@ -7,3 +7,4 @@ export * from "./barWide.js";
 export * from "./dot.js";
 export * from "./facet.js";
 export * from "./options.js";
+export * from "./groupedBar.js";
