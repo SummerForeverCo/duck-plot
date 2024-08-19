@@ -85,3 +85,12 @@ export interface PlotConfig {
   // title?: string;
   // titleDisplay?: boolean;
 }
+
+export type ColorConfig =
+  | string
+  | string[]
+  | {
+      domain?: string[] | number[];
+      range?: string[];
+      scheme?: string;
+    };

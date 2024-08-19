@@ -6,6 +6,7 @@ const codeString = `duckplot
   .columns({ x: "month", y: "consensus_income", series: "month"})
   .type("barY")
   .config({legendLabel: "Date", hideTicks: true})
+  .color({scheme: "blues"})
   `;
 
 export const barDate = (options) =>

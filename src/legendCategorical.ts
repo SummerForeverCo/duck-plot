@@ -1,4 +1,4 @@
-import { colors } from "./getPlotOptions";
+import { defaultColors } from "./getPlotOptions";
 
 export interface Category {
   name: string;
@@ -8,6 +8,7 @@ export interface Category {
 export function legendCategorical(
   document: Document,
   categories: string[],
+  colors: string[],
   width: number,
   label?: string,
   font?: any // for measuring text width on the server

@@ -1,8 +1,13 @@
 import type { MarkOptions, PlotOptions } from "@observablehq/plot";
 import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
-import type { BasicColumnType, ChartData, ChartType } from "./types";
-export const colors = [
+import type {
+  BasicColumnType,
+  ChartData,
+  ChartType,
+  ColorConfig,
+} from "./types";
+export const defaultColors = [
   "rgba(255, 0, 184, 1)", // pink (hsla(317, 100%, 50%))
   "rgba(0, 183, 255, 1)", // blue (hsla(194, 100%, 50%))
   "rgba(255, 237, 0, 1)", // yellow (hsla(54, 100%, 50%))
@@ -25,7 +30,7 @@ export function getMarkOptions(
     tip?: boolean;
   }
 ) {
-  const color = options.color || colors[0];
+  const color = options.color || defaultColors[0];
   const stroke = currentColumns.includes("series") ? "series" : color;
   const fill = currentColumns.includes("series") ? "series" : color;
   const fx =
@@ -100,7 +105,7 @@ const defaultOptions = {
   yLabel: "",
   legend: "",
   hideTicks: false,
-  colors,
+  color: defaultColors,
 };
 // Get the top level configurations for the plot object
 export function getTopLevelPlotOptions(
@@ -117,7 +122,7 @@ export function getTopLevelPlotOptions(
     yLabel?: string;
     legend?: string;
     hideTicks?: boolean;
-    colors?: string[];
+    color?: ColorConfig;
   }
 ) {
   const options = { ...defaultOptions, ...userOptions };
@@ -143,6 +148,41 @@ export function getTopLevelPlotOptions(
           (d) => d.y
         ),
       };
+
+  // Handle 3 options for color: note, color as a string is assigned in the mark
+  const { color: colorConfig, legend } = options;
+  const { domain: sortsDomain } = sorts.series || {};
+
+  let colorDomain, colorRange, colorScheme;
+
+  const categoricalColor = data?.types?.series === "string";
+  // Array of strings is treated as the range
+  if (Array.isArray(colorConfig)) {
+    colorRange = colorConfig;
+  }
+  // Object with optional values for domain, range, and scheme
+  else if (typeof colorConfig === "object" && colorConfig !== null) {
+    colorDomain = colorConfig.domain || sortsDomain;
+    colorRange = colorConfig.range;
+    colorScheme = colorConfig.scheme;
+  }
+  // Default values
+  else {
+    colorDomain = sortsDomain;
+    colorRange = categoricalColor ? defaultColors : undefined;
+    colorScheme = !categoricalColor ? "RdPu" : undefined;
+  }
+
+  const hasColor = currentColumns.includes("series") || colorConfig;
+
+  const color = hasColor
+    ? {
+        label: legend,
+        ...(colorDomain && { domain: colorDomain }),
+        ...(colorRange && { range: colorRange }),
+        ...(colorScheme && { scheme: colorScheme }),
+      }
+    : {};
   return {
     x:
       type === "barYGrouped" && currentColumns.includes("fx")
@@ -189,17 +229,7 @@ export function getTopLevelPlotOptions(
     ...(currentColumns.includes("facet")
       ? { fy: { ...sorts.facet, axis: null, label: null }, insetTop: 12 }
       : {}),
-    ...(currentColumns.includes("series")
-      ? {
-          color: {
-            label: options.legend,
-            ...(sorts.series ? { domain: sorts.series.domain } : {}),
-            ...(data?.types?.series === "string"
-              ? { range: options.colors }
-              : { scheme: "RdPu" }),
-          },
-        }
-      : {}),
+    ...{ color },
   } as PlotOptions;
 }
 
@@ -238,38 +268,6 @@ export function getTickFormatter(
     };
   }
   return {};
-}
-
-// Get options for a legend (rendered as a separate Plot component)
-export function getLegendOptions(
-  chartData: any,
-  currentColumns: string[],
-  label?: string,
-  colors?: string[]
-): any {
-  if (!chartData || !chartData.length || !currentColumns.includes("series")) {
-    return false;
-  }
-  const range = colors ?? defaultOptions.colors;
-  const values = chartData.map((d: any) => d.series);
-  const formatter =
-    chartData.types.series === "date" ? (d: any) => new Date(d) : (d: any) => d;
-
-  return {
-    color: {
-      label,
-      ...(chartData.types.series === "string"
-        ? // TODO: should we get these values with duckdb? might be too slow
-          { range, type: "categorical", domain: [...new Set(values)] }
-        : {
-            scheme: "RdPu",
-            domain: [
-              formatter(Math.min(...values)),
-              formatter(Math.max(...values)),
-            ],
-          }),
-    },
-  };
 }
 
 // Gets the type of legend to handle rendering

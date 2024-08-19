@@ -1,11 +1,16 @@
 import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
-import { ChartData, ChartType, ColumnsConfig, PlotConfig } from "./types";
+import {
+  ChartData,
+  ChartType,
+  ColorConfig,
+  ColumnsConfig,
+  PlotConfig,
+} from "./types";
 import { prepareChartData } from "./prepareChartData";
 import {
   getCommonMarks,
   getFacetMarks,
-  getLegendOptions,
   getLegendType,
   getMarkOptions,
   getPlotMarkType,
@@ -23,6 +28,7 @@ export class DuckPlot {
   private _ddb: AsyncDuckDB | null = null;
   private _table: string | null = null;
   private _columns: ColumnsConfig | null = null;
+  private _color: ColorConfig | undefined = undefined;
   private _type: ChartType | null = null;
   private _config: PlotConfig | null = null;
   private _jsdom: JSDOM | undefined;
@@ -97,6 +103,19 @@ export class DuckPlot {
     return this._config!;
   }
 
+  color(): ColorConfig;
+  color(config: ColorConfig): this;
+  color(config?: ColorConfig): ColorConfig | this {
+    if (config) {
+      if (!equal(config, this._color)) {
+        this._color = config;
+        this._newDataProps = true;
+      }
+      return this;
+    }
+    return this._color!;
+  }
+
   async prepareChartData(): Promise<ChartData> {
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
@@ -133,7 +152,7 @@ export class DuckPlot {
       : this._config?.height || 281;
     // TODO: maybe just pass plotConfig?
     const primaryMarkOptions = getMarkOptions(currentColumns, this._type, {
-      color: this._config?.color,
+      color: typeof this._color === "string" ? this._color : undefined,
       r: this._config?.r,
       tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
       xLabel: this._config?.xLabel ?? chartData?.labels?.x,
@@ -144,6 +163,7 @@ export class DuckPlot {
       currentColumns,
       sorts,
       this._type,
+      // TODO: pass in plotConfig? or better combine these objects
       {
         width: this._config?.width || 500,
         height: plotHeight,
@@ -152,6 +172,7 @@ export class DuckPlot {
         xLabelDisplay: this._config?.xLabelDisplay ?? true,
         yLabelDisplay: this._config?.yLabelDisplay ?? true,
         hideTicks: this._config?.hideTicks ?? false,
+        color: this._color,
       }
     );
 
@@ -167,6 +188,7 @@ export class DuckPlot {
     // TODO: store as this._plot?
     // TODO: add an option to NOT use PlotFit
     const plt = PlotFit(options, {}, this._font);
+
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     const wrapper = this._document.createElement("div");
     if (hasLegend) {
@@ -174,23 +196,19 @@ export class DuckPlot {
       const div = this._document.createElement("div");
 
       if (legendType === "categorical") {
-        const categories = [...new Set(chartData.map((d) => d.series))];
-
+        // TODO: better argument order
         legend = legendCategorical(
           this._document,
-          categories,
+          Array.from(plt.scale("color")?.domain ?? []),
+          Array.from(plt.scale("color")?.range ?? []),
           this._config?.width || 500, // TODO: default width
           legendLabel,
           this._font
         );
       } else {
-        const legendOptions = getLegendOptions(
-          chartData,
-          currentColumns,
-          legendLabel
-        );
         legend = legendContinuous({
-          ...legendOptions,
+          color: { ...plt.scale("color") },
+          label: legendLabel,
           ...(document ? { document } : {}),
         });
       }

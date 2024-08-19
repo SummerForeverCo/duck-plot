@@ -6,6 +6,7 @@ duckplot
   .columns({ x: "month", y: ["consensus_income", "execution_income"]})
   .config({yLabel: "Income"})
   .type("line")
+  .color(["purple", "green"])
 `;
 
 export const lineMultiY = (options) =>

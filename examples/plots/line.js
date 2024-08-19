@@ -5,6 +5,7 @@ duckplot
   .table("income")
   .columns({ x: "month", y: "consensus_income"})
   .type("line")
+  .color("red")
 `;
 
 export const line = (options) => renderPlot("income.csv", codeString, options);

@@ -12,7 +12,7 @@ export function PlotFit(
   config: PlotOptions,
   options?: PlotFitOptions,
   font?: any
-): HTMLElement | SVGElement {
+): (SVGSVGElement | HTMLElement) & Plot.Plot {
   const getWidth = function (element: HTMLElement | SVGElement): number {
     if (font && font.getAdvanceWidth) {
       const width = font.getAdvanceWidth(element.textContent || "", 10);

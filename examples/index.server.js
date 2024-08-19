@@ -26,6 +26,10 @@ const jsdom = new JSDOM(`
 </head>
 <body></body>`);
 
+const outDir = path.resolve(__dirname, "server-output");
+if (!fs.existsSync(outDir)) {
+  fs.mkdirSync(outDir, { recursive: true });
+}
 for (const [name, plot] of Object.entries(plots)) {
   // const duckPlot = new DuckPlot({ jsdom, font });
 
