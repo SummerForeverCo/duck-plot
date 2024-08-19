@@ -283,7 +283,6 @@ export function getLegendType(
 type MarkType = "dot" | "areaY" | "line" | "barX" | "barY";
 
 // Get the plot mark type associated with our chart type
-// TODO: update the types to `dot` and `areaY`: will break old charts :(
 export function getPlotMarkType(type: ChartType): MarkType {
   switch (type) {
     case "barYGrouped":

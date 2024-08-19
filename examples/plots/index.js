@@ -1,4 +1,5 @@
 export * from "./line.js";
+export * from "./area.js";
 export * from "./line-multi-y.js";
 export * from "./bar-date.js";
 export * from "./bar.js";
