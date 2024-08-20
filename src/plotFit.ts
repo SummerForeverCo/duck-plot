@@ -154,5 +154,8 @@ export function PlotFit(
       warning.parentElement.style.display = "none";
     }
   }
+  if (!font) {
+    document.body.removeChild(initialPlot);
+  }
   return finalChart;
 }
