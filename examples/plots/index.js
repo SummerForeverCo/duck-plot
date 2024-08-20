@@ -9,3 +9,4 @@ export * from "./dot.js";
 export * from "./facet.js";
 export * from "./options.js";
 export * from "./groupedBar.js";
+export * from "./barRotatedAxis.js";
