@@ -177,7 +177,11 @@ export class DuckPlot {
     );
 
     const primaryMark = [Plot[plotMarkType](chartData, primaryMarkOptions)];
-    const commonPlotMarks = getCommonMarks(this._type, currentColumns);
+    const commonPlotMarks = getCommonMarks(this._type, currentColumns, {
+      ...(this._config?.borderColor
+        ? { borderColor: this._config?.borderColor }
+        : {}),
+    });
     const facetMarks = getFacetMarks(chartData, currentColumns);
     const options = {
       ...topLevelPlotOptions,

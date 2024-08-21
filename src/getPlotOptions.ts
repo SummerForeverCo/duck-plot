@@ -15,8 +15,8 @@ export const defaultColors = [
   "rgba(255, 83, 0, 1)", // orange (hsla(22, 100%, 62%))
 ];
 const borderOptions = {
-  background: "hsla( 0 0% 100%)",
-  border: "hsla(220 6% 90%)",
+  backgroundColor: "hsla( 0 0% 100%)",
+  borderColor: "rgb(228, 229, 231)",
 };
 // Get options for a specific mark (e.g., the line or area marks)
 export function getMarkOptions(
@@ -39,8 +39,7 @@ export function getMarkOptions(
     options.tip !== false
       ? {
           tip: {
-            // TODO: suppport background/border as inputs?
-            stroke: borderOptions.border,
+            stroke: borderOptions.borderColor,
             // Display custom values, hide the auto generated values
             format: {
               xCustom: true,
@@ -300,9 +299,10 @@ export function getCommonMarks(
   inputOptions?: any
 ) {
   const options = { ...borderOptions, ...inputOptions };
+  console.log(options);
   return [
     Plot.frame({
-      stroke: options.border,
+      stroke: options.borderColor,
       // fill: options.background,
       rx: 4,
       ry: 4,
@@ -311,7 +311,7 @@ export function getCommonMarks(
     ...[
       currentColumns?.includes("y")
         ? Plot.gridY({
-            stroke: options.border,
+            stroke: options.borderColor,
             strokeDasharray: "1.5,1.5",
             strokeOpacity: 1,
           })

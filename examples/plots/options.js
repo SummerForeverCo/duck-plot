@@ -6,11 +6,12 @@ const codeString = `duckplot
     .type("dot")
     .config({
         xLabel: "Custom X Label",        
-        height: 100,
+        height: 200,
         width: 300,       
         yLabelDisplay: false,
         color: "black",
-        r: 1
+        r: 1,
+        borderColor: "blue"
     })`;
 
 export const options = (options) =>

@@ -78,9 +78,9 @@ export interface PlotConfig {
   yLabelDisplay?: boolean;
   legendDisplay?: boolean;
   hideTicks?: boolean;
-  color?: string;
   r?: number;
   tip?: boolean;
+  borderColor: string;
   // TODO: support these?
   // title?: string;
   // titleDisplay?: boolean;
