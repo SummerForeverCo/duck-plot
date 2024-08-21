@@ -189,7 +189,8 @@ export function getTopLevelPlotOptions(
         ? { axis: null }
         : {
             label: !options.xLabelDisplay ? null : options.xLabel,
-            tickSize: options.hideTicks ? 0 : 6,
+            tickSize: 0,
+            tickPadding: 5,
             ...(!options.xLabelDisplay || !options.xLabel
               ? { labelArrow: "none" }
               : {}),
@@ -207,7 +208,8 @@ export function getTopLevelPlotOptions(
       label: !options.yLabelDisplay ? null : options.yLabel,
       labelArrow: !options.yLabelDisplay || !options.yLabel ? "none" : true,
       labelAnchor: "top",
-      tickSize: options.hideTicks ? 0 : 6,
+      tickSize: 0,
+      tickPadding: 5,
       ...(currentColumns.includes("y") &&
         getTickFormatter(
           data?.types?.y,
