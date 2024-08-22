@@ -138,9 +138,12 @@ function showPopover(container: HTMLDivElement, width: number): void {
   if (popover.style.display === "block") {
     popover.style.display = "none";
   } else {
+    const currentColor = window.getComputedStyle(popover).color;
+    const background = currentColor === "rgb(0, 0, 0)" ? "white" : "black";
     popover.style.display = "block";
     popover.style.position = "absolute";
-    popover.style.left = `${width}px`;
-    popover.style.top = `0px`;
+    popover.style.backgroundColor = background;
+    popover.style.left = `0px`;
+    popover.style.top = `30px`;
   }
 }

@@ -1,7 +1,7 @@
 /* Container */
 .dp-categories-container {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   border-radius: 20px;
   border: 1px solid #e4e5e7;
