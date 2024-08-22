@@ -1,0 +1,31 @@
+---
+name: Publish NPM
+on:
+  workflow_dispatch:
+    inputs:
+      packageVersion:
+        description: "npm package version to publish"
+        required: true
+jobs:
+  publish:
+    name: publish npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18" # Specify the Node.js version if needed
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm test
+      - name: Build the project
+        run: npm run build
+      - name: Publish
+        run: |
+          npm version ${{ inputs.packageVersion }} --no-git-tag-version
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
