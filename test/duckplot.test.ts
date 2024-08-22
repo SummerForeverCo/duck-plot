@@ -65,13 +65,13 @@ describe("DuckPlot", () => {
   describe("prepareChartData()", () => {
     it("should throw an error if data is not set", async () => {
       await expect(plot.prepareChartData()).rejects.toThrow(
-        "Data configuration is not set"
+        "Database and table not set"
       );
     });
 
     it("should prepare chart data when data is set", async () => {
       plot
-        .data({ ddb, table: "income" })
+        .table("income")
         .columns({ x: "month", y: "consensus_income" })
         .type("line");
       const data = await plot.prepareChartData();
@@ -86,7 +86,7 @@ describe("DuckPlot", () => {
       expect(result).toBeNull();
     });
 
-    it.only("should render an SVG element when everything is set", async () => {
+    it("should render an SVG element when everything is set", async () => {
       plot
         .table("income")
         .columns({ x: "month", y: "consensus_income" })
@@ -97,9 +97,9 @@ describe("DuckPlot", () => {
       expect(result!.firstChild!.nodeName).toBe("svg");
     });
 
-    it("should handle legend creation correctly", async () => {
+    it("should render a legend", async () => {
       plot.table("income");
-      plot.columns({ x: "x", y: "y", series: "series" });
+      plot.columns({ x: "month", y: ["consensus_income", "execution_income"] });
       plot.type("line");
       plot.config({ legendDisplay: true });
       const result = await plot.render();
