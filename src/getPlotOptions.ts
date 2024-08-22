@@ -158,6 +158,7 @@ export function getTopLevelPlotOptions(
   // Array of strings is treated as the range
   if (Array.isArray(colorConfig)) {
     colorRange = colorConfig;
+    colorDomain = sortsDomain;
   }
   // Object with optional values for domain, range, and scheme
   else if (typeof colorConfig === "object" && colorConfig !== null) {
@@ -299,7 +300,6 @@ export function getCommonMarks(
   inputOptions?: any
 ) {
   const options = { ...borderOptions, ...inputOptions };
-  console.log(options);
   return [
     Plot.frame({
       stroke: options.borderColor,
