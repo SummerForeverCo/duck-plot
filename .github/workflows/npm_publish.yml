@@ -18,10 +18,10 @@ jobs:
           node-version: "18" # Specify the Node.js version if needed
       - name: Install dependencies
         run: npm install
-      - name: Run tests
-        run: npm test
       - name: Build the project
         run: npm run build
+      - name: Run tests
+        run: npm test
       - name: Publish
         run: |
           npm version ${{ inputs.packageVersion }} --no-git-tag-version
