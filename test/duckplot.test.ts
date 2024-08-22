@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { JSDOM } from "jsdom";
 // @ts-expect-error: TypeScript cannot find the types but it works
 import { DuckPlot } from "../dist/index.es";
-import { DataConfig, ColumnsConfig, PlotConfig } from "../src/types";
+import { ColumnsConfig, PlotConfig } from "../src/types";
 import { createDbServer } from "../examples/util/createDbServer";
 import { Database } from "duckdb-async";
 
@@ -18,8 +18,8 @@ describe("DuckPlot", () => {
 
   beforeEach(async () => {
     jsdom = new JSDOM();
-    plot = new DuckPlot({ jsdom, font: fakeFont });
     ddb = await createDbServer("income.csv");
+    plot = new DuckPlot(ddb, { jsdom, font: fakeFont });
   });
 
   describe("constructor", () => {
@@ -30,10 +30,9 @@ describe("DuckPlot", () => {
   });
 
   describe("data()", () => {
-    it("should set and get data config", () => {
-      const dataConfig: DataConfig = { ddb, table: "table" };
-      plot.data(dataConfig);
-      expect(plot.data()).toEqual(dataConfig);
+    it("should set and get table name", () => {
+      plot.table("tableName");
+      expect(plot.table()).toEqual("tableName");
       expect(plot["_newDataProps"]).toBe(true);
     });
   });
@@ -44,48 +43,6 @@ describe("DuckPlot", () => {
       plot.columns(columnsConfig);
       expect(plot.columns()).toEqual(columnsConfig);
       expect(plot["_newDataProps"]).toBe(true);
-    });
-  });
-
-  describe("x()", () => {
-    it("should set x value when columns is null", () => {
-      plot.x("xValue");
-      expect(plot.x()).toEqual("xValue");
-    });
-
-    it("should set x value when columns already has values", () => {
-      plot.columns({ x: "x1", y: "y1", series: "s1" });
-      plot.x("xValue");
-      expect(plot.x()).toEqual("xValue");
-      expect(plot.columns().x).toEqual("xValue");
-    });
-  });
-
-  describe("y()", () => {
-    it("should set y value when columns is null", () => {
-      plot.y("yValue");
-      expect(plot.y()).toEqual("yValue");
-    });
-
-    it("should set y value when columns already has values", () => {
-      plot.columns({ x: "x1", y: "y1", series: "s1" });
-      plot.y("yValue");
-      expect(plot.y()).toEqual("yValue");
-      expect(plot.columns().y).toEqual("yValue");
-    });
-  });
-
-  describe("series()", () => {
-    it("should set series value when columns is null", () => {
-      plot.series("seriesValue");
-      expect(plot.series()).toEqual("seriesValue");
-    });
-
-    it("should set series value when columns already has values", () => {
-      plot.columns({ x: "x1", y: "y1", series: "s1" });
-      plot.series("seriesValue");
-      expect(plot.series()).toEqual("seriesValue");
-      expect(plot.columns().series).toEqual("seriesValue");
     });
   });
 
@@ -131,7 +88,7 @@ describe("DuckPlot", () => {
 
     it.only("should render an SVG element when everything is set", async () => {
       plot
-        .data({ ddb, table: "income" })
+        .table("income")
         .columns({ x: "month", y: "consensus_income" })
         .type("line");
       const result = await plot.render();
@@ -141,7 +98,7 @@ describe("DuckPlot", () => {
     });
 
     it("should handle legend creation correctly", async () => {
-      plot.data({ ddb, table: "table" });
+      plot.table("income");
       plot.columns({ x: "x", y: "y", series: "series" });
       plot.type("line");
       plot.config({ legendDisplay: true });
