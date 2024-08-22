@@ -116,6 +116,10 @@ export class DuckPlot {
     return this._color!;
   }
 
+  data(): ChartData {
+    return this._chartData || [];
+  }
+
   async prepareChartData(): Promise<ChartData> {
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
@@ -150,7 +154,7 @@ export class DuckPlot {
     const plotHeight = hasLegend
       ? (this._config?.height || 281) - legendHeight
       : this._config?.height || 281;
-    // TODO: maybe just pass plotConfig?
+    // TODO: maybe just pass plotConfig, but falling back to chartData.labels
     const primaryMarkOptions = getMarkOptions(currentColumns, this._type, {
       color: typeof this._color === "string" ? this._color : undefined,
       r: this._config?.r,
@@ -176,7 +180,10 @@ export class DuckPlot {
       }
     );
 
-    const primaryMark = [Plot[plotMarkType](chartData, primaryMarkOptions)];
+    const primaryMark =
+      !currentColumns.includes("x") || !currentColumns.includes("y")
+        ? []
+        : [Plot[plotMarkType](chartData, primaryMarkOptions)];
     const commonPlotMarks = getCommonMarks(this._type, currentColumns, {
       ...(this._config?.borderColor
         ? { borderColor: this._config?.borderColor }
