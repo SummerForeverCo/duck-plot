@@ -4,7 +4,7 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `duckplot
   .table("taxi")
   .columns({ x: "date", y: "count", series: "Borough"})
-  .config({width: 200, height: 200, xLabel: '', legendLabel: "", tip: false})
+  .config({width: 200, height: 100, xLabel: '', legendLabel: "", tip: false})
   .type("barY");`;
 
 export const barSmallLegend = (options) =>

@@ -10,6 +10,7 @@ export function legendCategorical(
   categories: string[],
   colors: string[],
   width: number,
+  height: number,
   label?: string,
   font?: any // for measuring text width on the server
 ): HTMLDivElement {
@@ -57,7 +58,7 @@ export function legendCategorical(
   const collapsedCategoriesDiv = document.createElement("div");
   collapsedCategoriesDiv.className = "dp-collapsed-categories dp-category";
   collapsedCategoriesDiv.addEventListener("click", () =>
-    showPopover(container, width)
+    showPopover(container, height)
   );
 
   const popoverDiv = document.createElement("div");
@@ -133,17 +134,20 @@ function updateLegendDisplay(container: HTMLDivElement, font: any): void {
   }
 }
 
-function showPopover(container: HTMLDivElement, width: number): void {
+function showPopover(container: HTMLDivElement, height: number): void {
   const popover = container.querySelector(".dp-popover") as HTMLDivElement;
   if (popover.style.display === "block") {
     popover.style.display = "none";
   } else {
+    // TODO: Move some to CSS
     const currentColor = window.getComputedStyle(popover).color;
     const background = currentColor === "rgb(0, 0, 0)" ? "white" : "black";
     popover.style.display = "block";
     popover.style.position = "absolute";
     popover.style.backgroundColor = background;
-    popover.style.left = `0px`;
+    popover.style.right = `0px`;
     popover.style.top = `30px`;
+    popover.style.maxHeight = `${height}px`;
+    popover.style.overflowY = `auto`;
   }
 }

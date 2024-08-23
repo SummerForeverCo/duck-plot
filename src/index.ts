@@ -213,6 +213,7 @@ export class DuckPlot {
           Array.from(plt.scale("color")?.domain ?? []),
           Array.from(plt.scale("color")?.range ?? []),
           this._config?.width || 500, // TODO: default width
+          plotHeight,
           legendLabel,
           this._font
         );
