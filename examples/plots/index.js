@@ -1,12 +1,12 @@
 // export * from "./line.js";
 // export * from "./area.js";
 // export * from "./line-multi-y.js";
-export * from "./bar-date.js";
+// export * from "./bar-date.js";
 // export * from "./bar.js";
 // export * from "./barWide.js";
 // export * from "./barWideColor.js";
 // export * from "./dot.js";
-// export * from "./facet.js";
+export * from "./facet.js";
 // export * from "./options.js";
 // export * from "./groupedBar.js";
 // export * from "./barRotatedAxis.js";

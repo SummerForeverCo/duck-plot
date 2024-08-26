@@ -3,8 +3,11 @@ import { renderPlot } from "../util/renderPlotClient.js";
 
 const codeString = `duckplot
   .table("taxi")
-  .columns({ x: "date", y: "count", series: "Borough"})
-  .config({width: 200, height: 100, xLabel: '', legendLabel: "", tip: false})
+  .x("date", {label: ""})
+  .y("count")
+  .color("Borough")
+  .options({width: 200, height: 100, color: {label: ""}})
+  .config({tip: false})
   .type("barY");`;
 
 export const barSmallLegend = (options) =>

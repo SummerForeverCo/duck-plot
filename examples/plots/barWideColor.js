@@ -3,10 +3,16 @@ import { renderPlot } from "../util/renderPlotClient.js";
 
 const codeString = `duckplot
   .table("taxi")
-  .columns({ x: "date", y: "count", series: "Borough"})  
+  .x("date")
+  .y("count")
+  .color("Borough")  
   .type("line")
-  .color({domain: ["Queens", "Bronx", "Manhattan", "Brooklyn", "EWR", "Staten Island"],
-    range: ["#ff7f0e", "gray", "gray", "gray", "gray", "gray"]})
+  .options({
+    color: {
+      domain: ["Queens", "Bronx", "Manhattan", "Brooklyn", "EWR", "Staten Island"],
+      range: ["#ff7f0e", "gray", "gray", "gray", "gray", "gray"]
+    }
+  })  
   `;
 
 export const barWideColor = (options) =>

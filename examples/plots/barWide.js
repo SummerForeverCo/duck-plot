@@ -3,7 +3,9 @@ import { renderPlot } from "../util/renderPlotClient.js";
 
 const codeString = `duckplot
   .table("taxi")
-  .columns({ x: "date", y: "count", series: "Borough"})  
+  .x("date")
+  .y("count")
+  .color("Borough")  
   .type("line");`;
 
 export const barWide = (options) => renderPlot("taxi.csv", codeString, options);

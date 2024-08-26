@@ -142,7 +142,9 @@ export function getTopLevelPlotOptions(
 
   let colorDomain, colorRange, colorScheme;
 
-  const categoricalColor = data?.types?.series === "string";
+  const categoricalColor =
+    data?.types?.series === "string" ||
+    (!Array.isArray(options.color) && options.color.type === "categorical");
   // Array of strings is treated as the range
   if (Array.isArray(colorConfig)) {
     colorRange = colorConfig;

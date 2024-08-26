@@ -234,7 +234,8 @@ export class DuckPlot {
     // TODO: get from options
     const hasLegend = chartData.types?.series !== undefined && legendDisplay;
     // TODO: accept input legend type
-    const legendType = getLegendType(chartData, currentColumns);
+    const legendType =
+      plotOptions?.color.type ?? getLegendType(chartData, currentColumns);
     // TODO: maybe rename series to color....?
     const legendLabel = plotOptions.color.label;
 

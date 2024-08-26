@@ -2,9 +2,12 @@ import { renderPlot } from "../util/renderPlotClient.js";
 // This code is both displayed in the browser and executed
 const codeString = `
 duckplot
-  .table("income")  
-  .columns({ x: "month", y: "consensus_income", facet: "validator", series: "validator"})
-  .config({width: 600, height: 800})
+  .table("income")
+  .x("month")
+  .y("consensus_income")
+  .facet("validator")
+  .color("validator", {type: "categorical"})
+  .options({width: 600, height: 800})
   .type("line")
 `;
 
