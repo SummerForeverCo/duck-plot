@@ -1,8 +1,8 @@
 import { buildSqlQuery } from "./buildSqlQuery";
-import { Column, Config, ChartType, ChartData } from "./types";
+import { Column, ColumnConfig, ChartType, ChartData } from "./types";
 
 // Function to determine if a column (either a string or array of strings) is defined
-export function columnIsDefined(column: Column, config: Config) {
+export function columnIsDefined(column: Column, config: ColumnConfig) {
   return Array.isArray(config[column])
     ? (config[column] as any[]).filter((d) => d).length > 0
     : config[column] != null && config[column] != undefined;
@@ -15,7 +15,10 @@ export function omit(obj: any, keys: Array<string | number>): any {
 }
 
 // Determine what type of query we need to construct based on the config
-export function getTransformType(type: ChartType, { x, y, series }: Config) {
+export function getTransformType(
+  type: ChartType,
+  { x, y, series }: ColumnConfig
+) {
   if (type === "barX") {
     if (Array.isArray(x) && x.length > 1) {
       return series?.length ? "unPivotWithSeries" : "unPivot";
@@ -30,7 +33,7 @@ export function getTransformType(type: ChartType, { x, y, series }: Config) {
 
 export function getStandardTransformQuery(
   type: ChartType,
-  { x, y, series, facet }: Config,
+  { x, y, series, facet }: ColumnConfig,
   tableName: string,
   into: string
 ) {
@@ -60,7 +63,7 @@ export function getStandardTransformQuery(
 
 export function getUnpivotQuery(
   type: ChartType,
-  { x, y, facet }: Config,
+  { x, y, facet }: ColumnConfig,
   tableName: string,
   into: string
 ) {
@@ -92,7 +95,7 @@ export function getUnpivotQuery(
 
 export function getUnpivotWithSeriesQuery(
   type: ChartType,
-  { x, y, series, facet }: Config,
+  { x, y, series, facet }: ColumnConfig,
   tableName: string,
   into: string
 ) {
@@ -157,7 +160,7 @@ export function getUnpivotWithSeriesQuery(
 // Construct SQL statement, handling aggregation when necessary
 export function getTransformQuery(
   type: ChartType,
-  config: Config,
+  config: ColumnConfig,
   tableName: string,
   intoTable: string
 ) {
@@ -186,7 +189,7 @@ export function extractDefinedValues(
 // Returns both querystring and labels
 export function getAggregateInfo(
   type: ChartType,
-  config: Config,
+  config: ColumnConfig,
   columns: string[],
   tableName: string
 ): { queryString: string; labels: ChartData["labels"] } {

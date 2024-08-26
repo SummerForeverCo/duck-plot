@@ -41,7 +41,7 @@ export type Indexable = {
   [key: string]: any;
 };
 export type Column = "x" | "y" | "series" | "facet";
-export type Config = Partial<Record<Column, string | string[]>>;
+export type ColumnConfig = Partial<Record<Column, string | string[]>>;
 export interface ChartData extends Array<Indexable> {
   types?: { [key: string]: BasicColumnType };
   labels?: { x?: string; y?: string; series?: string };
@@ -64,4 +64,14 @@ export interface TypesObject {
 export type PlotProperty<T extends keyof PlotOptions> = {
   column: string;
   options?: PlotOptions[T];
+};
+
+// A few types that we can't quite squeeze into (or out of) PlotOptions. The
+// label display options are important because the labels specifcy the labels
+// in the tooltips (but someone might want to turn off the labels in the plot)
+export type Config = {
+  xLabelDisplay?: boolean;
+  yLabelDisplay?: boolean;
+  r?: number; // Radius for dot plots
+  tip?: boolean; // Show tooltips
 };

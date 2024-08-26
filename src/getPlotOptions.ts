@@ -1,7 +1,7 @@
 import type { MarkOptions, PlotOptions } from "@observablehq/plot";
 import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
-import type { BasicColumnType, ChartData, ChartType } from "./types";
+import type { BasicColumnType, ChartData, ChartType, Config } from "./types";
 export const defaultColors = [
   "rgba(255, 0, 184, 1)", // pink (hsla(317, 100%, 50%))
   "rgba(0, 183, 255, 1)", // blue (hsla(194, 100%, 50%))
@@ -93,8 +93,6 @@ export function getSorts(currentColumns: string[] = [], data?: ChartData) {
 const defaultOptions = {
   width: 500,
   height: 281,
-  xLabelDisplay: true, // TODO: change
-  yLabelDisplay: true, // TODO: change
   color: defaultColors,
   fx: { label: null },
   className: "plot-chart",
@@ -104,12 +102,14 @@ const defaultOptions = {
   },
 };
 // Get the top level configurations for the plot object
+// TODO: better argument order or naming
 export function getTopLevelPlotOptions(
   data: ChartData | undefined,
   currentColumns: string[],
   sorts: any,
   type: ChartType,
-  userOptions: PlotOptions
+  userOptions: PlotOptions,
+  config: Config
 ) {
   const options = { ...defaultOptions, ...userOptions };
 
@@ -181,11 +181,10 @@ export function getTopLevelPlotOptions(
     type === "barYGrouped" && currentColumns.includes("fx")
       ? { axis: null }
       : {
-          // TODO: handle labelDisplay
-          label: !options.xLabelDisplay ? null : options.x?.label,
+          label: !config.xLabelDisplay ? null : options.x?.label,
           tickSize: 0,
           tickPadding: 5,
-          ...(!options.xLabelDisplay || !options.x?.label
+          ...(!config.xLabelDisplay || !options.x?.label
             ? { labelArrow: "none" }
             : {}),
           ...(currentColumns.includes("x") &&
@@ -198,8 +197,8 @@ export function getTopLevelPlotOptions(
           ...xDomain,
         };
   const computedY = {
-    label: !options.yLabelDisplay ? null : options.y?.label,
-    labelArrow: !options.yLabelDisplay || !options.y?.label ? "none" : true,
+    label: !config.yLabelDisplay ? null : options.y?.label,
+    labelArrow: !config.yLabelDisplay || !options.y?.label ? "none" : true,
     labelAnchor: "top",
     tickSize: 0,
     tickPadding: 5,

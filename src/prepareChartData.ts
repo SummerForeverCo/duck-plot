@@ -1,5 +1,5 @@
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-import { ChartData, ChartType, Config, DescribeSchema } from "./types";
+import { ChartData, ChartType, ColumnConfig, DescribeSchema } from "./types";
 import {
   columnIsDefined,
   getAggregateInfo,
@@ -23,7 +23,7 @@ export function getUniqueName() {
 export async function prepareChartData(
   ddb: AsyncDuckDB | Database,
   tableName: string | undefined,
-  config: Config,
+  config: ColumnConfig,
   type: ChartType
 ): Promise<ChartData> {
   // Note, this function depends on the component props
@@ -45,7 +45,7 @@ export async function prepareChartData(
 
   let distinctCols = (
     type === "barX" ? ["y", "series", "facet"] : ["x", "series", "facet"]
-  ).filter((d) => columnIsDefined(d as keyof Config, config));
+  ).filter((d) => columnIsDefined(d as keyof ColumnConfig, config));
 
   // Catch for reshaped data where series gets added
   const yValue = Array.isArray(config.y)

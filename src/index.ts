@@ -2,7 +2,7 @@ import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
 import type { PlotOptions } from "@observablehq/plot";
 
-import { ChartData, ChartType, PlotProperty } from "./types";
+import { ChartData, ChartType, Config, PlotProperty } from "./types";
 import { prepareChartData } from "./prepareChartData";
 import {
   getCommonMarks,
@@ -51,6 +51,11 @@ export class DuckPlot {
   private _document: Document;
   private _newDataProps: boolean = true;
   private _chartData: ChartData = [];
+  private _config: Config = {
+    xLabelDisplay: true,
+    yLabelDisplay: true,
+    tip: true,
+  };
 
   constructor(
     ddb: AsyncDuckDB,
@@ -146,12 +151,23 @@ export class DuckPlot {
   options(opts: PlotOptions): this;
   options(opts?: PlotOptions): PlotOptions | this {
     if (opts) {
+      // TODO: this is probably an unnecessary check
       if (!equal(opts, this._options)) {
         this._options = opts;
       }
       return this;
     }
     return this._options!;
+  }
+
+  config(): Config;
+  config(config: Config): this;
+  config(config?: Config): Config | this {
+    if (config) {
+      this._config = config;
+      return this;
+    }
+    return this._config;
   }
 
   data(): ChartData {
@@ -226,28 +242,22 @@ export class DuckPlot {
     const plotHeight = hasLegend
       ? (plotOptions.height || 281) - legendHeight
       : plotOptions.height || 281;
-    // TODO: maybe just pass plotConfig, but falling back to chartData.labels
+
     const primaryMarkOptions = getMarkOptions(currentColumns, this._type, {
       color: isColor(this._color.column) ? this._color.column : undefined,
-      // TODO: radius
-      // r: plotOptions.r,
-      // TODO: tooltips
-      // tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
-      tip: this._isServer ? false : true, // don't allow tip on the server
-      xLabel: plotOptions.x.label ?? chartData?.labels?.x,
-      yLabel: plotOptions.y.label ?? chartData?.labels?.y,
+      r: this._config.r,
+      tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
+      xLabel: plotOptions.x.label,
+      yLabel: plotOptions.y.label,
     });
+
     const topLevelPlotOptions = getTopLevelPlotOptions(
       chartData,
       currentColumns,
       sorts,
       this._type,
-      plotOptions
-      // TODO: support these!
-      // xLabelDisplay: this._config?.xLabelDisplay ?? true,
-      // yLabelDisplay: this._config?.yLabelDisplay ?? true,
-      // color: this._color,
-      // }
+      plotOptions,
+      this._config
     );
 
     const primaryMark =
