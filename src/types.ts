@@ -1,5 +1,6 @@
 import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import { Database } from "duckdb-async";
+import type { PlotOptions } from "@observablehq/plot";
 
 export type ChartType =
   | "dot"
@@ -94,3 +95,9 @@ export type ColorConfig =
       range?: string[];
       scheme?: string;
     };
+
+// Define a generic type for property
+export type PlotProperty<T extends keyof PlotOptions> = {
+  column: string;
+  options?: PlotOptions[T];
+};

@@ -1,11 +1,14 @@
 import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
+import type { PlotOptions } from "@observablehq/plot";
+
 import {
   ChartData,
   ChartType,
   ColorConfig,
   ColumnsConfig,
   PlotConfig,
+  PlotProperty,
 } from "./types";
 import { prepareChartData } from "./prepareChartData";
 import {
@@ -27,8 +30,25 @@ import equal from "fast-deep-equal";
 export class DuckPlot {
   private _ddb: AsyncDuckDB | null = null;
   private _table: string | null = null;
-  private _columns: ColumnsConfig | null = null;
-  private _color: ColorConfig | undefined = undefined;
+  private _x: PlotProperty<"x"> = {
+    column: "",
+    options: {},
+  };
+
+  private _y: PlotProperty<"y"> = {
+    column: "",
+    options: {},
+  };
+
+  private _facet: PlotProperty<"facet"> = {
+    column: "",
+    options: {},
+  };
+
+  private _color: PlotProperty<"color"> = {
+    column: "",
+    options: {},
+  };
   private _type: ChartType | null = null;
   private _config: PlotConfig | null = null;
   private _jsdom: JSDOM | undefined;
@@ -64,18 +84,55 @@ export class DuckPlot {
     return this._table!;
   }
 
-  columns(): ColumnsConfig;
-  columns(config: ColumnsConfig): this;
-  columns(config?: ColumnsConfig): ColumnsConfig | this {
-    // Check for no changes
-    if (config) {
-      if (!equal(config, this._columns)) {
-        this._columns = config;
-        this._newDataProps = true; // when changed, we need to requery the data
-      }
-      return this;
+  // Helper method for getting and setting x, y, color, and facet properties
+  private handleProperty<T extends keyof PlotOptions>(
+    prop: PlotProperty<T>,
+    column?: string,
+    options?: PlotOptions[T]
+  ): PlotProperty<T> | this {
+    if (!column) {
+      return prop;
     }
-    return this._columns!;
+    if (column !== prop.column) {
+      this._newDataProps = true; // When changed, we need to requery the data
+    }
+    prop.column = column;
+    prop.options = options;
+    return this;
+  }
+
+  // x method using the generic handler
+  x(): PlotProperty<"x">;
+  x(column: string, options?: PlotOptions["x"]): this;
+  x(column?: string, options?: PlotOptions["x"]): PlotProperty<"x"> | this {
+    return this.handleProperty(this._x, column, options);
+  }
+
+  // y method using the generic handler
+  y(): PlotProperty<"y">;
+  y(column: string, options?: PlotOptions["y"]): this;
+  y(column?: string, options?: PlotOptions["y"]): PlotProperty<"y"> | this {
+    return this.handleProperty(this._y, column, options);
+  }
+
+  // color method using the generic handler
+  color(): PlotProperty<"color">;
+  color(column: string, options?: PlotOptions["color"]): this;
+  color(
+    column?: string,
+    options?: PlotOptions["color"]
+  ): PlotProperty<"color"> | this {
+    return this.handleProperty(this._color, column, options);
+  }
+
+  // facet method using the generic handler
+  facet(): PlotProperty<"facet">;
+  facet(column: string, options?: PlotOptions["facet"]): this;
+  facet(
+    column?: string,
+    options?: PlotOptions["facet"]
+  ): PlotProperty<"facet"> | this {
+    return this.handleProperty(this._facet, column, options);
   }
 
   type(): ChartType;
@@ -103,19 +160,6 @@ export class DuckPlot {
     return this._config!;
   }
 
-  color(): ColorConfig;
-  color(config: ColorConfig): this;
-  color(config?: ColorConfig): ColorConfig | this {
-    if (config) {
-      if (!equal(config, this._color)) {
-        this._color = config;
-        this._newDataProps = true;
-      }
-      return this;
-    }
-    return this._color!;
-  }
-
   data(): ChartData {
     return this._chartData || [];
   }
@@ -124,12 +168,13 @@ export class DuckPlot {
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
     this._newDataProps = false;
-    return prepareChartData(
-      this._ddb,
-      this._table,
-      this._columns!,
-      this._type!
-    );
+    const columns = {
+      ...(this._x.column ? { x: this._x.column } : {}),
+      ...(this._y.column ? { y: this._y.column } : {}),
+      ...(this._color.column ? { color: this._color.column } : {}),
+      ...(this._facet.column ? { color: this._facet.column } : {}),
+    };
+    return prepareChartData(this._ddb, this._table, columns, this._type!);
   }
 
   async render(): Promise<SVGElement | HTMLElement | null> {
@@ -176,7 +221,7 @@ export class DuckPlot {
         xLabelDisplay: this._config?.xLabelDisplay ?? true,
         yLabelDisplay: this._config?.yLabelDisplay ?? true,
         hideTicks: this._config?.hideTicks ?? false,
-        color: this._color,
+        // color: this._color,
       }
     );
 

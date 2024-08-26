@@ -3,7 +3,8 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `
 duckplot
   .table("income")
-  .columns({ x: "month", y: "consensus_income"})
+  .x("month")
+  .y("consensus_income")
   .type("line")
   .color("red")
 `;
