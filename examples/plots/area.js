@@ -3,8 +3,10 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `
 duckplot
   .table("income")
-  .columns({ x: "month", y: ["consensus_income", "execution_income"]})
+  .x("month")
+  .y(["consensus_income", "execution_income"])
   .type("areaY")
+  .options({color: {label: "Income Source"}})
 `;
 
 export const area = (options) => renderPlot("income.csv", codeString, options);

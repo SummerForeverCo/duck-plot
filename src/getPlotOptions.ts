@@ -151,7 +151,12 @@ export function getTopLevelPlotOptions(
     colorDomain = sortsDomain;
   }
   // Object with optional values for domain, range, and scheme
-  else if (typeof colorConfig === "object" && colorConfig !== null) {
+  else if (
+    typeof colorConfig === "object" &&
+    (colorConfig.domain !== undefined ||
+      colorConfig.range !== undefined ||
+      colorConfig.scheme !== undefined)
+  ) {
     colorDomain = colorConfig.domain || sortsDomain;
     colorRange = colorConfig.range;
     colorScheme = colorConfig.scheme;
@@ -165,7 +170,7 @@ export function getTopLevelPlotOptions(
 
   const hasColor = currentColumns.includes("series") || colorConfig;
 
-  const color = hasColor
+  const computedColor = hasColor
     ? {
         label: legend,
         ...(colorDomain && { domain: colorDomain }),
@@ -173,6 +178,7 @@ export function getTopLevelPlotOptions(
         ...(colorScheme && { scheme: colorScheme }),
       }
     : {};
+
   const computedX =
     type === "barYGrouped" && currentColumns.includes("fx")
       ? { axis: null }
@@ -211,10 +217,10 @@ export function getTopLevelPlotOptions(
     ...yDomain,
   };
   return {
-    x: { ...computedX, ...options.x },
-
-    y: { ...computedY, ...options.y },
     ...options,
+    x: { ...computedX, ...options.x },
+    y: { ...computedY, ...options.y },
+    color: { ...computedColor, ...options.color },
     fx: { label: null },
     className: "plot-chart",
     // TODO: move these to default option
@@ -225,7 +231,6 @@ export function getTopLevelPlotOptions(
     ...(currentColumns.includes("facet")
       ? { fy: { ...sorts.facet, axis: null, label: null }, insetTop: 12 }
       : {}),
-    ...{ color },
   } as PlotOptions;
 }
 
