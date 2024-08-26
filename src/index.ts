@@ -88,7 +88,7 @@ export class DuckPlot {
     if (!column) {
       return prop;
     }
-    if (column !== prop.column) {
+    if (!equal(column, prop.column)) {
       this._newDataProps = true; // When changed, we need to requery the data
     }
     prop.column = column;
