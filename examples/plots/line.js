@@ -3,10 +3,11 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `
 duckplot
   .table("income")
-  .x("month")
-  .y("consensus_income")
+  .x("month", {label: "Date", axis: "top", grid: true})
+  .y("consensus_income", {type: "log"})
   .type("line")
   .color("red")
+  .options({width: 400, height: 500, y: {domain: [100, 30000]}})
 `;
 
 export const line = (options) => renderPlot("income.csv", codeString, options);

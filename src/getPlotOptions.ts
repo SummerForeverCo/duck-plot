@@ -112,17 +112,7 @@ export function getTopLevelPlotOptions(
   currentColumns: string[],
   sorts: any,
   type: ChartType,
-  userOptions: {
-    width?: number;
-    height?: number;
-    xLabelDisplay?: boolean;
-    yLabelDisplay?: boolean;
-    xLabel?: string;
-    yLabel?: string;
-    legend?: string;
-    hideTicks?: boolean;
-    color?: ColorConfig;
-  }
+  userOptions: PlotOptions
 ) {
   const options = { ...defaultOptions, ...userOptions };
   // Only compute a custom x/y domain if the other axes is missing
@@ -183,47 +173,51 @@ export function getTopLevelPlotOptions(
         ...(colorScheme && { scheme: colorScheme }),
       }
     : {};
+  const computedX =
+    type === "barYGrouped" && currentColumns.includes("fx")
+      ? { axis: null }
+      : {
+          // TODO: handle labelDisplay
+          label: !options.xLabelDisplay ? null : options.xLabel,
+          tickSize: 0,
+          tickPadding: 5,
+          ...(!options.xLabelDisplay || !options.xLabel
+            ? { labelArrow: "none" }
+            : {}),
+          ...(currentColumns.includes("x") &&
+            getTickFormatter(
+              data?.types?.x,
+              "x",
+              options.width || 0,
+              options.height || 0,
+              options.hideTicks // TODO handle
+            )),
+          ...xDomain,
+        };
+  const computedY = {
+    label: !options.yLabelDisplay ? null : options.yLabel,
+    labelArrow: !options.yLabelDisplay || !options.yLabel ? "none" : true,
+    labelAnchor: "top",
+    tickSize: 0,
+    tickPadding: 5,
+    ...(currentColumns.includes("y") &&
+      getTickFormatter(
+        data?.types?.y,
+        "y",
+        options.width || 0,
+        options.height || 0,
+        options.hideTicks
+      )),
+    ...yDomain,
+  };
   return {
-    x:
-      type === "barYGrouped" && currentColumns.includes("fx")
-        ? { axis: null }
-        : {
-            label: !options.xLabelDisplay ? null : options.xLabel,
-            tickSize: 0,
-            tickPadding: 5,
-            ...(!options.xLabelDisplay || !options.xLabel
-              ? { labelArrow: "none" }
-              : {}),
-            ...(currentColumns.includes("x") &&
-              getTickFormatter(
-                data?.types?.x,
-                "x",
-                options.width || 0,
-                options.height || 0,
-                options.hideTicks
-              )),
-            ...xDomain,
-          },
-    y: {
-      label: !options.yLabelDisplay ? null : options.yLabel,
-      labelArrow: !options.yLabelDisplay || !options.yLabel ? "none" : true,
-      labelAnchor: "top",
-      tickSize: 0,
-      tickPadding: 5,
-      ...(currentColumns.includes("y") &&
-        getTickFormatter(
-          data?.types?.y,
-          "y",
-          options.width || 0,
-          options.height || 0,
-          options.hideTicks
-        )),
-      ...yDomain,
-    },
+    x: { ...computedX, ...options.x },
+
+    y: { ...computedY, ...options.y },
+    ...options,
     fx: { label: null },
-    width: options.width,
-    height: options.height,
     className: "plot-chart",
+    // TODO: move these to default option
     grid: false,
     style: {
       overflow: "visible",
@@ -336,4 +330,28 @@ export function getFacetMarks(data: ChartData, currentColumns: string[]) {
         ),
       ]
     : [];
+}
+
+// Directly using the code from Observable Plot
+// https://github.com/observablehq/plot/blob/d2afa58db80bbb0365229a7c66ab016a5214fb0d/src/options.js#L519
+const namedColors = new Set(
+  "none,currentcolor,transparent,aliceblue,antiquewhite,aqua,aquamarine,azure,beige,bisque,black,blanchedalmond,blue,blueviolet,brown,burlywood,cadetblue,chartreuse,chocolate,coral,cornflowerblue,cornsilk,crimson,cyan,darkblue,darkcyan,darkgoldenrod,darkgray,darkgreen,darkgrey,darkkhaki,darkmagenta,darkolivegreen,darkorange,darkorchid,darkred,darksalmon,darkseagreen,darkslateblue,darkslategray,darkslategrey,darkturquoise,darkviolet,deeppink,deepskyblue,dimgray,dimgrey,dodgerblue,firebrick,floralwhite,forestgreen,fuchsia,gainsboro,ghostwhite,gold,goldenrod,gray,green,greenyellow,grey,honeydew,hotpink,indianred,indigo,ivory,khaki,lavender,lavenderblush,lawngreen,lemonchiffon,lightblue,lightcoral,lightcyan,lightgoldenrodyellow,lightgray,lightgreen,lightgrey,lightpink,lightsalmon,lightseagreen,lightskyblue,lightslategray,lightslategrey,lightsteelblue,lightyellow,lime,limegreen,linen,magenta,maroon,mediumaquamarine,mediumblue,mediumorchid,mediumpurple,mediumseagreen,mediumslateblue,mediumspringgreen,mediumturquoise,mediumvioletred,midnightblue,mintcream,mistyrose,moccasin,navajowhite,navy,oldlace,olive,olivedrab,orange,orangered,orchid,palegoldenrod,palegreen,paleturquoise,palevioletred,papayawhip,peachpuff,peru,pink,plum,powderblue,purple,rebeccapurple,red,rosybrown,royalblue,saddlebrown,salmon,sandybrown,seagreen,seashell,sienna,silver,skyblue,slateblue,slategray,slategrey,snow,springgreen,steelblue,tan,teal,thistle,tomato,turquoise,violet,wheat,white,whitesmoke,yellow".split(
+    ","
+  )
+); // prettier-ignore
+
+// Returns true if value is a valid CSS color string. This is intentionally lax
+// because the CSS color spec keeps growing, and we don’t need to parse these
+// colors—we just need to disambiguate them from column names.
+// https://www.w3.org/TR/SVG11/painting.html#SpecifyingPaint
+// https://www.w3.org/TR/css-color-5/
+export function isColor(value: string) {
+  value = value.toLowerCase().trim();
+  return (
+    /^#[0-9a-f]{3,8}$/.test(value) || // hex rgb, rgba, rrggbb, rrggbbaa
+    /^(?:url|var|rgb|rgba|hsl|hsla|hwb|lab|lch|oklab|oklch|color|color-mix)\(.*\)$/.test(
+      value
+    ) || // <funciri>, CSS variable, color, etc.
+    namedColors.has(value) // currentColor, red, etc.
+  );
 }

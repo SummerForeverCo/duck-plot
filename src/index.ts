@@ -19,6 +19,7 @@ import {
   getPlotMarkType,
   getSorts,
   getTopLevelPlotOptions,
+  isColor,
 } from "./getPlotOptions";
 import { PlotFit } from "./plotFit";
 import { legendCategorical } from "./legendCategorical";
@@ -50,7 +51,7 @@ export class DuckPlot {
     options: {},
   };
   private _type: ChartType | null = null;
-  private _config: PlotConfig | null = null;
+  private _options: PlotOptions = {};
   private _jsdom: JSDOM | undefined;
   private _font: any;
   private _isServer: boolean;
@@ -148,22 +149,23 @@ export class DuckPlot {
     return this._type!;
   }
 
-  config(): PlotConfig;
-  config(config: PlotConfig): this;
-  config(config?: PlotConfig): PlotConfig | this {
-    if (config) {
-      if (!equal(config, this._config)) {
-        this._config = config;
+  options(): PlotOptions;
+  options(opts: PlotOptions): this;
+  options(opts?: PlotOptions): PlotOptions | this {
+    if (opts) {
+      if (!equal(opts, this._options)) {
+        this._options = opts;
       }
       return this;
     }
-    return this._config!;
+    return this._options!;
   }
 
   data(): ChartData {
     return this._chartData || [];
   }
 
+  // TODO; private?
   async prepareChartData(): Promise<ChartData> {
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
@@ -179,61 +181,90 @@ export class DuckPlot {
 
   async render(): Promise<SVGElement | HTMLElement | null> {
     if (!this._type) return null;
-
+    // Because users can specify options either in .options or with each column, we coalese them here
+    let plotOptions = {
+      ...this._options,
+      x: {
+        ...this._options.x,
+        ...this._x.options,
+      },
+      y: {
+        ...this._options.y,
+        ...this._y.options,
+      },
+      color: {
+        ...this._options.color,
+        ...this._color.options,
+      },
+      facet: {
+        ...this._options.facet,
+        ...this._facet.options,
+      },
+    };
     const chartData = this._newDataProps
       ? await this.prepareChartData()
       : this._chartData;
+
+    // Fallback to computed labels if they aren't present in the options
+    plotOptions.x.label = plotOptions.x.label ?? chartData.labels?.x;
+    plotOptions.y.label = plotOptions.y.label ?? chartData.labels?.y;
+    plotOptions.color.label =
+      plotOptions.color.label ?? chartData.labels?.series;
+
     this._chartData = chartData;
     const document = this._isServer ? this._jsdom!.window.document : undefined;
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
+    // TODO: custom sorts as inputs
     const sorts = getSorts(currentColumns, chartData);
     const plotMarkType = getPlotMarkType(this._type);
-    const legendDisplay = this._config?.legendDisplay ?? true;
+
+    // Note, displaying legends by default
+    const legendDisplay = plotOptions.color.legend ?? true;
+    // TODO: get from options
     const hasLegend = chartData.types?.series !== undefined && legendDisplay;
+    // TODO: get from options
     const legendType = getLegendType(chartData, currentColumns);
-    const legendLabel = this._config?.legendLabel ?? chartData.labels?.series;
+    // TODO: maybe rename series to color....?
+    const legendLabel = plotOptions.color.label;
 
     // Different legend height for continuous, leave space for categorical label
     const legendHeight =
       legendType === "continuous" ? 50 : legendLabel ? 44 : 28;
     const plotHeight = hasLegend
-      ? (this._config?.height || 281) - legendHeight
-      : this._config?.height || 281;
+      ? (plotOptions.height || 281) - legendHeight
+      : plotOptions.height || 281;
     // TODO: maybe just pass plotConfig, but falling back to chartData.labels
     const primaryMarkOptions = getMarkOptions(currentColumns, this._type, {
-      color: typeof this._color === "string" ? this._color : undefined,
-      r: this._config?.r,
-      tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
-      xLabel: this._config?.xLabel ?? chartData?.labels?.x,
-      yLabel: this._config?.yLabel ?? chartData?.labels?.y,
+      color: isColor(this._color.column) ? this._color.column : undefined,
+      // TODO: radius
+      // r: plotOptions.r,
+      // TODO: tooltips
+      // tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
+      tip: this._isServer ? false : true, // don't allow tip on the server
+      xLabel: plotOptions.x.label ?? chartData?.labels?.x,
+      yLabel: plotOptions.y.label ?? chartData?.labels?.y,
     });
     const topLevelPlotOptions = getTopLevelPlotOptions(
       chartData,
       currentColumns,
       sorts,
       this._type,
-      // TODO: pass in plotConfig? or better combine these objects
-      {
-        width: this._config?.width || 500,
-        height: plotHeight,
-        xLabel: this._config?.xLabel ?? chartData?.labels?.x,
-        yLabel: this._config?.yLabel ?? chartData?.labels?.y,
-        xLabelDisplay: this._config?.xLabelDisplay ?? true,
-        yLabelDisplay: this._config?.yLabelDisplay ?? true,
-        hideTicks: this._config?.hideTicks ?? false,
-        // color: this._color,
-      }
+      plotOptions
+      // TODO: support these?
+      // xLabelDisplay: this._config?.xLabelDisplay ?? true,
+      // yLabelDisplay: this._config?.yLabelDisplay ?? true,
+      // TODO: handle hideTicks differently -- just pass in null for the axis
+      // hideTicks: this._config?.hideTicks ?? false,
+      // color: this._color,
+      // }
     );
 
     const primaryMark =
       !currentColumns.includes("x") || !currentColumns.includes("y")
         ? []
         : [Plot[plotMarkType](chartData, primaryMarkOptions)];
-    const commonPlotMarks = getCommonMarks(this._type, currentColumns, {
-      ...(this._config?.borderColor
-        ? { borderColor: this._config?.borderColor }
-        : {}),
-    });
+    // TODO: double check you don't actually use border color
+    const commonPlotMarks = getCommonMarks(this._type, currentColumns);
     const facetMarks = getFacetMarks(chartData, currentColumns);
     const options = {
       ...topLevelPlotOptions,
@@ -257,7 +288,7 @@ export class DuckPlot {
           this._document,
           Array.from(plt.scale("color")?.domain ?? []),
           Array.from(plt.scale("color")?.range ?? []),
-          this._config?.width || 500, // TODO: default width
+          plotOptions?.width || 500, // TODO: default width
           plotHeight,
           legendLabel,
           this._font
