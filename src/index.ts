@@ -214,11 +214,13 @@ export class DuckPlot {
       ? await this.prepareChartData()
       : this._chartData;
 
-    // Fallback to computed labels if they aren't present in the options
-    plotOptions.x.label = plotOptions.x.label ?? chartData.labels?.x;
-    plotOptions.y.label = plotOptions.y.label ?? chartData.labels?.y;
-    plotOptions.color.label =
-      plotOptions.color.label ?? chartData.labels?.series;
+    // Fallback to computed labels if they are undefined
+    if (plotOptions.x.label === undefined)
+      plotOptions.x.label = chartData.labels?.x;
+    if (plotOptions.y.label === undefined)
+      plotOptions.y.label = chartData.labels?.y;
+    if (plotOptions.color.label === undefined)
+      plotOptions.color.label = chartData.labels?.series;
 
     this._chartData = chartData;
     const document = this._isServer ? this._jsdom!.window.document : undefined;
@@ -248,8 +250,8 @@ export class DuckPlot {
       color: isColor(this._color.column) ? this._color.column : undefined,
       r: this._config.r,
       tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
-      xLabel: plotOptions.x.label,
-      yLabel: plotOptions.y.label,
+      xLabel: plotOptions.x.label ?? "",
+      yLabel: plotOptions.y.label ?? "",
     });
 
     const topLevelPlotOptions = getTopLevelPlotOptions(
@@ -292,7 +294,7 @@ export class DuckPlot {
           Array.from(plt.scale("color")?.range ?? []),
           plotOptions?.width || 500, // TODO: default width
           plotHeight,
-          legendLabel,
+          legendLabel ?? "",
           this._font
         );
       } else {

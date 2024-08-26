@@ -3,7 +3,8 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `
 duckplot
   .table("income")
-  .columns({ x: "validator", y: ["consensus_income", "execution_income"]})
+  .x("validator")
+  .y(["consensus_income", "execution_income"])
   .type("barYGrouped")
 `;
 

@@ -3,8 +3,10 @@ import { renderPlot } from "../util/renderPlotClient.js";
 
 const codeString = `duckplot
   .table("taxi")
-  .columns({ x: "Borough", y: "count"})  
-  .type("barY");`;
+  .x("Borough", {label: "Neighborhood"})
+  .y("count")  
+  .type("barY")
+  .config({xLabelDisplay: false});`;
 
 export const barRotatedAxis = (options) =>
   renderPlot("taxi.csv", codeString, options);

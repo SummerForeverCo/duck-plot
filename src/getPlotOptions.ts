@@ -43,6 +43,7 @@ export function getMarkOptions(
               x: false,
               y: false,
               fy: false,
+              fx: false,
               z: false, // Hide the auto generated "series" for area charts
             },
           },
