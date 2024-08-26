@@ -3,7 +3,8 @@ import { renderPlot } from "../util/renderPlotClient.js";
 
 const codeString = `duckplot
   .table("taxi")
-  .columns({ x: "date", series: "Borough"})  
+  .x("date")
+  .color("Borough")  
   .type("barY");`;
 
 export const partialChart = (options) =>
