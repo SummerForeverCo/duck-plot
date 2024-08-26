@@ -6,7 +6,7 @@ duckplot
   .x("month")
   .y(["consensus_income", "execution_income"], {label: "Total income"})
   .type("areaY")
-  .options({color: {label: "Income Source"}})
+  .options({color: {legend: false, label: "Income Source"}})
 `;
 
 export const area = (options) => renderPlot("income.csv", codeString, options);
