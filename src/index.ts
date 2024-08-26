@@ -180,7 +180,9 @@ export class DuckPlot {
     const columns = {
       ...(this._x.column ? { x: this._x.column } : {}),
       ...(this._y.column ? { y: this._y.column } : {}),
-      ...(this._color.column ? { series: this._color.column } : {}), // TODO: naming....?
+      ...(this._color.column && !isColor(this._color.column)
+        ? { series: this._color.column }
+        : {}), // TODO: naming....?
       ...(this._facet.column ? { facet: this._facet.column } : {}),
     };
     return prepareChartData(this._ddb, this._table, columns, this._type!);
