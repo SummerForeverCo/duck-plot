@@ -1,4 +1,3 @@
-import { DuckPlot } from "../dist/index.cjs";
 import { JSDOM } from "jsdom";
 import fs from "fs";
 import path from "path";
@@ -31,8 +30,6 @@ if (!fs.existsSync(outDir)) {
   fs.mkdirSync(outDir, { recursive: true });
 }
 for (const [name, plot] of Object.entries(plots)) {
-  // const duckPlot = new DuckPlot({ jsdom, font });
-
   try {
     // Wrap the plot function call and the rest of the operations in a try block
     const plt = await plot({ jsdom, font });
