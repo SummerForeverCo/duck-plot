@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { JSDOM } from "jsdom";
 // @ts-expect-error: TypeScript cannot find the types but it works
 import { DuckPlot } from "../dist/index.es";
-import { ColumnsConfig, PlotConfig } from "../src/types";
 import { createDbServer } from "../examples/util/createDbServer";
 import { Database } from "duckdb-async";
 
@@ -55,7 +54,7 @@ describe("DuckPlot", () => {
 
   describe("config()", () => {
     it("should set and get plot config", () => {
-      const config: PlotConfig = { width: 500, height: 300 };
+      const config = { width: 500, height: 300 };
       plot.config(config);
       expect(plot.config()).toEqual(config);
     });
