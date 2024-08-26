@@ -2,14 +2,7 @@ import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
 import type { PlotOptions } from "@observablehq/plot";
 
-import {
-  ChartData,
-  ChartType,
-  ColorConfig,
-  ColumnsConfig,
-  PlotConfig,
-  PlotProperty,
-} from "./types";
+import { ChartData, ChartType, PlotProperty } from "./types";
 import { prepareChartData } from "./prepareChartData";
 import {
   getCommonMarks,
@@ -253,8 +246,6 @@ export class DuckPlot {
       // TODO: support these!
       // xLabelDisplay: this._config?.xLabelDisplay ?? true,
       // yLabelDisplay: this._config?.yLabelDisplay ?? true,
-      // TODO: handle hideTicks differently -- just pass in null for the axis
-      // hideTicks: this._config?.hideTicks ?? false,
       // color: this._color,
       // }
     );

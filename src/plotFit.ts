@@ -2,7 +2,6 @@ import * as Plot from "@observablehq/plot";
 import type { PlotOptions } from "@observablehq/plot";
 
 export type PlotFitOptions = {
-  hideTicks?: boolean;
   rotateX?: boolean;
   hideWarnings?: boolean;
   hideOverlapping?: boolean;
@@ -25,14 +24,13 @@ export function PlotFit(
 
   // Default options
   const defaultOptions: PlotFitOptions = {
-    hideTicks: false, // if there are no ticks at all
     hideWarnings: true,
     rotateX: true,
     hideOverlapping: true,
   };
 
   // Merge user options with default options
-  const { hideTicks, hideWarnings, rotateX, hideOverlapping } = {
+  const { hideWarnings, rotateX, hideOverlapping } = {
     ...defaultOptions,
     ...options,
   };
@@ -110,8 +108,8 @@ export function PlotFit(
   let style = (config.style || {}) as Partial<CSSStyleDeclaration>;
   config = {
     ...config,
-    marginBottom: hideTicks ? 20 : maxHeight + 15,
-    marginLeft: hideTicks ? 0 : Math.max(maxWidthFromX, maxYWidth),
+    marginBottom: maxHeight + 15,
+    marginLeft: Math.max(maxWidthFromX, maxYWidth),
     marginRight: 0,
     insetTop: 0,
     x: {

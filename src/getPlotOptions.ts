@@ -95,7 +95,6 @@ const defaultOptions = {
   height: 281,
   xLabelDisplay: true, // TODO: change
   yLabelDisplay: true, // TODO: change
-  hideTicks: false, // TODO: change
   color: defaultColors,
   fx: { label: null },
   className: "plot-chart",
@@ -194,8 +193,7 @@ export function getTopLevelPlotOptions(
               data?.types?.x,
               "x",
               options.width || 0,
-              options.height || 0,
-              options.hideTicks // TODO handle
+              options.height || 0
             )),
           ...xDomain,
         };
@@ -210,8 +208,7 @@ export function getTopLevelPlotOptions(
         data?.types?.y,
         "y",
         options.width || 0,
-        options.height || 0,
-        options.hideTicks
+        options.height || 0
       )),
     ...yDomain,
   };
@@ -252,12 +249,9 @@ export function getTickFormatter(
   colType: BasicColumnType,
   direction: "x" | "y",
   width: number,
-  height: number,
-  hideTicks?: boolean
+  height: number
 ) {
-  if (hideTicks) {
-    return { tickFormat: () => "" };
-  } else if (colType === "string") {
+  if (colType === "string") {
     return {
       tickFormat: (text: string) =>
         truncateText(text, direction, width, height),

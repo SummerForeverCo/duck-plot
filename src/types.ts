@@ -1,5 +1,3 @@
-import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-import { Database } from "duckdb-async";
 import type { PlotOptions } from "@observablehq/plot";
 
 export type ChartType =
@@ -61,40 +59,6 @@ export type DescribeSchema = ColumnSchema[];
 export interface TypesObject {
   [key: string]: BasicColumnType;
 }
-
-export interface ColumnsConfig {
-  x: string;
-  y: string;
-  series: string;
-  facet?: string;
-}
-
-export interface PlotConfig {
-  xLabel?: string;
-  yLabel?: string;
-  legendLabel?: string;
-  width?: number;
-  height?: number;
-  xLabelDisplay?: boolean;
-  yLabelDisplay?: boolean;
-  legendDisplay?: boolean;
-  hideTicks?: boolean;
-  r?: number;
-  tip?: boolean;
-  borderColor?: string; // TODO maybe remove
-  // TODO: support these?
-  // title?: string;
-  // titleDisplay?: boolean;
-}
-
-export type ColorConfig =
-  | string
-  | string[]
-  | {
-      domain?: string[] | number[];
-      range?: string[];
-      scheme?: string;
-    };
 
 // Define a generic type for property
 export type PlotProperty<T extends keyof PlotOptions> = {
