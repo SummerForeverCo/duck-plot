@@ -211,6 +211,7 @@ export function getTopLevelPlotOptions(
       )),
     ...yDomain,
   };
+
   return {
     ...options,
     x: { ...computedX, ...options.x },

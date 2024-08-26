@@ -3,10 +3,13 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `
 duckplot
   .table("income")
-  .columns({ x: "month", y: ["consensus_income", "execution_income"]})
-  .config({yLabel: "Income"})
+  .x("month")
+  .y(["consensus_income", "execution_income"], {label: "Income"})
   .type("line")
-  .color(["purple", "green"])
+  .options({
+    color: {
+      range: ["purple", "green"]
+    }})
 `;
 
 export const lineMultiY = (options) =>

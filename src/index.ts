@@ -178,12 +178,14 @@ export class DuckPlot {
   async prepareChartData(): Promise<ChartData> {
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
+    // TODO: this error isn't being thrown when I'd expect (e.g, if type is not set)
+    if (!this._type) throw new Error("Type not set");
     this._newDataProps = false;
     const columns = {
       ...(this._x.column ? { x: this._x.column } : {}),
       ...(this._y.column ? { y: this._y.column } : {}),
-      ...(this._color.column ? { color: this._color.column } : {}),
-      ...(this._facet.column ? { color: this._facet.column } : {}),
+      ...(this._color.column ? { series: this._color.column } : {}), // TODO: naming....?
+      ...(this._facet.column ? { facet: this._facet.column } : {}),
     };
     return prepareChartData(this._ddb, this._table, columns, this._type!);
   }
