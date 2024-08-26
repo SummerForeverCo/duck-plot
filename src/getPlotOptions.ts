@@ -101,6 +101,12 @@ const defaultOptions = {
     overflow: "visible",
   },
 };
+
+const defaultConfig = {
+  xLabelDisplay: true,
+  yLabelDisplay: true,
+  tip: true,
+};
 // Get the top level configurations for the plot object
 // TODO: better argument order or naming
 export function getTopLevelPlotOptions(
@@ -109,9 +115,10 @@ export function getTopLevelPlotOptions(
   sorts: any,
   type: ChartType,
   userOptions: PlotOptions,
-  config?: Config
+  userConfig?: Config
 ) {
   const options = { ...defaultOptions, ...userOptions };
+  const config = { ...defaultConfig, ...userConfig };
 
   // Only compute a custom x/y domain if the other axes is missing
   // Make sure a minimum of 0 is included for x/y domains
@@ -183,7 +190,6 @@ export function getTopLevelPlotOptions(
     type === "barYGrouped" && currentColumns.includes("fx")
       ? { axis: null }
       : {
-          label: !config?.xLabelDisplay ? null : options.x?.label,
           tickSize: 0,
           tickPadding: 5,
           ...(!config?.xLabelDisplay || !options.x?.label
@@ -199,7 +205,6 @@ export function getTopLevelPlotOptions(
           ...xDomain,
         };
   const computedY = {
-    label: !config?.yLabelDisplay ? null : options.y?.label,
     labelArrow: !config?.yLabelDisplay || !options.y?.label ? "none" : true,
     labelAnchor: "top",
     tickSize: 0,
@@ -216,8 +221,16 @@ export function getTopLevelPlotOptions(
 
   return {
     ...options,
-    x: { ...computedX, ...options.x },
-    y: { ...computedY, ...options.y },
+    x: {
+      ...computedX,
+      ...options.x,
+      label: !config?.xLabelDisplay ? null : options.x?.label,
+    },
+    y: {
+      ...computedY,
+      ...options.y,
+      label: !config?.yLabelDisplay ? null : options.y?.label,
+    },
     color: { ...computedColor, ...options.color },
     ...(currentColumns.includes("facet")
       ? {

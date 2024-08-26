@@ -51,11 +51,7 @@ export class DuckPlot {
   private _document: Document;
   private _newDataProps: boolean = true;
   private _chartData: ChartData = [];
-  private _config: Config = {
-    xLabelDisplay: true,
-    yLabelDisplay: true,
-    tip: true,
-  };
+  private _config: Config = {};
 
   constructor(
     ddb: AsyncDuckDB,
