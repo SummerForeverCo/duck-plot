@@ -109,7 +109,7 @@ export function getTopLevelPlotOptions(
   sorts: any,
   type: ChartType,
   userOptions: PlotOptions,
-  config: Config
+  config?: Config
 ) {
   const options = { ...defaultOptions, ...userOptions };
 
@@ -181,10 +181,10 @@ export function getTopLevelPlotOptions(
     type === "barYGrouped" && currentColumns.includes("fx")
       ? { axis: null }
       : {
-          label: !config.xLabelDisplay ? null : options.x?.label,
+          label: !config?.xLabelDisplay ? null : options.x?.label,
           tickSize: 0,
           tickPadding: 5,
-          ...(!config.xLabelDisplay || !options.x?.label
+          ...(!config?.xLabelDisplay || !options.x?.label
             ? { labelArrow: "none" }
             : {}),
           ...(currentColumns.includes("x") &&
@@ -197,8 +197,8 @@ export function getTopLevelPlotOptions(
           ...xDomain,
         };
   const computedY = {
-    label: !config.yLabelDisplay ? null : options.y?.label,
-    labelArrow: !config.yLabelDisplay || !options.y?.label ? "none" : true,
+    label: !config?.yLabelDisplay ? null : options.y?.label,
+    labelArrow: !config?.yLabelDisplay || !options.y?.label ? "none" : true,
     labelAnchor: "top",
     tickSize: 0,
     tickPadding: 5,

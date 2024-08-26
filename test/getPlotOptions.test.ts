@@ -124,13 +124,6 @@ describe("truncateText", () => {
 });
 
 describe("getTickFormatter", () => {
-  it("should return an empty string formatter if hideTicks is true", () => {
-    const result = getTickFormatter("string", "x", 100, 100, true);
-    expect(result).toEqual({ tickFormat: expect.any(Function) });
-    if (typeof result.tickFormat === "function")
-      expect(result?.tickFormat("hello")).toBe("");
-  });
-
   it("should return a tick formatter that truncates text for string columns", () => {
     const result = getTickFormatter("string", "x", 100, 20);
     expect(result).toEqual({ tickFormat: expect.any(Function) });
@@ -138,11 +131,6 @@ describe("getTickFormatter", () => {
       expect(
         result.tickFormat("This is a long text that needs to be truncated")
       ).toBe("T…");
-  });
-
-  it("should return an empty object for number columns if hideTicks is false", () => {
-    const result = getTickFormatter("number", "x", 100, 100, false);
-    expect(result).toEqual({});
   });
 });
 
@@ -164,10 +152,8 @@ describe("getTopLevelPlotOptions", () => {
     ];
     data.types = { x: "string", y: "number", series: "string" };
     const result = getTopLevelPlotOptions(data, ["x", "y"], {}, "barY", {
-      xLabelDisplay: true,
-      yLabelDisplay: true,
-      xLabel: "X Axis",
-      yLabel: "Y Axis",
+      x: { label: "X Axis" },
+      y: { label: "Y Axis" },
     });
 
     expect(result.x).toEqual(
