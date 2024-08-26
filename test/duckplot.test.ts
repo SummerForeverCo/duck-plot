@@ -29,7 +29,7 @@ describe("DuckPlot", () => {
     });
   });
 
-  describe("data()", () => {
+  describe("table()", () => {
     it("should set and get table name", () => {
       plot.table("tableName");
       expect(plot.table()).toEqual("tableName");
@@ -37,11 +37,10 @@ describe("DuckPlot", () => {
     });
   });
 
-  describe("columns()", () => {
-    it("should set and get columns config", () => {
-      const columnsConfig: ColumnsConfig = { x: "x", y: "y", series: "series" };
-      plot.columns(columnsConfig);
-      expect(plot.columns()).toEqual(columnsConfig);
+  describe("x()", () => {
+    it("should set and get x config", () => {
+      plot.x("x", { axis: "top" });
+      expect(plot.x()).toEqual({ column: "x", options: { axis: "top" } });
       expect(plot["_newDataProps"]).toBe(true);
     });
   });
@@ -70,10 +69,7 @@ describe("DuckPlot", () => {
     });
 
     it("should prepare chart data when data is set", async () => {
-      plot
-        .table("income")
-        .columns({ x: "month", y: "consensus_income" })
-        .type("line");
+      plot.table("income").x("month").y("consensus_income").type("line");
       const data = await plot.prepareChartData();
       expect(data).toBeDefined();
       expect(plot["_newDataProps"]).toBe(false);
@@ -87,10 +83,7 @@ describe("DuckPlot", () => {
     });
 
     it("should render an SVG element when everything is set", async () => {
-      plot
-        .table("income")
-        .columns({ x: "month", y: "consensus_income" })
-        .type("line");
+      plot.table("income").x("month").y("consensus_income").type("line");
       const result = await plot.render();
       expect(result).toBeDefined();
       expect(result!.nodeName).toBe("DIV");
@@ -98,10 +91,12 @@ describe("DuckPlot", () => {
     });
 
     it("should render a legend", async () => {
-      plot.table("income");
-      plot.columns({ x: "month", y: ["consensus_income", "execution_income"] });
-      plot.type("line");
-      plot.config({ legendDisplay: true });
+      plot
+        .table("income")
+        .x("month")
+        .y(["consensus_income", "execution_income"])
+        .type("line");
+
       const result = await plot.render();
       expect(result!.querySelector(".legend")).toBeDefined();
     });
