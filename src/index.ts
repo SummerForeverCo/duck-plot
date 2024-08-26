@@ -240,7 +240,7 @@ export class DuckPlot {
     // Different legend height for continuous, leave space for categorical label
     const legendHeight =
       legendType === "continuous" ? 50 : legendLabel ? 44 : 28;
-    const plotHeight = hasLegend
+    plotOptions.height = hasLegend
       ? (plotOptions.height || 281) - legendHeight
       : plotOptions.height || 281;
 
@@ -291,7 +291,7 @@ export class DuckPlot {
           Array.from(plt.scale("color")?.domain ?? []),
           Array.from(plt.scale("color")?.range ?? []),
           plotOptions?.width || 500, // TODO: default width
-          plotHeight,
+          plotOptions.height,
           legendLabel ?? "",
           this._font
         );
