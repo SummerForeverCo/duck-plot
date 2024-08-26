@@ -4,7 +4,7 @@ const codeString = `
 duckplot
   .table("income")
   .x("month")
-  .y(["consensus_income", "execution_income"])
+  .y(["consensus_income", "execution_income"], {label: "Total income"})
   .type("areaY")
   .options({color: {label: "Income Source"}})
 `;

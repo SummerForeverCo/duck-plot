@@ -1,12 +1,7 @@
 import type { MarkOptions, PlotOptions } from "@observablehq/plot";
 import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
-import type {
-  BasicColumnType,
-  ChartData,
-  ChartType,
-  ColorConfig,
-} from "./types";
+import type { BasicColumnType, ChartData, ChartType } from "./types";
 export const defaultColors = [
   "rgba(255, 0, 184, 1)", // pink (hsla(317, 100%, 50%))
   "rgba(0, 183, 255, 1)", // blue (hsla(194, 100%, 50%))
@@ -96,15 +91,18 @@ export function getSorts(currentColumns: string[] = [], data?: ChartData) {
 
 // TODO: type this
 const defaultOptions = {
-  width: 800,
-  height: 600,
-  xLabelDisplay: true,
-  yLabelDisplay: true,
-  xLabel: "",
-  yLabel: "",
-  legend: "",
-  hideTicks: false,
+  width: 500,
+  height: 281,
+  xLabelDisplay: true, // TODO: change
+  yLabelDisplay: true, // TODO: change
+  hideTicks: false, // TODO: change
   color: defaultColors,
+  fx: { label: null },
+  className: "plot-chart",
+  grid: false,
+  style: {
+    overflow: "visible",
+  },
 };
 // Get the top level configurations for the plot object
 export function getTopLevelPlotOptions(
@@ -115,6 +113,7 @@ export function getTopLevelPlotOptions(
   userOptions: PlotOptions
 ) {
   const options = { ...defaultOptions, ...userOptions };
+
   // Only compute a custom x/y domain if the other axes is missing
   // Make sure a minimum of 0 is included for x/y domains
   const xDomain = sorts.x
@@ -139,7 +138,7 @@ export function getTopLevelPlotOptions(
       };
 
   // Handle 3 options for color: note, color as a string is assigned in the mark
-  const { color: colorConfig, legend } = options;
+  const { color: colorConfig } = options;
   const { domain: sortsDomain } = sorts.series || {};
 
   let colorDomain, colorRange, colorScheme;
@@ -172,7 +171,7 @@ export function getTopLevelPlotOptions(
 
   const computedColor = hasColor
     ? {
-        label: legend,
+        label: Array.isArray(options.color) ? "" : options.color.label,
         ...(colorDomain && { domain: colorDomain }),
         ...(colorRange && { range: colorRange }),
         ...(colorScheme && { scheme: colorScheme }),
@@ -184,10 +183,10 @@ export function getTopLevelPlotOptions(
       ? { axis: null }
       : {
           // TODO: handle labelDisplay
-          label: !options.xLabelDisplay ? null : options.xLabel,
+          label: !options.xLabelDisplay ? null : options.x?.label,
           tickSize: 0,
           tickPadding: 5,
-          ...(!options.xLabelDisplay || !options.xLabel
+          ...(!options.xLabelDisplay || !options.x?.label
             ? { labelArrow: "none" }
             : {}),
           ...(currentColumns.includes("x") &&
@@ -201,8 +200,8 @@ export function getTopLevelPlotOptions(
           ...xDomain,
         };
   const computedY = {
-    label: !options.yLabelDisplay ? null : options.yLabel,
-    labelArrow: !options.yLabelDisplay || !options.yLabel ? "none" : true,
+    label: !options.yLabelDisplay ? null : options.y?.label,
+    labelArrow: !options.yLabelDisplay || !options.y?.label ? "none" : true,
     labelAnchor: "top",
     tickSize: 0,
     tickPadding: 5,
@@ -221,15 +220,11 @@ export function getTopLevelPlotOptions(
     x: { ...computedX, ...options.x },
     y: { ...computedY, ...options.y },
     color: { ...computedColor, ...options.color },
-    fx: { label: null },
-    className: "plot-chart",
-    // TODO: move these to default option
-    grid: false,
-    style: {
-      overflow: "visible",
-    },
     ...(currentColumns.includes("facet")
-      ? { fy: { ...sorts.facet, axis: null, label: null }, insetTop: 12 }
+      ? {
+          fy: { ...sorts.facet, axis: null, label: null, ...options.facet },
+          insetTop: options.insetTop || 12,
+        }
       : {}),
   } as PlotOptions;
 }

@@ -222,7 +222,7 @@ export class DuckPlot {
     const legendDisplay = plotOptions.color.legend ?? true;
     // TODO: get from options
     const hasLegend = chartData.types?.series !== undefined && legendDisplay;
-    // TODO: get from options
+    // TODO: accept input legend type
     const legendType = getLegendType(chartData, currentColumns);
     // TODO: maybe rename series to color....?
     const legendLabel = plotOptions.color.label;
@@ -250,7 +250,7 @@ export class DuckPlot {
       sorts,
       this._type,
       plotOptions
-      // TODO: support these?
+      // TODO: support these!
       // xLabelDisplay: this._config?.xLabelDisplay ?? true,
       // yLabelDisplay: this._config?.yLabelDisplay ?? true,
       // TODO: handle hideTicks differently -- just pass in null for the axis
