@@ -8,6 +8,7 @@ export type PlotFitOptions = {
 };
 
 export function PlotFit(
+  // TODO: probably swap the name of options and config for consistency
   config: PlotOptions,
   options?: PlotFitOptions,
   font?: any
@@ -69,7 +70,7 @@ export function PlotFit(
   }
   // Extract the x-axis tick labels
   let xNodes = initialPlot.querySelectorAll(
-    '[aria-label="x-axis tick label"] text'
+    '[aria-label="x-axis tick label"] text, [aria-label="fx-axis tick label"] text'
   );
 
   let yNodes = initialPlot.querySelectorAll(
@@ -106,6 +107,13 @@ export function PlotFit(
       tickRotate === 0 ? 0 : Math.max(maxWidthFromX, rotatedWidth);
   });
   let style = (config.style || {}) as Partial<CSSStyleDeclaration>;
+  // Additional margin bottom for grouped bar charts
+  let facet =
+    "fx" in config
+      ? {
+          facet: { marginBottom: maxHeight + 15 },
+        }
+      : {};
   config = {
     ...config,
     marginBottom: maxHeight + 15,
@@ -123,7 +131,9 @@ export function PlotFit(
       ...style,
       overflow: "visible",
     },
+    ...facet,
   };
+
   const finalChart = Plot.plot(config);
 
   // Adjust the visibility of the x and y labels that may be overlapping

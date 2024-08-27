@@ -64,6 +64,7 @@ export function getMarkOptions(
     ...tip,
     ...(type === "line" ? { stroke } : { fill }),
     ...(currentColumns.includes("x") ? { x: `x`, sort: (d: any) => d.x } : {}),
+    // TODO: should probably rename facet to 'fx'
     ...(currentColumns.includes("facet") ? { fy: "facet" } : {}),
     ...(fx ? { fx: `fx` } : {}),
     ...(currentColumns.includes("y") ? { y: `y` } : {}),
@@ -238,6 +239,10 @@ export function getTopLevelPlotOptions(
           fy: { ...sorts.facet, axis: null, label: null, ...options.facet },
           insetTop: options.insetTop || 12,
         }
+      : {}),
+    // This is based on the assumption that fx comes from a groupedBar chart
+    ...(currentColumns.includes("fx") && type === "barYGrouped"
+      ? { fx: { label: options.x?.label } }
       : {}),
   } as PlotOptions;
 }
