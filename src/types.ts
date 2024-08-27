@@ -74,4 +74,5 @@ export type Config = {
   yLabelDisplay?: boolean;
   r?: number; // Radius for dot plots
   tip?: boolean; // Show tooltips
+  autoMargin?: boolean; // Automatically adjust margins
 };

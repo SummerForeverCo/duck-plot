@@ -274,9 +274,16 @@ export class DuckPlot {
       ...(document ? { document } : {}),
     };
 
-    // TODO: store as this._plot?
-    // TODO: add an option to NOT use PlotFit
-    const plt = PlotFit(options, {}, this._font);
+    // Adjust margins UNLESS specified otherwise AND not on the server without a
+    // font
+    const serverWithoutFont = this._isServer && !this._font;
+    const autoMargin = serverWithoutFont
+      ? false
+      : this._config.autoMargin !== false;
+
+    const plt = autoMargin
+      ? PlotFit(options, {}, this._font)
+      : Plot.plot(options);
 
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     const wrapper = this._document.createElement("div");
