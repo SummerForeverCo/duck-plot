@@ -5,11 +5,10 @@
   "description": "",
   "scripts": {
     "dev": "vite",
-    "dev-server": "node examples/index.server.js",
-    "dev-multi-chart": "node examples/multiChart.js",
+    "dev-server": "npm run build && node examples/index.server.js",
+    "dev-multi-chart": "npm run build && node examples/multiChart.js",
     "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
+    "test": "npm run build && vitest run",
     "test:watch": "vitest",
     "watch:build": "nodemon"
   },
