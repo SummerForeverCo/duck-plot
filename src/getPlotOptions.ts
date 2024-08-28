@@ -49,12 +49,13 @@ export function getMarkOptions(
           },
         }
       : {};
+
   return {
     // Create custom labels for x and y (important if the labels are custom but hidden!)
     channels: {
       xCustom: {
         label: options.xLabel,
-        value: "x",
+        value: type === "barYGrouped" ? "fx" : "x",
       },
       yCustom: {
         label: options.yLabel,
