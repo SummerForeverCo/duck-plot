@@ -139,7 +139,7 @@ export function PlotFit(
   // Adjust the visibility of the x and y labels that may be overlapping
   if (hideOverlapping) {
     xNodes = finalChart.querySelectorAll(
-      '[aria-label="x-axis tick label"] text'
+      '[aria-label="x-axis tick label"] text, [aria-label="fx-axis tick label"] text'
     );
     yNodes = finalChart.querySelectorAll(
       '[aria-label="y-axis tick label"] text'

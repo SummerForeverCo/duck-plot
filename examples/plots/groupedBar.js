@@ -3,9 +3,10 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `
 duckplot
   .table("income")
-  .x("validator")
+  .x("month")
   .y(["consensus_income", "execution_income"])
   .type("barYGrouped")
+  .options({width: 300})
 `;
 
 export const groupedBar = (options) =>
