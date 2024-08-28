@@ -3,6 +3,7 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `
 duckplot
   .table("income")
+  .query("SELECT * FROM income LIMIT 100")
   .x("month", {label: "Date", axis: "top", grid: true})
   .y("consensus_income", {type: "log"})
   .type("line")

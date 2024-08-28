@@ -24,21 +24,31 @@ export async function prepareChartData(
   ddb: AsyncDuckDB | Database,
   tableName: string | undefined,
   config: ColumnConfig,
-  type: ChartType
+  type: ChartType,
+  preQuery?: string
 ): Promise<ChartData> {
   // Note, this function depends on the component props
   if (!ddb || !tableName) return [];
 
   let queryString: string;
   let labels: ChartData["labels"] = {};
+  let preQueryTableName = "";
   const reshapeTableName = getUniqueName();
+
+  // If someone wants to run some arbitary sql first, store that in a temp table
+  if (preQuery) {
+    preQueryTableName = getUniqueName();
+    const createStatement = `CREATE TABLE ${preQueryTableName} as ${preQuery}`;
+    await runQuery(ddb, createStatement);
+  }
+  let transformTableFrom = preQuery ? preQueryTableName : tableName;
 
   // First, reshape the data if necessary: this will create a NEW DUCKDB TABLE
   // that ALWAYS has the columns `x`, `y`, and `series`.
   const tranformQuery = getTransformQuery(
     type,
     config,
-    tableName,
+    transformTableFrom,
     reshapeTableName
   );
   await runQuery(ddb, tranformQuery);
@@ -109,5 +119,7 @@ export async function prepareChartData(
 
   // Drop the reshaped table
   await runQuery(ddb, `drop table if exists "${reshapeTableName}"`);
+  if (preQueryTableName)
+    await runQuery(ddb, `drop table if exists "${preQueryTableName}"`);
   return formatted;
 }

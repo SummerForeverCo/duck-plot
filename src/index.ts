@@ -52,6 +52,7 @@ export class DuckPlot {
   private _newDataProps: boolean = true;
   private _chartData: ChartData = [];
   private _config: Config = {};
+  private _query: string = "";
 
   constructor(
     ddb: AsyncDuckDB,
@@ -79,6 +80,19 @@ export class DuckPlot {
     return this._table!;
   }
 
+  // Method to run arbitrary sql BEFORE transforming the data
+  query(): string;
+  query(query: string): this;
+  query(query?: string): string | this {
+    if (query) {
+      if (query !== this._query) {
+        this._query = query;
+        this._newDataProps = true; // when changed, we need to requery the data
+      }
+      return this;
+    }
+    return this._query;
+  }
   // Helper method for getting and setting x, y, color, and facet properties
   private handleProperty<T extends keyof PlotOptions>(
     prop: PlotProperty<T>,
@@ -185,7 +199,13 @@ export class DuckPlot {
         : {}), // TODO: naming....?
       ...(this._facet.column ? { facet: this._facet.column } : {}),
     };
-    return prepareChartData(this._ddb, this._table, columns, this._type!);
+    return prepareChartData(
+      this._ddb,
+      this._table,
+      columns,
+      this._type!,
+      this._query
+    );
   }
 
   async render(): Promise<SVGElement | HTMLElement | null> {
