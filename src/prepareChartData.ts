@@ -1,5 +1,11 @@
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-import { ChartData, ChartType, ColumnConfig, DescribeSchema } from "./types";
+import {
+  ChartData,
+  ChartType,
+  ColumnConfig,
+  DescribeSchema,
+  Indexable,
+} from "./types";
 import {
   columnIsDefined,
   getAggregateInfo,
@@ -27,7 +33,6 @@ export async function prepareChartData(
   type: ChartType,
   preQuery?: string
 ): Promise<ChartData> {
-  // Note, this function depends on the component props
   if (!ddb || !tableName) return [];
 
   let queryString: string;
@@ -43,6 +48,19 @@ export async function prepareChartData(
   }
   let transformTableFrom = preQuery ? preQueryTableName : tableName;
 
+  // Make sure that the columns are in the schema
+  const initialSchema = await runQuery(ddb, `DESCRIBE ${transformTableFrom}`);
+  const allColumns = Object.entries(config).flatMap(([key, col]) => col);
+  const schemaCols = initialSchema.map((row: Indexable) => row.column_name);
+
+  // Find the missing columns
+  const missingColumns = allColumns.filter((col) => !schemaCols.includes(col));
+
+  if (missingColumns.length > 0) {
+    throw new Error(
+      `Column(s) not found in schema: ${missingColumns.join(", ")}`
+    );
+  }
   // First, reshape the data if necessary: this will create a NEW DUCKDB TABLE
   // that ALWAYS has the columns `x`, `y`, and `series`.
   const tranformQuery = getTransformQuery(
