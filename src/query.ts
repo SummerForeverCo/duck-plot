@@ -33,7 +33,7 @@ export function getTransformType(
 
 export function getStandardTransformQuery(
   type: ChartType,
-  { x, y, series, facet }: ColumnConfig,
+  { x, y, series, fy }: ColumnConfig,
   tableName: string,
   into: string
 ) {
@@ -51,19 +51,19 @@ export function getStandardTransformQuery(
       }
     }
     if (y?.length) select.push(standardColName({ y }, "y"));
-    if (facet?.length) select.push(maybeConcatCols(facet, "facet"));
+    if (fy?.length) select.push(maybeConcatCols(fy, "fy"));
   } else {
     if (x?.length) select.push(standardColName({ x }, "x"));
     if (y?.length) select.push(standardColName({ y }, "y"));
     if (series?.length) select.push(maybeConcatCols(series, "series"));
-    if (facet?.length) select.push(maybeConcatCols(facet, "facet"));
+    if (fy?.length) select.push(maybeConcatCols(fy, "fy"));
   }
   return buildSqlQuery({ select, into, from: tableName! });
 }
 
 export function getUnpivotQuery(
   type: ChartType,
-  { x, y, facet }: ColumnConfig,
+  { x, y, fy }: ColumnConfig,
   tableName: string,
   into: string
 ) {
@@ -74,8 +74,8 @@ export function getUnpivotQuery(
   if (type === "barYGrouped") {
     const selectStr = `SELECT "${x}" as fx, value AS y`;
     const keysStr = quoteColumns(y)?.join(", ");
-    const facetStr = facet ? `${maybeConcatCols(facet, "facet,")}` : "";
-    return `${createStatment} ${selectStr}, ${facetStr} key AS x, key AS series FROM "${tableName}"
+    const fyStr = fy ? `${maybeConcatCols(fy, "fy,")}` : "";
+    return `${createStatment} ${selectStr}, ${fyStr} key AS x, key AS series FROM "${tableName}"
         UNPIVOT (value FOR key IN (${keysStr}));`;
   }
 
@@ -87,15 +87,15 @@ export function getUnpivotQuery(
         }value AS y`;
   const keysStr =
     type === "barX" ? quoteColumns(x)?.join(", ") : quoteColumns(y)?.join(", ");
-  const facetStr = facet ? maybeConcatCols(facet, "facet,") : "";
+  const fyStr = fy ? maybeConcatCols(fy, "fy,") : "";
 
-  return `${createStatment} ${selectStr}, ${facetStr} key AS series FROM "${tableName}"
+  return `${createStatment} ${selectStr}, ${fyStr} key AS series FROM "${tableName}"
         UNPIVOT (value FOR key IN (${keysStr}));`;
 }
 
 export function getUnpivotWithSeriesQuery(
   type: ChartType,
-  { x, y, series, facet }: ColumnConfig,
+  { x, y, series, fy }: ColumnConfig,
   tableName: string,
   into: string
 ) {
@@ -111,13 +111,13 @@ export function getUnpivotWithSeriesQuery(
             y,
             concat_ws('-', pivotCol, series) AS series,
             fx,
-            ${facet?.length ? "facet" : ""}
+            ${fy?.length ? "fy" : ""}
         FROM (
             SELECT
                 ${xStatement},
                 ${yStatement},
                 ${maybeConcatCols(series, "series")},
-                ${facet?.length ? maybeConcatCols(facet, "facet") : ""}
+                ${fy?.length ? maybeConcatCols(fy, "fy") : ""}
             FROM
                 ${tableName}
         ) p
@@ -141,13 +141,13 @@ export function getUnpivotWithSeriesQuery(
             ${columnIsDefined("x", { x }) ? `x, ` : ""}
             y,
             concat_ws('-', pivotCol, series) AS series,
-            ${facet?.length ? "facet" : ""}
+            ${fy?.length ? "fy" : ""}
         FROM (
           SELECT
               ${xStatement}
               ${yStatement},
               ${maybeConcatCols(series, "series")},
-              ${facet?.length ? maybeConcatCols(facet, "facet") : ""}
+              ${fy?.length ? maybeConcatCols(fy, "fy") : ""}
           FROM
               ${tableName}
       ) p
@@ -165,7 +165,7 @@ export function getTransformQuery(
   intoTable: string
 ) {
   // Detect what type of query we need to construct
-  const transformType = getTransformType(type, omit(config, ["facet"]));
+  const transformType = getTransformType(type, omit(config, ["fy"]));
   // Return the constructe query
   if (transformType === "unPivotWithSeries") {
     return getUnpivotWithSeriesQuery(type, config, tableName, intoTable);

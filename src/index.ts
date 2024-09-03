@@ -6,7 +6,7 @@ import { ChartData, ChartType, Config, PlotProperty } from "./types";
 import { prepareChartData } from "./prepareChartData";
 import {
   getCommonMarks,
-  getFacetMarks,
+  getfyMarks,
   getLegendType,
   getMarkOptions,
   getPlotMarkType,
@@ -34,7 +34,7 @@ export class DuckPlot {
     options: {},
   };
 
-  private _facet: PlotProperty<"facet"> = {
+  private _fy: PlotProperty<"fy"> = {
     column: "",
     options: {},
   };
@@ -93,7 +93,7 @@ export class DuckPlot {
     }
     return this._query;
   }
-  // Helper method for getting and setting x, y, color, and facet properties
+  // Helper method for getting and setting x, y, color, and fy properties
   private handleProperty<T extends keyof PlotOptions>(
     prop: PlotProperty<T>,
     column?: string,
@@ -134,14 +134,11 @@ export class DuckPlot {
     return this.handleProperty(this._color, column, options);
   }
 
-  // facet method using the generic handler
-  facet(): PlotProperty<"facet">;
-  facet(column: string, options?: PlotOptions["facet"]): this;
-  facet(
-    column?: string,
-    options?: PlotOptions["facet"]
-  ): PlotProperty<"facet"> | this {
-    return this.handleProperty(this._facet, column, options);
+  // fy method using the generic handler
+  fy(): PlotProperty<"fy">;
+  fy(column: string, options?: PlotOptions["fy"]): this;
+  fy(column?: string, options?: PlotOptions["fy"]): PlotProperty<"fy"> | this {
+    return this.handleProperty(this._fy, column, options);
   }
 
   type(): ChartType;
@@ -197,7 +194,7 @@ export class DuckPlot {
       ...(this._color.column && !isColor(this._color.column)
         ? { series: this._color.column }
         : {}), // TODO: naming....?
-      ...(this._facet.column ? { facet: this._facet.column } : {}),
+      ...(this._fy.column ? { fy: this._fy.column } : {}),
     };
     return prepareChartData(
       this._ddb,
@@ -225,9 +222,9 @@ export class DuckPlot {
         ...this._options.color,
         ...this._color.options,
       },
-      facet: {
-        ...this._options.facet,
-        ...this._facet.options,
+      fy: {
+        ...this._options.fy,
+        ...this._fy.options,
       },
     };
     const chartData = this._newDataProps
@@ -287,10 +284,10 @@ export class DuckPlot {
         : [Plot[plotMarkType](chartData, primaryMarkOptions)];
     // TODO: double check you don't actually use border color
     const commonPlotMarks = getCommonMarks(this._type, currentColumns);
-    const facetMarks = getFacetMarks(chartData, currentColumns);
+    const fyMarks = getfyMarks(chartData, currentColumns);
     const options = {
       ...topLevelPlotOptions,
-      marks: [...commonPlotMarks, ...primaryMark, facetMarks],
+      marks: [...commonPlotMarks, ...primaryMark, fyMarks],
       ...(document ? { document } : {}),
     };
 

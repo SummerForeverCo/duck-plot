@@ -65,8 +65,8 @@ export function getMarkOptions(
     ...tip,
     ...(type === "line" ? { stroke } : { fill }),
     ...(currentColumns.includes("x") ? { x: `x`, sort: (d: any) => d.x } : {}),
-    // TODO: should probably rename facet to 'fx'
-    ...(currentColumns.includes("facet") ? { fy: "facet" } : {}),
+    // TODO: should probably rename fy to 'fx'
+    ...(currentColumns.includes("fy") ? { fy: "fy" } : {}),
     ...(fx ? { fx: `fx` } : {}),
     ...(currentColumns.includes("y") ? { y: `y` } : {}),
     ...(options.r ? { r: options.r } : {}),
@@ -235,9 +235,9 @@ export function getTopLevelPlotOptions(
       label: !config?.yLabelDisplay ? null : options.y?.label,
     },
     color: { ...computedColor, ...options.color },
-    ...(currentColumns.includes("facet")
+    ...(currentColumns.includes("fy")
       ? {
-          fy: { ...sorts.facet, axis: null, label: null, ...options.facet },
+          fy: { ...sorts.fy, axis: null, label: null, ...options.fy },
           insetTop: options.insetTop || 12,
         }
       : {}),
@@ -316,7 +316,7 @@ export function getCommonMarks(
       // fill: options.background,
       rx: 4,
       ry: 4,
-      ...(type === "barYGrouped" ? { facet: "super" } : {}),
+      ...(type === "barYGrouped" ? { fy: "super" } : {}),
     }),
     ...[
       currentColumns?.includes("y")
@@ -330,16 +330,16 @@ export function getCommonMarks(
   ];
 }
 
-export function getFacetMarks(data: ChartData, currentColumns: string[]) {
-  return currentColumns.includes("facet")
+export function getfyMarks(data: ChartData, currentColumns: string[]) {
+  return currentColumns.includes("fy")
     ? [
         Plot.text(
           data,
           Plot.selectFirst({
-            text: (d) => d.facet,
-            fy: (d) => d.facet,
+            text: (d) => d.fy,
+            fy: (d) => d.fy,
             frameAnchor: "top-left",
-            facetAnchor: "left",
+            fyAnchor: "left",
             dy: 3,
             dx: 3,
           })

@@ -144,10 +144,8 @@ export function PlotFit(
     yNodes = finalChart.querySelectorAll(
       '[aria-label="y-axis tick label"] text'
     );
-    const facetNodes = finalChart.querySelectorAll(
-      '[aria-label="text"] g text'
-    );
-    adjustVisibility(facetNodes, config.height! - (config.marginBottom || 0));
+    const fyNodes = finalChart.querySelectorAll('[aria-label="text"] g text');
+    adjustVisibility(fyNodes, config.height! - (config.marginBottom || 0));
     adjustVisibility(xNodes, config.width! - (config.marginLeft || 0));
     adjustVisibility(yNodes, config.height! - (config.marginBottom || 0));
   }

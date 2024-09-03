@@ -67,7 +67,7 @@ import { DuckPlot } from "duck-plot";
 const duckPlot = new DuckPlot(ddb);
 duckPlot
   .table("my_table")
-  .columns({ x: "date", y: "cost", series: "company", facet: "department" })
+  .columns({ x: "date", y: "cost", series: "company", fy: "department" })
   .type("line");
 const svg = await duckPlot.render();
 document.body.appendChild(svg);
@@ -107,14 +107,14 @@ effectively. Below are the primary methods available:
 - **Parameters:**
   - `table`: The name of the table to be used for plotting.
 
-**`.columns({x: string, y: string, series?: string, facet?: string})`**
+**`.columns({x: string, y: string, series?: string, fy?: string})`**
 
 - **Description:** Defines the columns of interest for the plot.
 - **Parameters:**
   - `x`: The column to be used for the x-axis.
   - `y`: The column to be used for the y-axis.
   - `series` _(optional)_: The column used to group data by series.
-  - `facet` _(optional)_: The column used for faceting the plot.
+  - `fy` _(optional)_: The column used for fying the plot.
 
 **`.type("line" | "barY" | "areaY" | "dot" | "barX")`**
 

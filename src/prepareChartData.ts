@@ -54,7 +54,7 @@ export async function prepareChartData(
   await runQuery(ddb, tranformQuery);
 
   let distinctCols = (
-    type === "barX" ? ["y", "series", "facet"] : ["x", "series", "facet"]
+    type === "barX" ? ["y", "series", "fy"] : ["x", "series", "fy"]
   ).filter((d) => columnIsDefined(d as keyof ColumnConfig, config));
 
   // Catch for reshaped data where series gets added

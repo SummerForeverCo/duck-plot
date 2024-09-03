@@ -20,9 +20,9 @@ describe("getMarkOptions", () => {
     expect(result).toHaveProperty("fill", "series");
   });
 
-  it("should return the correct options when facet is included", () => {
-    const result = getMarkOptions(["facet"], "line", {});
-    expect(result).toHaveProperty("fy", "facet");
+  it("should return the correct options when fy is included", () => {
+    const result = getMarkOptions(["fy"], "line", {});
+    expect(result).toHaveProperty("fy", "fy");
   });
   it("should use custom x and y labels in the tooltip", () => {
     const result = getMarkOptions(["x", "y"], "line", {
@@ -181,9 +181,9 @@ describe("getTopLevelPlotOptions", () => {
     expect(result.y).toEqual(expect.objectContaining(sorts.y));
   });
 
-  it("should handle facet sort option and insetTop if provided", () => {
-    const sorts = { facet: { domain: ["a", "b", "c"] } };
-    const result = getTopLevelPlotOptions([], ["facet"], sorts, "barY", {});
+  it("should handle fy sort option and insetTop if provided", () => {
+    const sorts = { fy: { domain: ["a", "b", "c"] } };
+    const result = getTopLevelPlotOptions([], ["fy"], sorts, "barY", {});
     expect(result.fy).toEqual(
       expect.objectContaining({
         domain: ["a", "b", "c"],

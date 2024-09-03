@@ -19,7 +19,7 @@ function removeSpacesAndBreaks(str: string) {
 }
 describe("getTransformType", () => {
   it('barX: should return a "standard" transform with 1 x and 1 y', () => {
-    const config = { x: ["x1"], y: ["y1"], series: [], facet: [] };
+    const config = { x: ["x1"], y: ["y1"], series: [], fy: [] };
     expect(getTransformType("barX", config)).toBe("standard");
   });
   it('barX: should return an "unPivot" transform with 2 x-axes and 1 y', () => {
@@ -27,7 +27,7 @@ describe("getTransformType", () => {
       x: ["x1", "x2"],
       y: ["y1"],
       series: [],
-      facet: [],
+      fy: [],
     };
     expect(getTransformType("barX", config)).toBe("unPivot");
   });
@@ -37,13 +37,13 @@ describe("getTransformType", () => {
       x: ["x1", "x2"],
       y: ["y1"],
       series: ["series1"],
-      facet: [],
+      fy: [],
     };
     expect(getTransformType("barX", config)).toBe("unPivotWithSeries");
   });
 
   it('barY: should return a "standard" transform with 1 x and 1 y', () => {
-    const config = { x: ["x1"], y: ["y1"], series: [], facet: [] };
+    const config = { x: ["x1"], y: ["y1"], series: [], fy: [] };
     expect(getTransformType("barY", config)).toBe("standard");
   });
   it('barY: should return an "unPivot" transform with 2 y-axes and 1 x', () => {
@@ -51,7 +51,7 @@ describe("getTransformType", () => {
       x: ["x1"],
       y: ["y1", "y2"],
       series: [],
-      facet: [],
+      fy: [],
     };
     expect(getTransformType("barY", config)).toBe("unPivot");
   });
@@ -61,7 +61,7 @@ describe("getTransformType", () => {
       x: ["x1"],
       y: ["y1", "y2"],
       series: ["series1"],
-      facet: [],
+      fy: [],
     };
     expect(getTransformType("barY", config)).toBe("unPivotWithSeries");
   });
@@ -73,11 +73,11 @@ describe("getStandardTransformQuery", () => {
       x: ["x1"],
       y: ["y1"],
       series: ["s1"],
-      facet: ["f1"],
+      fy: ["f1"],
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as x, "y1" as y, "s1" as series, "f1" as facet FROM yourTableName`;
+    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as x, "y1" as y, "s1" as series, "f1" as fy FROM yourTableName`;
     expect(
       getStandardTransformQuery("line", config, tableName, reshapedName)
     ).toBe(expectedQuery);
@@ -88,11 +88,11 @@ describe("getStandardTransformQuery", () => {
       x: ["x1"],
       y: ["y1"],
       series: ["s1"],
-      facet: ["f1"],
+      fy: ["f1"],
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as fx, "s1" as series, "s1" as x, "y1" as y, "f1" as facet FROM yourTableName`;
+    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as fx, "s1" as series, "s1" as x, "y1" as y, "f1" as fy FROM yourTableName`;
     expect(
       getStandardTransformQuery("barYGrouped", config, tableName, reshapedName)
     ).toBe(expectedQuery);
@@ -104,7 +104,7 @@ describe("getUnpivotQuery", () => {
     const config = {
       x: ["x1", "x2"],
       y: ["y1"],
-      facet: [],
+      fy: [],
       series: [],
     };
     const tableName = "yourTableName";
@@ -117,16 +117,16 @@ describe("getUnpivotQuery", () => {
     );
   });
 
-  it("should build unpivot query correctly for barX type with facet", () => {
+  it("should build unpivot query correctly for barX type with fy", () => {
     const config = {
       x: ["x1", "x2"],
       y: ["y1"],
-      facet: ["facet 1", "facet 2"],
+      fy: ["fy 1", "fy 2"],
       series: [],
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "y1" as y, value AS x, concat_ws('-', "facet 1", "facet 2") as facet, key AS series FROM "yourTableName"
+    const expectedQuery = `CREATE TABLE reshaped as SELECT "y1" as y, value AS x, concat_ws('-', "fy 1", "fy 2") as fy, key AS series FROM "yourTableName"
         UNPIVOT (value FOR key IN ("x1", "x2"));`;
 
     expect(getUnpivotQuery("barX", config, tableName, reshapedName)).toBe(
@@ -134,17 +134,17 @@ describe("getUnpivotQuery", () => {
     );
   });
 
-  it("should build unpivot query correctly for area type with facet", () => {
+  it("should build unpivot query correctly for area type with fy", () => {
     const config = {
       x: ["x1"],
       y: ["y1", "y2"],
-      facet: ["facet 1", "facet 2"],
+      fy: ["fy 1", "fy 2"],
       series: [],
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
 
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as x, value AS y, concat_ws('-', "facet 1", "facet 2") as facet, key AS series FROM "yourTableName"
+    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as x, value AS y, concat_ws('-', "fy 1", "fy 2") as fy, key AS series FROM "yourTableName"
         UNPIVOT (value FOR key IN ("y1", "y2"));`;
 
     expect(getUnpivotQuery("areaY", config, tableName, reshapedName)).toBe(
@@ -152,17 +152,17 @@ describe("getUnpivotQuery", () => {
     );
   });
 
-  it("should build unpivot query correctly for barYGrouped with facet", () => {
+  it("should build unpivot query correctly for barYGrouped with fy", () => {
     const config = {
       x: ["x1"],
       y: ["y1", "y2"],
-      facet: ["facet 1", "facet 2"],
+      fy: ["fy 1", "fy 2"],
       series: [],
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
 
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as fx, value AS y, concat_ws('-', "facet 1", "facet 2") as facet, key AS x, key AS series FROM "yourTableName"
+    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as fx, value AS y, concat_ws('-', "fy 1", "fy 2") as fy, key AS x, key AS series FROM "yourTableName"
       UNPIVOT (value FOR key IN ("y1", "y2"));`;
     const result = getUnpivotQuery(
       "barYGrouped",
@@ -182,7 +182,7 @@ describe("getUnpivotWithSeriesQuery", () => {
       x: ["x1", "x2"],
       y: ["y1"],
       series: ["s1", "s2"],
-      facet: [],
+      fy: [],
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
@@ -217,7 +217,7 @@ describe("getUnpivotWithSeriesQuery", () => {
       x: ["x1"],
       y: ["y1", "y2"],
       series: ["s1", "s2"],
-      facet: [],
+      fy: [],
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
@@ -247,12 +247,12 @@ describe("getUnpivotWithSeriesQuery", () => {
     );
   });
 
-  it("should build unpivot with series query correctly for area type with facets", () => {
+  it("should build unpivot with series query correctly for area type with fys", () => {
     const config = {
       x: ["x1"],
       y: ["y1", "y2"],
       series: ["s1", "s2"],
-      facet: ["f1", "f2"],
+      fy: ["f1", "f2"],
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
@@ -260,13 +260,13 @@ describe("getUnpivotWithSeriesQuery", () => {
             x,
             y,
             concat_ws('-', pivotCol, series) AS series,
-            facet
+            fy
         FROM (
             SELECT
                 "x1" as x,
                 "y1", "y2",
                 concat_ws('-', "s1", "s2") as series,
-                concat_ws('-', "f1", "f2") as facet
+                concat_ws('-', "f1", "f2") as fy
             FROM
                 yourTableName
         ) p
@@ -284,12 +284,12 @@ describe("getUnpivotWithSeriesQuery", () => {
     );
   });
 
-  it("should build unpivot with series query correctly for barYGrouped with facets", () => {
+  it("should build unpivot with series query correctly for barYGrouped with fys", () => {
     const config = {
       x: ["x1"],
       y: ["y1", "y2"],
       series: ["s1", "s2"],
-      facet: ["f1", "f2"],
+      fy: ["f1", "f2"],
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
@@ -298,13 +298,13 @@ describe("getUnpivotWithSeriesQuery", () => {
             y,
             concat_ws('-', pivotCol, series) AS series,
             fx,
-            facet
+            fy
         FROM (
             SELECT
                 "x1" as fx,
                 "y1", "y2",
                 concat_ws('-', "s1", "s2") as series,
-                concat_ws('-', "f1", "f2") as facet
+                concat_ws('-', "f1", "f2") as fy
             FROM
                 yourTableName
         ) p
@@ -325,7 +325,7 @@ describe("getUnpivotWithSeriesQuery", () => {
 
 describe("getTransformQuery", () => {
   it("should return standard transform query correctly", () => {
-    const config = { x: ["x1"], y: ["y1"], series: [], facet: [] };
+    const config = { x: ["x1"], y: ["y1"], series: [], fy: [] };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
     const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as x, "y1" as y FROM ${tableName}`;
@@ -351,7 +351,7 @@ describe("extractDefinedValues", () => {
 
 describe("getAggregateInfo", () => {
   it("barX: should sum X if x present", () => {
-    const config = { x: ["x"], y: ["y1"], series: [], facet: [] };
+    const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
     const expectedQueryString = `SELECT y,  sum(x::FLOAT) as x FROM reshaped GROUP BY y ORDER BY y`;
