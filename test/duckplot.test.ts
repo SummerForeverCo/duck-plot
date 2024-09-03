@@ -46,8 +46,8 @@ describe("DuckPlot", () => {
 
   describe("type()", () => {
     it("should set and get chart type", () => {
-      plot.type("line");
-      expect(plot.type()).toEqual("line");
+      plot.mark("line");
+      expect(plot.mark()).toEqual("line");
       expect(plot["_newDataProps"]).toBe(true);
     });
   });
@@ -68,7 +68,7 @@ describe("DuckPlot", () => {
     });
 
     it("should prepare chart data when data is set", async () => {
-      plot.table("income").x("month").y("consensus_income").type("line");
+      plot.table("income").x("month").y("consensus_income").mark("line");
       const data = await plot.prepareChartData();
       expect(data).toBeDefined();
       expect(plot["_newDataProps"]).toBe(false);
@@ -82,7 +82,7 @@ describe("DuckPlot", () => {
     });
 
     it("should render an SVG element when everything is set", async () => {
-      plot.table("income").x("month").y("consensus_income").type("line");
+      plot.table("income").x("month").y("consensus_income").mark("line");
       const result = await plot.render();
       expect(result).toBeDefined();
       expect(result!.nodeName).toBe("DIV");
@@ -94,7 +94,7 @@ describe("DuckPlot", () => {
         .table("income")
         .x("month")
         .y(["consensus_income", "execution_income"])
-        .type("line");
+        .mark("line");
 
       const result = await plot.render();
       expect(result!.querySelector(".legend")).toBeDefined();

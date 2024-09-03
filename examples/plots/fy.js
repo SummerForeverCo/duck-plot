@@ -8,7 +8,7 @@ duckplot
   .fy("validator")
   .color("validator", {type: "categorical"})
   .options({width: 600, height: 800})
-  .type("line")
+  .mark("line")
 `;
 
 export const fy = (options) => renderPlot("income.csv", codeString, options);

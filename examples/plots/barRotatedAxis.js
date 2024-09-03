@@ -5,7 +5,7 @@ const codeString = `duckplot
   .table("taxi")
   .x("Borough", {label: "Neighborhood"})
   .y("count")  
-  .type("barY")
+  .mark("barY")
   .config({xLabelDisplay: false});`;
 
 export const barRotatedAxis = (options) =>

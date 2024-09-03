@@ -5,7 +5,7 @@ const codeString = `duckplot
   .table("taxi")
   .x("date")
   .color("Borough")  
-  .type("barY");`;
+  .mark("barY");`;
 
 export const partialChart = (options) =>
   renderPlot("taxi.csv", codeString, options);

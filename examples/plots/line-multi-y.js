@@ -5,7 +5,7 @@ duckplot
   .table("income")
   .x("month")
   .y(["consensus_income", "execution_income"], {label: "Income"})
-  .type("line")
+  .mark("line")
   .options({
     color: {
       range: ["purple", "green"]

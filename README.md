@@ -31,7 +31,7 @@ DuckPlot:
 duckplot
   .table("taxi")
   .columns({ x: "Borough", y: "Count", series: "Borough" }) // Columns of interest
-  .type("barY") // Observable Plot mark type
+  .mark("barY") // Observable Plot mark type
   .render(); // Generate the plot
 </code>
   </pre>
@@ -68,7 +68,7 @@ const duckPlot = new DuckPlot(ddb);
 duckPlot
   .table("my_table")
   .columns({ x: "date", y: "cost", series: "company", fy: "department" })
-  .type("line");
+  .mark("line");
 const svg = await duckPlot.render();
 document.body.appendChild(svg);
 ```
@@ -116,7 +116,7 @@ effectively. Below are the primary methods available:
   - `series` _(optional)_: The column used to group data by series.
   - `fy` _(optional)_: The column used for fying the plot.
 
-**`.type("line" | "barY" | "areaY" | "dot" | "barX")`**
+**`.mark("line" | "barY" | "areaY" | "dot" | "barX")`**
 
 - **Description:** Sets the type of plot. Options correspond to Observable Plot mark types.
 - **Parameters:**
@@ -181,7 +181,7 @@ const codeString = `
 duckplot
   .data({ ddb: db, table: "income" })
   .columns({ x: "month", y: "consensus_income"})
-  .type("line")
+  .mark("line")
 `;
 
 export const line = (duckplot) =>

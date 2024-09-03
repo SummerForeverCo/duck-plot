@@ -6,7 +6,7 @@ const codeString = `duckplot
   .x("month")
   .y("consensus_income")
   .color("month")
-  .type("barY")
+  .mark("barY")
   .options({
     color: {
       label: "Date",

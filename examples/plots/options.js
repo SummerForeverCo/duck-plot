@@ -4,7 +4,7 @@ const codeString = `duckplot
     .table("income")
     .x("execution_income", {label: "Custom X Label"})
     .y("consensus_income")    
-    .type("dot")
+    .mark("dot")
     .options({
         height: 200,
         width: 300,

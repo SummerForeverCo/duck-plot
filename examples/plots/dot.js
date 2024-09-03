@@ -4,7 +4,7 @@ const codeString = `duckplot
     .table("income")
     .x("execution_income")
     .y("consensus_income")
-    .type("dot")
+    .mark("dot")
     .config({r: 2})
     `;
 

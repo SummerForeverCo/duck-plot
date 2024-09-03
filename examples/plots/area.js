@@ -5,7 +5,7 @@ duckplot
   .table("income")
   .x("month")
   .y(["consensus_income", "execution_income"], {label: "Total income"})
-  .type("areaY")
+  .mark("areaY")
   .options({color: {legend: false, label: "Income Source"}})
 `;
 

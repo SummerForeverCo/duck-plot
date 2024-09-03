@@ -8,7 +8,7 @@ duckplot
   .y("consensus_income")
   .x("v")
   .color("v")
-  .type("barY")
+  .mark("barY")
   .options({width: 300})
 `;
 

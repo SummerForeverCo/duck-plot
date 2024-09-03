@@ -30,7 +30,7 @@ async function makePlots() {
   const db = await createDb("taxi.csv");
   const duckPlot = new DuckPlot(db, { jsdom, font });
 
-  duckPlot.table("taxi").x("date").y("count").type("line");
+  duckPlot.table("taxi").x("date").y("count").mark("line");
   const line = await duckPlot.render();
   savePlot(jsdom, line, "line");
 
@@ -50,7 +50,7 @@ async function makePlots() {
     .y("count")
     .color("borough")
     .options({ width: 400, x: { label: null } })
-    .type("barY");
+    .mark("barY");
 
   const series = await duckPlot.render();
   savePlot(jsdom, series, "series");
@@ -63,7 +63,7 @@ async function makePlots() {
     .x("date")
     .y("count")
     .color("borough")
-    .type("barY")
+    .mark("barY")
     .options({ width: 400, x: { label: null } });
   const noFont = await duckPlotNoFont.render();
   savePlot(jsdom, noFont, "noFont");

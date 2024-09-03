@@ -6,6 +6,6 @@ const codeString = `duckplot
   .x("date")
   .y("count")
   .color("Borough")  
-  .type("line");`;
+  .mark("line");`;
 
 export const barWide = (options) => renderPlot("taxi.csv", codeString, options);

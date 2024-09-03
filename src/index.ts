@@ -47,7 +47,7 @@ export class DuckPlot {
     column: "",
     options: {},
   };
-  private _type: ChartType | null = null;
+  private _mark: ChartType | null = null;
   private _options: PlotOptions = {};
   private _jsdom: JSDOM | undefined;
   private _font: any;
@@ -152,17 +152,17 @@ export class DuckPlot {
     return this.handleProperty(this._fx, column, options);
   }
 
-  type(): ChartType;
-  type(value: ChartType): this;
-  type(value?: ChartType): ChartType | this {
+  mark(): ChartType;
+  mark(value: ChartType): this;
+  mark(value?: ChartType): ChartType | this {
     if (value) {
-      if (this._type !== value) {
-        this._type = value;
+      if (this._mark !== value) {
+        this._mark = value;
         this._newDataProps = true; // when changed, we need to requery the data
       }
       return this;
     }
-    return this._type!;
+    return this._mark!;
   }
 
   options(): PlotOptions;
@@ -197,7 +197,7 @@ export class DuckPlot {
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
     // TODO: this error isn't being thrown when I'd expect (e.g, if type is not set)
-    if (!this._type) throw new Error("Type not set");
+    if (!this._mark) throw new Error("Type not set");
     this._newDataProps = false;
     const columns = {
       ...(this._x.column ? { x: this._x.column } : {}),
@@ -212,13 +212,13 @@ export class DuckPlot {
       this._ddb,
       this._table,
       columns,
-      this._type!,
+      this._mark!,
       this._query
     );
   }
 
   async render(): Promise<SVGElement | HTMLElement | null> {
-    if (!this._type) return null;
+    if (!this._mark) return null;
     // Because users can specify options either in .options or with each column, we coalese them here
     let plotOptions = {
       ...this._options,
@@ -258,7 +258,6 @@ export class DuckPlot {
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
     // TODO: custom sorts as inputs
     const sorts = getSorts(currentColumns, chartData);
-    const plotMarkType = this._type;
 
     // Note, displaying legends by default
     const legendDisplay = plotOptions.color.legend ?? true;
@@ -275,7 +274,7 @@ export class DuckPlot {
       ? (plotOptions.height || 281) - legendHeight
       : plotOptions.height || 281;
 
-    const primaryMarkOptions = getMarkOptions(currentColumns, this._type, {
+    const primaryMarkOptions = getMarkOptions(currentColumns, this._mark, {
       color: isColor(this._color.column) ? this._color.column : undefined,
       r: this._config.r,
       tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
@@ -287,7 +286,7 @@ export class DuckPlot {
       chartData,
       currentColumns,
       sorts,
-      this._type,
+      this._mark,
       plotOptions,
       this._config
     );
@@ -295,7 +294,7 @@ export class DuckPlot {
     const primaryMark =
       !currentColumns.includes("x") || !currentColumns.includes("y")
         ? []
-        : [Plot[this._type](chartData, primaryMarkOptions)];
+        : [Plot[this._mark](chartData, primaryMarkOptions)];
     // TODO: double check you don't actually use border color
     const commonPlotMarks = getCommonMarks(currentColumns);
     const fyMarks = getfyMarks(chartData, currentColumns);

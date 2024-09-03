@@ -5,7 +5,7 @@ duckplot
   .table("income")
   .fx("month")
   .y(["consensus_income", "execution_income"])
-  .type("barY")
+  .mark("barY")
 `;
 
 export const groupedBar = (options) =>

@@ -8,7 +8,7 @@ const codeString = `duckplot
   .color("Borough")
   .options({width: 200, height: 100, color: {label: ""}})
   .config({tip: false})
-  .type("barY");`;
+  .mark("barY");`;
 
 export const barSmallLegend = (options) =>
   renderPlot("taxi.csv", codeString, options);
