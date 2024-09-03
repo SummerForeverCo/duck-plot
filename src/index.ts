@@ -9,7 +9,6 @@ import {
   getfyMarks,
   getLegendType,
   getMarkOptions,
-  getPlotMarkType,
   getSorts,
   getTopLevelPlotOptions,
   isColor,
@@ -35,6 +34,11 @@ export class DuckPlot {
   };
 
   private _fy: PlotProperty<"fy"> = {
+    column: "",
+    options: {},
+  };
+
+  private _fx: PlotProperty<"fx"> = {
     column: "",
     options: {},
   };
@@ -141,6 +145,13 @@ export class DuckPlot {
     return this.handleProperty(this._fy, column, options);
   }
 
+  // fy method using the generic handler
+  fx(): PlotProperty<"fx">;
+  fx(column: string, options?: PlotOptions["fx"]): this;
+  fx(column?: string, options?: PlotOptions["fx"]): PlotProperty<"fx"> | this {
+    return this.handleProperty(this._fx, column, options);
+  }
+
   type(): ChartType;
   type(value: ChartType): this;
   type(value?: ChartType): ChartType | this {
@@ -195,6 +206,7 @@ export class DuckPlot {
         ? { series: this._color.column }
         : {}), // TODO: naming....?
       ...(this._fy.column ? { fy: this._fy.column } : {}),
+      ...(this._fx.column ? { fx: this._fx.column } : {}),
     };
     return prepareChartData(
       this._ddb,
@@ -222,6 +234,8 @@ export class DuckPlot {
         ...this._options.color,
         ...this._color.options,
       },
+      // TODO: figure out how we want to handle fx and fy (and their options).
+      // Probably not allow them to be passed in.
       fy: {
         ...this._options.fy,
         ...this._fy.options,
@@ -244,7 +258,7 @@ export class DuckPlot {
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
     // TODO: custom sorts as inputs
     const sorts = getSorts(currentColumns, chartData);
-    const plotMarkType = getPlotMarkType(this._type);
+    const plotMarkType = this._type;
 
     // Note, displaying legends by default
     const legendDisplay = plotOptions.color.legend ?? true;
@@ -281,9 +295,9 @@ export class DuckPlot {
     const primaryMark =
       !currentColumns.includes("x") || !currentColumns.includes("y")
         ? []
-        : [Plot[plotMarkType](chartData, primaryMarkOptions)];
+        : [Plot[this._type](chartData, primaryMarkOptions)];
     // TODO: double check you don't actually use border color
-    const commonPlotMarks = getCommonMarks(this._type, currentColumns);
+    const commonPlotMarks = getCommonMarks(currentColumns);
     const fyMarks = getfyMarks(chartData, currentColumns);
     const options = {
       ...topLevelPlotOptions,

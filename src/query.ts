@@ -33,128 +33,82 @@ export function getTransformType(
 
 export function getStandardTransformQuery(
   type: ChartType,
-  { x, y, series, fy }: ColumnConfig,
+  { x, y, series, fy, fx }: ColumnConfig,
   tableName: string,
   into: string
 ) {
   let select = [];
-  // Very confusing case! for barYGrouped, we want the selected X to be fx, and
-  // the selected series to be x.
-  if (type === "barYGrouped") {
-    if (x && !series) {
-      select.push(standardColName({ x }, "x"));
-    } else {
-      select.push(standardColName({ x }, "x", "fx"));
-      if (series) {
-        select.push(maybeConcatCols(series, "series"));
-        select.push(maybeConcatCols(series, "x"));
-      }
-    }
-    if (y?.length) select.push(standardColName({ y }, "y"));
-    if (fy?.length) select.push(maybeConcatCols(fy, "fy"));
-  } else {
-    if (x?.length) select.push(standardColName({ x }, "x"));
-    if (y?.length) select.push(standardColName({ y }, "y"));
-    if (series?.length) select.push(maybeConcatCols(series, "series"));
-    if (fy?.length) select.push(maybeConcatCols(fy, "fy"));
-  }
+
+  if (x?.length) select.push(standardColName({ x }, "x"));
+  if (fx?.length) select.push(standardColName({ fx }, "fx"));
+  if (y?.length) select.push(standardColName({ y }, "y"));
+  if (series?.length) select.push(maybeConcatCols(series, "series"));
+  if (fy?.length) select.push(maybeConcatCols(fy, "fy"));
+
   return buildSqlQuery({ select, into, from: tableName! });
 }
 
 export function getUnpivotQuery(
   type: ChartType,
-  { x, y, fy }: ColumnConfig,
+  { x, y, fy, fx }: ColumnConfig,
   tableName: string,
   into: string
 ) {
   const createStatment = `CREATE TABLE ${into} as`;
 
-  // Handling the confusing case of barYGrouped where x becomes fx and series
-  // becomes x
-  if (type === "barYGrouped") {
-    const selectStr = `SELECT "${x}" as fx, value AS y`;
-    const keysStr = quoteColumns(y)?.join(", ");
-    const fyStr = fy ? `${maybeConcatCols(fy, "fy,")}` : "";
-    return `${createStatment} ${selectStr}, ${fyStr} key AS x, key AS series FROM "${tableName}"
-        UNPIVOT (value FOR key IN (${keysStr}));`;
-  }
-
   const selectStr =
     type === "barX"
       ? `SELECT ${columnIsDefined("y", { y }) ? `"${y}" as y, ` : ""}value AS x`
-      : `SELECT ${
-          columnIsDefined("x", { x }) ? `"${x}" as x, ` : ""
-        }value AS y`;
+      : `SELECT ${columnIsDefined("fx", { fx }) ? `"${fx}" as fx, ` : ""}
+        ${columnIsDefined("x", { x }) ? `"${x}" as x, ` : ""}value AS y`;
   const keysStr =
     type === "barX" ? quoteColumns(x)?.join(", ") : quoteColumns(y)?.join(", ");
   const fyStr = fy ? maybeConcatCols(fy, "fy,") : "";
 
-  return `${createStatment} ${selectStr}, ${fyStr} key AS series FROM "${tableName}"
+  return `${createStatment} ${selectStr}, ${fyStr} key AS series${
+    fx && !x ? "key AS x" : ""
+  } FROM "${tableName}"
         UNPIVOT (value FOR key IN (${keysStr}));`;
 }
 
 export function getUnpivotWithSeriesQuery(
   type: ChartType,
-  { x, y, series, fy }: ColumnConfig,
+  { x, y, series, fy, fx }: ColumnConfig,
   tableName: string,
   into: string
 ) {
-  if (type === "barYGrouped") {
-    const xStatement = `"${x}" as fx`;
-    const yStatement = quoteColumns(y)?.join(", ");
-    const unPivotStatment = `y FOR pivotCol IN (${quoteColumns(y)?.join(
-      ", "
-    )})`;
-    const createStatment = `CREATE TABLE ${into} as`;
-    return `${createStatment} SELECT
-            concat_ws('-', pivotCol, series) AS x,
-            y,
-            concat_ws('-', pivotCol, series) AS series,
-            fx,
-            ${fy?.length ? "fy" : ""}
-        FROM (
-            SELECT
-                ${xStatement},
-                ${yStatement},
-                ${maybeConcatCols(series, "series")},
-                ${fy?.length ? maybeConcatCols(fy, "fy") : ""}
-            FROM
-                ${tableName}
-        ) p
-        UNPIVOT (
-            ${unPivotStatment}
-        );`;
-  } else {
-    const xStatement = !columnIsDefined("x", { x })
-      ? ``
-      : type === "barX"
-      ? `${quoteColumns(x)?.join(", ")}, `
-      : `"${x}" as x, `;
-    const yStatement =
-      type === "barX" ? `"${y}" as y` : quoteColumns(y)?.join(", ");
-    const unPivotStatment =
-      type === "barX"
-        ? `x FOR pivotCol IN (${quoteColumns(x)?.join(", ")})`
-        : `y FOR pivotCol IN (${quoteColumns(y)?.join(", ")})`;
-    const createStatment = `CREATE TABLE ${into} as`;
-    return `${createStatment} SELECT
+  const xStatement = !columnIsDefined("x", { x })
+    ? ``
+    : type === "barX"
+    ? `${quoteColumns(x)?.join(", ")}, `
+    : `"${x}" as x, `;
+  const yStatement =
+    type === "barX" ? `"${y}" as y` : quoteColumns(y)?.join(", ");
+  const unPivotStatment =
+    type === "barX"
+      ? `x FOR pivotCol IN (${quoteColumns(x)?.join(", ")})`
+      : `y FOR pivotCol IN (${quoteColumns(y)?.join(", ")})`;
+  const createStatment = `CREATE TABLE ${into} as`;
+  return `${createStatment} SELECT
             ${columnIsDefined("x", { x }) ? `x, ` : ""}
             y,
-            concat_ws('-', pivotCol, series) AS series,
-            ${fy?.length ? "fy" : ""}
+            concat_ws('-', pivotCol, series) AS series
+            ${fy?.length ? ", fy" : ""}
+            ${fx?.length ? ", fx" : ""}
+
         FROM (
           SELECT
               ${xStatement}
               ${yStatement},
               ${maybeConcatCols(series, "series")},
               ${fy?.length ? maybeConcatCols(fy, "fy") : ""}
+              ${fx?.length ? `, ${maybeConcatCols(fx, "fx")}` : ""}
           FROM
               ${tableName}
       ) p
       UNPIVOT (
           ${unPivotStatment}
       );`;
-  }
 }
 
 // Construct SQL statement, handling aggregation when necessary
@@ -166,7 +120,8 @@ export function getTransformQuery(
 ) {
   // Detect what type of query we need to construct
   const transformType = getTransformType(type, omit(config, ["fy"]));
-  // Return the constructe query
+
+  // Return the constructed query
   if (transformType === "unPivotWithSeries") {
     return getUnpivotWithSeriesQuery(type, config, tableName, intoTable);
   } else if (transformType === "unPivot") {

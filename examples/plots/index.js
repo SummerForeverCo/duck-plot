@@ -9,5 +9,6 @@ export * from "./dot.js";
 export * from "./fy.js";
 export * from "./options.js";
 export * from "./groupedBar.js";
+export * from "./groupedBarExplicit.js";
 export * from "./barRotatedAxis.js";
 export * from "./partialChart.js";

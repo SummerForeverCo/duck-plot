@@ -82,21 +82,6 @@ describe("getStandardTransformQuery", () => {
       getStandardTransformQuery("line", config, tableName, reshapedName)
     ).toBe(expectedQuery);
   });
-
-  it("should handle grouped barY", () => {
-    const config = {
-      x: ["x1"],
-      y: ["y1"],
-      series: ["s1"],
-      fy: ["f1"],
-    };
-    const tableName = "yourTableName";
-    const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as fx, "s1" as series, "s1" as x, "y1" as y, "f1" as fy FROM yourTableName`;
-    expect(
-      getStandardTransformQuery("barYGrouped", config, tableName, reshapedName)
-    ).toBe(expectedQuery);
-  });
 });
 
 describe("getUnpivotQuery", () => {
@@ -146,30 +131,7 @@ describe("getUnpivotQuery", () => {
 
     const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as x, value AS y, concat_ws('-', "fy 1", "fy 2") as fy, key AS series FROM "yourTableName"
         UNPIVOT (value FOR key IN ("y1", "y2"));`;
-
-    expect(getUnpivotQuery("areaY", config, tableName, reshapedName)).toBe(
-      expectedQuery
-    );
-  });
-
-  it("should build unpivot query correctly for barYGrouped with fy", () => {
-    const config = {
-      x: ["x1"],
-      y: ["y1", "y2"],
-      fy: ["fy 1", "fy 2"],
-      series: [],
-    };
-    const tableName = "yourTableName";
-    const reshapedName = "reshaped";
-
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as fx, value AS y, concat_ws('-', "fy 1", "fy 2") as fy, key AS x, key AS series FROM "yourTableName"
-      UNPIVOT (value FOR key IN ("y1", "y2"));`;
-    const result = getUnpivotQuery(
-      "barYGrouped",
-      config,
-      tableName,
-      reshapedName
-    );
+    const result = getUnpivotQuery("areaY", config, tableName, reshapedName);
     expect(removeSpacesAndBreaks(result)).toBe(
       removeSpacesAndBreaks(expectedQuery)
     );
@@ -189,7 +151,7 @@ describe("getUnpivotWithSeriesQuery", () => {
     const expectedQuery = `CREATE TABLE reshaped as SELECT
             x,
             y,
-            concat_ws('-', pivotCol, series) AS series,
+            concat_ws('-', pivotCol, series) AS series
         FROM (
             SELECT
                 "x1", "x2",
@@ -224,7 +186,7 @@ describe("getUnpivotWithSeriesQuery", () => {
     const expectedQuery = `CREATE TABLE reshaped as SELECT
             x,
             y,
-            concat_ws('-', pivotCol, series) AS series,
+            concat_ws('-', pivotCol, series) AS series
         FROM (
             SELECT
                 "x1" as x,
@@ -275,44 +237,6 @@ describe("getUnpivotWithSeriesQuery", () => {
         );`;
     const result = getUnpivotWithSeriesQuery(
       "areaY",
-      config,
-      tableName,
-      reshapedName
-    );
-    expect(removeSpacesAndBreaks(result)).toBe(
-      removeSpacesAndBreaks(expectedQuery)
-    );
-  });
-
-  it("should build unpivot with series query correctly for barYGrouped with fys", () => {
-    const config = {
-      x: ["x1"],
-      y: ["y1", "y2"],
-      series: ["s1", "s2"],
-      fy: ["f1", "f2"],
-    };
-    const tableName = "yourTableName";
-    const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT
-            concat_ws('-', pivotCol, series) AS x,
-            y,
-            concat_ws('-', pivotCol, series) AS series,
-            fx,
-            fy
-        FROM (
-            SELECT
-                "x1" as fx,
-                "y1", "y2",
-                concat_ws('-', "s1", "s2") as series,
-                concat_ws('-', "f1", "f2") as fy
-            FROM
-                yourTableName
-        ) p
-        UNPIVOT (
-            y FOR pivotCol IN ("y1", "y2")
-        );`;
-    const result = getUnpivotWithSeriesQuery(
-      "barYGrouped",
       config,
       tableName,
       reshapedName

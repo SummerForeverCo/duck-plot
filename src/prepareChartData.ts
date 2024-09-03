@@ -54,7 +54,7 @@ export async function prepareChartData(
   await runQuery(ddb, tranformQuery);
 
   let distinctCols = (
-    type === "barX" ? ["y", "series", "fy"] : ["x", "series", "fy"]
+    type === "barX" ? ["y", "series", "fy", "fx"] : ["x", "series", "fy", "fx"]
   ).filter((d) => columnIsDefined(d as keyof ColumnConfig, config));
 
   // Catch for reshaped data where series gets added
@@ -62,9 +62,7 @@ export async function prepareChartData(
     ? config.y.filter((d) => d)
     : [config.y];
   if (yValue.length > 1 && !distinctCols.includes("series")) {
-    // Added as fx for groupedY
-    const col = type === "barYGrouped" ? "fx" : "series";
-    distinctCols.push(col);
+    distinctCols.push("series");
   }
   // Deteremine if we should aggregate
 
@@ -106,7 +104,7 @@ export async function prepareChartData(
     );
   }
   if (!labels!.x) {
-    labels!.x = toTitleCase(config.x);
+    labels!.x = config.fx ? toTitleCase(config.fx) : toTitleCase(config.x);
   }
   if (!labels!.y) {
     labels!.y = toTitleCase(

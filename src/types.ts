@@ -1,12 +1,6 @@
 import type { PlotOptions } from "@observablehq/plot";
 
-export type ChartType =
-  | "dot"
-  | "areaY"
-  | "line"
-  | "barX"
-  | "barY"
-  | "barYGrouped";
+export type ChartType = "dot" | "areaY" | "line" | "barX" | "barY";
 
 export type SqlSort = {
   column: string;
@@ -40,7 +34,7 @@ export type SqlWhere = {
 export type Indexable = {
   [key: string]: any;
 };
-export type Column = "x" | "y" | "series" | "fy";
+export type Column = "x" | "y" | "series" | "fy" | "fx";
 export type ColumnConfig = Partial<Record<Column, string | string[]>>;
 export interface ChartData extends Array<Indexable> {
   types?: { [key: string]: BasicColumnType };

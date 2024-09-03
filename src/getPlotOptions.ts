@@ -28,8 +28,7 @@ export function getMarkOptions(
   const color = options.color || defaultColors[0];
   const stroke = currentColumns.includes("series") ? "series" : color;
   const fill = currentColumns.includes("series") ? "series" : color;
-  const fx =
-    type === "barYGrouped" && currentColumns.includes("fx") ? "fx" : undefined;
+  const fx = currentColumns.includes("fx") ? "fx" : undefined;
   const tip =
     options.tip !== false
       ? {
@@ -55,7 +54,8 @@ export function getMarkOptions(
     channels: {
       xCustom: {
         label: options.xLabel,
-        value: type === "barYGrouped" ? "fx" : "x",
+        // TODO: good for grouped bar charts, not good for other fx
+        value: currentColumns.includes("fx") ? "fx" : "x",
       },
       yCustom: {
         label: options.yLabel,
@@ -189,24 +189,25 @@ export function getTopLevelPlotOptions(
       }
     : {};
 
-  const computedX =
-    type === "barYGrouped" && currentColumns.includes("fx")
-      ? { axis: null }
-      : {
-          tickSize: 0,
-          tickPadding: 5,
-          ...(!config?.xLabelDisplay || !options.x?.label
-            ? { labelArrow: "none" }
-            : {}),
-          ...(currentColumns.includes("x") &&
-            getTickFormatter(
-              data?.types?.x,
-              "x",
-              options.width || 0,
-              options.height || 0
-            )),
-          ...xDomain,
-        };
+  // TODO: fx labels are set to override x labels (good for grouped bar charts,
+  // not good for other charts)
+  const computedX = currentColumns.includes("fx")
+    ? { axis: null }
+    : {
+        tickSize: 0,
+        tickPadding: 5,
+        ...(!config?.xLabelDisplay || !options.x?.label
+          ? { labelArrow: "none" }
+          : {}),
+        ...(currentColumns.includes("x") &&
+          getTickFormatter(
+            data?.types?.x,
+            "x",
+            options.width || 0,
+            options.height || 0
+          )),
+        ...xDomain,
+      };
   const computedY = {
     labelArrow: !config?.yLabelDisplay || !options.y?.label ? "none" : true,
     labelAnchor: "top",
@@ -242,7 +243,7 @@ export function getTopLevelPlotOptions(
         }
       : {}),
     // This is based on the assumption that fx comes from a groupedBar chart
-    ...(currentColumns.includes("fx") && type === "barYGrouped"
+    ...(currentColumns.includes("fx")
       ? { fx: { label: options.x?.label } }
       : {}),
   } as PlotOptions;
@@ -291,24 +292,8 @@ export function getLegendType(
   return data.types.series === "string" ? "categorical" : "continuous";
 }
 
-type MarkType = "dot" | "areaY" | "line" | "barX" | "barY";
-
-// Get the plot mark type associated with our chart type
-export function getPlotMarkType(type: ChartType): MarkType {
-  switch (type) {
-    case "barYGrouped":
-      return "barY";
-    default:
-      return type as MarkType;
-  }
-}
-
 // TODO: input options type
-export function getCommonMarks(
-  type: ChartType,
-  currentColumns: string[],
-  inputOptions?: any
-) {
+export function getCommonMarks(currentColumns: string[], inputOptions?: any) {
   const options = { ...borderOptions, ...inputOptions };
   return [
     Plot.frame({
@@ -316,7 +301,7 @@ export function getCommonMarks(
       // fill: options.background,
       rx: 4,
       ry: 4,
-      ...(type === "barYGrouped" ? { fy: "super" } : {}),
+      ...(currentColumns.includes("fx") ? { facet: "super" } : {}),
     }),
     ...[
       currentColumns?.includes("y")
