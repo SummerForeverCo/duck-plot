@@ -66,7 +66,7 @@ export function getUnpivotQuery(
   const fyStr = fy ? maybeConcatCols(fy, "fy,") : "";
 
   return `${createStatment} ${selectStr}, ${fyStr} key AS series${
-    fx && !x ? "key AS x" : ""
+    fx && !x ? ", key AS x" : ""
   } FROM "${tableName}"
         UNPIVOT (value FOR key IN (${keysStr}));`;
 }
