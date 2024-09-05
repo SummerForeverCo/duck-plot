@@ -2,7 +2,13 @@ import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
 import type { PlotOptions } from "@observablehq/plot";
 
-import { ChartData, ChartType, Config, PlotProperty } from "./types";
+import {
+  ChartData,
+  ChartType,
+  Config,
+  MarkProperty,
+  PlotProperty,
+} from "./types";
 import { prepareChartData } from "./prepareChartData";
 import {
   getCommonMarks,
@@ -47,7 +53,10 @@ export class DuckPlot {
     column: "",
     options: {},
   };
-  private _mark: ChartType | null = null;
+  private _mark: MarkProperty = {
+    markType: "line",
+    options: {},
+  };
   private _options: PlotOptions = {};
   private _jsdom: JSDOM | undefined;
   private _font: any;
@@ -139,6 +148,7 @@ export class DuckPlot {
   }
 
   // fy method using the generic handler
+  // TODO: maybe remove the plotOptions here
   fy(): PlotProperty<"fy">;
   fy(column: string, options?: PlotOptions["fy"]): this;
   fy(column?: string, options?: PlotOptions["fy"]): PlotProperty<"fy"> | this {
@@ -146,20 +156,24 @@ export class DuckPlot {
   }
 
   // fy method using the generic handler
+  // TODO: maybe remove the plotOptions here
   fx(): PlotProperty<"fx">;
   fx(column: string, options?: PlotOptions["fx"]): this;
   fx(column?: string, options?: PlotOptions["fx"]): PlotProperty<"fx"> | this {
     return this.handleProperty(this._fx, column, options);
   }
 
-  mark(): ChartType;
-  mark(value: ChartType): this;
-  mark(value?: ChartType): ChartType | this {
-    if (value) {
-      if (this._mark !== value) {
-        this._mark = value;
+  mark(): MarkProperty;
+  mark(markType: ChartType, options?: MarkProperty["options"]): this;
+  mark(
+    markType?: ChartType,
+    options?: MarkProperty["options"]
+  ): MarkProperty | this {
+    if (markType) {
+      if (this._mark.markType !== markType) {
         this._newDataProps = true; // when changed, we need to requery the data
       }
+      this._mark = { markType, ...options };
       return this;
     }
     return this._mark!;
@@ -212,7 +226,7 @@ export class DuckPlot {
       this._ddb,
       this._table,
       columns,
-      this._mark!,
+      this._mark.markType!,
       this._query
     );
   }
@@ -274,19 +288,24 @@ export class DuckPlot {
       ? (plotOptions.height || 281) - legendHeight
       : plotOptions.height || 281;
 
-    const primaryMarkOptions = getMarkOptions(currentColumns, this._mark, {
-      color: isColor(this._color.column) ? this._color.column : undefined,
-      r: this._config.r,
-      tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
-      xLabel: plotOptions.x.label ?? "",
-      yLabel: plotOptions.y.label ?? "",
-    });
+    const primaryMarkOptions = getMarkOptions(
+      currentColumns,
+      this._mark.markType,
+      {
+        color: isColor(this._color.column) ? this._color.column : undefined,
+        r: this._config.r,
+        tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
+        xLabel: plotOptions.x.label ?? "",
+        yLabel: plotOptions.y.label ?? "",
+        markOptions: this._mark.options,
+      }
+    );
 
     const topLevelPlotOptions = getTopLevelPlotOptions(
       chartData,
       currentColumns,
       sorts,
-      this._mark,
+      this._mark.markType,
       plotOptions,
       this._config
     );
@@ -294,7 +313,7 @@ export class DuckPlot {
     const primaryMark =
       !currentColumns.includes("x") || !currentColumns.includes("y")
         ? []
-        : [Plot[this._mark](chartData, primaryMarkOptions)];
+        : [Plot[this._mark.markType](chartData, primaryMarkOptions)];
     // TODO: double check you don't actually use border color
     const commonPlotMarks = getCommonMarks(currentColumns);
     const fyMarks = getfyMarks(chartData, currentColumns);

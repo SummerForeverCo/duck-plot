@@ -47,7 +47,7 @@ describe("DuckPlot", () => {
   describe("type()", () => {
     it("should set and get chart type", () => {
       plot.mark("line");
-      expect(plot.mark()).toEqual("line");
+      expect(plot.mark()).toEqual({ markType: "line" });
       expect(plot["_newDataProps"]).toBe(true);
     });
   });
@@ -76,9 +76,10 @@ describe("DuckPlot", () => {
   });
 
   describe("render()", () => {
-    it("should return null if chart type is not set", async () => {
-      const result = await plot.render();
-      expect(result).toBeNull();
+    it("should throw an error if table is not set", async () => {
+      await expect(async () => {
+        await plot.render();
+      }).rejects.toThrow("Database and table not set");
     });
 
     it("should render an SVG element when everything is set", async () => {

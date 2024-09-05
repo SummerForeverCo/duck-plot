@@ -4,8 +4,7 @@ const codeString = `duckplot
     .table("income")
     .x("execution_income")
     .y("consensus_income")
-    .mark("dot")
-    .config({r: 2})
+    .mark("dot", {r: 2, opacity: .1})
     `;
 
 export const dot = (options) => renderPlot("income.csv", codeString, options);

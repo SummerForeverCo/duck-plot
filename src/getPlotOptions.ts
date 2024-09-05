@@ -23,6 +23,7 @@ export function getMarkOptions(
     yLabel?: string;
     r?: number;
     tip?: boolean;
+    markOptions?: MarkOptions;
   }
 ) {
   const color = options.color || defaultColors[0];
@@ -69,7 +70,7 @@ export function getMarkOptions(
     ...(currentColumns.includes("fy") ? { fy: "fy" } : {}),
     ...(fx ? { fx: `fx` } : {}),
     ...(currentColumns.includes("y") ? { y: `y` } : {}),
-    ...(options.r ? { r: options.r } : {}),
+    ...(options.markOptions ? { ...options.markOptions } : {}),
     ...(currentColumns.includes("series")
       ? {
           [type === "line" || type.startsWith("rule") || type.startsWith("tick")

@@ -1,4 +1,4 @@
-import type { PlotOptions } from "@observablehq/plot";
+import type { MarkOptions, PlotOptions } from "@observablehq/plot";
 
 export type ChartType = "dot" | "areaY" | "line" | "barX" | "barY";
 
@@ -58,6 +58,11 @@ export interface TypesObject {
 export type PlotProperty<T extends keyof PlotOptions> = {
   column: string;
   options?: PlotOptions[T];
+};
+
+export type MarkProperty = {
+  markType: ChartType;
+  options?: MarkOptions;
 };
 
 // A few types that we can't quite squeeze into (or out of) PlotOptions. The
