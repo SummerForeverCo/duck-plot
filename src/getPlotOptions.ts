@@ -71,7 +71,11 @@ export function getMarkOptions(
     ...(currentColumns.includes("y") ? { y: `y` } : {}),
     ...(options.r ? { r: options.r } : {}),
     ...(currentColumns.includes("series")
-      ? { [type === "line" ? "stroke" : "fill"]: `series` }
+      ? {
+          [type === "line" || type.startsWith("rule") || type.startsWith("tick")
+            ? "stroke"
+            : "fill"]: `series`,
+        }
       : {}),
   } satisfies MarkOptions;
 }
