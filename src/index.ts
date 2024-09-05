@@ -173,7 +173,7 @@ export class DuckPlot {
       if (this._mark.markType !== markType) {
         this._newDataProps = true; // when changed, we need to requery the data
       }
-      this._mark = { markType, ...options };
+      this._mark = { markType, ...(options ? { options } : {}) };
       return this;
     }
     return this._mark!;
@@ -317,9 +317,10 @@ export class DuckPlot {
     // TODO: double check you don't actually use border color
     const commonPlotMarks = getCommonMarks(currentColumns);
     const fyMarks = getfyMarks(chartData, currentColumns);
+    const userMarks = this._options.marks ?? [];
     const options = {
       ...topLevelPlotOptions,
-      marks: [...commonPlotMarks, ...primaryMark, fyMarks],
+      marks: [...commonPlotMarks, ...primaryMark, fyMarks, ...userMarks],
       ...(document ? { document } : {}),
     };
 
