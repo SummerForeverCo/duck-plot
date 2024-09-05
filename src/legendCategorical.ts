@@ -141,10 +141,9 @@ function showPopover(container: HTMLDivElement, height: number): void {
   } else {
     // TODO: Move some to CSS
     const currentColor = window.getComputedStyle(popover).color;
-    const background = currentColor === "rgb(0, 0, 0)" ? "white" : "black";
     popover.style.display = "block";
     popover.style.position = "absolute";
-    popover.style.backgroundColor = background;
+    popover.style.backgroundColor = "white";
     popover.style.right = `0px`;
     popover.style.top = `30px`;
     popover.style.maxHeight = `${height}px`;

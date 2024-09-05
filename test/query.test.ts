@@ -278,7 +278,7 @@ describe("getAggregateInfo", () => {
     const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
-    const expectedQueryString = `SELECT y,  sum(x::FLOAT) as x FROM reshaped GROUP BY y ORDER BY y`;
+    const expectedQueryString = `SELECT y,  sum(x::FLOAT) as x FROM reshaped GROUP BY y`;
     expect(
       getAggregateInfo("barX", config, columns, reshapedName).queryString
     ).toBe(expectedQueryString);
