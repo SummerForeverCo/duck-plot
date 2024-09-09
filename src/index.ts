@@ -315,12 +315,13 @@ export class DuckPlot {
         ? []
         : [Plot[this._mark.markType](chartData, primaryMarkOptions)];
     // TODO: double check you don't actually use border color
-    const commonPlotMarks = getCommonMarks(currentColumns);
+    // If a user supplies marks, don't add the common marks
+    const commonPlotMarks =
+      this._options.marks ?? getCommonMarks(currentColumns);
     const fyMarks = getfyMarks(chartData, currentColumns);
-    const userMarks = this._options.marks ?? [];
     const options = {
       ...topLevelPlotOptions,
-      marks: [...commonPlotMarks, ...primaryMark, fyMarks, ...userMarks],
+      marks: [...fyMarks, ...commonPlotMarks, ...primaryMark],
       ...(document ? { document } : {}),
     };
 
