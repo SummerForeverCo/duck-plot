@@ -93,7 +93,7 @@ export class DuckPlot {
     column?: string | false | null,
     options?: PlotOptions[T]
   ): PlotProperty<T> | this {
-    if (!equal(column, prop.column)) {
+    if (column !== undefined && !equal(column, prop.column)) {
       this._newDataProps = true; // When changed, we need to requery the data
     }
     if (column === false || column === null) {
