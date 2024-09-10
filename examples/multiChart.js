@@ -48,7 +48,7 @@ async function makePlots() {
     .table("taxi")
     .x("date")
     .y("count")
-    .color("borough")
+    .color("Borough")
     .options({ width: 400, x: { label: null } })
     .mark("barY");
 
@@ -62,7 +62,7 @@ async function makePlots() {
     .table("taxi")
     .x("date")
     .y("count")
-    .color("borough")
+    .color("Borough")
     .mark("barY")
     .options({ width: 400, x: { label: null } });
   const noFont = await duckPlotNoFont.render();

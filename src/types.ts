@@ -56,7 +56,7 @@ export interface TypesObject {
 
 // Define a generic type for property
 export type PlotProperty<T extends keyof PlotOptions> = {
-  column: string;
+  column: string | undefined;
   options?: PlotOptions[T];
 };
 

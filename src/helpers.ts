@@ -16,7 +16,7 @@ export async function checkDistinct(
   tableName: string,
   cols: string | undefined | (string | undefined)[]
 ) {
-  if (!duckDB || !tableName || !cols) return false; // TODO: maybe check array length
+  if (!duckDB || !tableName || !cols || !cols.length) return false;
   const query = `SELECT CASE WHEN count(distinct(${quoteColumns(cols)?.join(
     ", "
   )}))= count(*)

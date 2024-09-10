@@ -25,34 +25,15 @@ import "./legend.css";
 import { legendContinuous } from "./legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import equal from "fast-deep-equal";
-
+const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | null = null;
   private _table: string | null = null;
-  private _x: PlotProperty<"x"> = {
-    column: "",
-    options: {},
-  };
-
-  private _y: PlotProperty<"y"> = {
-    column: "",
-    options: {},
-  };
-
-  private _fy: PlotProperty<"fy"> = {
-    column: "",
-    options: {},
-  };
-
-  private _fx: PlotProperty<"fx"> = {
-    column: "",
-    options: {},
-  };
-
-  private _color: PlotProperty<"color"> = {
-    column: "",
-    options: {},
-  };
+  private _x: PlotProperty<"x"> = { ...emptyProp };
+  private _y: PlotProperty<"y"> = { ...emptyProp };
+  private _fy: PlotProperty<"fy"> = { ...emptyProp };
+  private _fx: PlotProperty<"fx"> = { ...emptyProp };
+  private _color: PlotProperty<"color"> = { ...emptyProp };
   private _mark: MarkProperty = {
     markType: "line",
     options: {},
@@ -109,18 +90,20 @@ export class DuckPlot {
   // Helper method for getting and setting x, y, color, and fy properties
   private handleProperty<T extends keyof PlotOptions>(
     prop: PlotProperty<T>,
-    column?: string,
+    column?: string | false | null,
     options?: PlotOptions[T]
   ): PlotProperty<T> | this {
-    if (!column) {
-      return prop;
-    }
     if (!equal(column, prop.column)) {
       this._newDataProps = true; // When changed, we need to requery the data
     }
-    prop.column = column;
-    prop.options = options;
-    return this;
+    if (column === false || column === null) {
+      prop.column = "";
+      if (options !== undefined) prop.options = options;
+    } else {
+      if (column !== undefined) prop.column = column;
+      if (options !== undefined) prop.options = options;
+    }
+    return column === undefined ? prop : this;
   }
 
   // x method using the generic handler

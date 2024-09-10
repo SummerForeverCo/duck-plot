@@ -351,8 +351,8 @@ const namedColors = new Set(
 // colors—we just need to disambiguate them from column names.
 // https://www.w3.org/TR/SVG11/painting.html#SpecifyingPaint
 // https://www.w3.org/TR/css-color-5/
-export function isColor(value: string | string[]) {
-  if (Array.isArray(value)) return false;
+export function isColor(value?: string | string[]) {
+  if (Array.isArray(value) || value === undefined) return false;
   value = value.toLowerCase().trim();
   return (
     /^#[0-9a-f]{3,8}$/.test(value) || // hex rgb, rgba, rrggbb, rrggbbaa

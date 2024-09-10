@@ -12,3 +12,4 @@ export * from "./groupedBar.js";
 export * from "./groupedBarExplicit.js";
 export * from "./barRotatedAxis.js";
 export * from "./partialChart.js";
+export * from "./partialChartY.js";
