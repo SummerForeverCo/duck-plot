@@ -71,7 +71,18 @@ export type MarkProperty = {
 export type Config = {
   xLabelDisplay?: boolean;
   yLabelDisplay?: boolean;
-  r?: number; // Radius for dot plots
   tip?: boolean; // Show tooltips
   autoMargin?: boolean; // Automatically adjust margins
+  aggregate?: Aggregate;
 };
+
+export type Aggregate =
+  | "sum"
+  | "avg"
+  | "count"
+  | "max"
+  | "min"
+  | "median"
+  | "mode"
+  | "stddev"
+  | "variance";

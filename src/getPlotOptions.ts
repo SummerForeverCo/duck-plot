@@ -21,7 +21,6 @@ export function getMarkOptions(
     color?: string;
     xLabel?: string;
     yLabel?: string;
-    r?: number;
     tip?: boolean;
     markOptions?: MarkOptions;
   }

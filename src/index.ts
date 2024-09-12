@@ -210,7 +210,8 @@ export class DuckPlot {
       this._table,
       columns,
       this._mark.markType!,
-      this._query
+      this._query,
+      this._config.aggregate
     );
     return this._chartData;
   }
@@ -225,7 +226,6 @@ export class DuckPlot {
       this._mark.markType,
       {
         color: isColor(this._color.column) ? this._color.column : undefined,
-        r: this._config.r,
         tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
         xLabel: plotOptions.x?.label ?? "",
         yLabel: plotOptions.y?.label ?? "",

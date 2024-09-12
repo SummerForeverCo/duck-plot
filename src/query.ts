@@ -1,5 +1,5 @@
 import { buildSqlQuery } from "./buildSqlQuery";
-import { Column, ColumnConfig, ChartType, ChartData } from "./types";
+import { Column, ColumnConfig, ChartType, ChartData, Aggregate } from "./types";
 
 // Function to determine if a column (either a string or array of strings) is defined
 export function columnIsDefined(column: Column, config: ColumnConfig) {
@@ -146,26 +146,27 @@ export function getAggregateInfo(
   type: ChartType,
   config: ColumnConfig,
   columns: string[],
-  tableName: string
+  tableName: string,
+  aggregate?: Aggregate // TODO: add tests
 ): { queryString: string; labels: ChartData["labels"] } {
   // Filter out null values (the case that an empty selector has been added)
   const y = extractDefinedValues(config.y);
   const x = extractDefinedValues(config.x);
-
+  const agg = aggregate ?? "sum";
   let aggregateSelection;
   let groupBy: string[] = [];
   let labels: ChartData["labels"] = {};
   // Handling horiztonal bar charts differently (aggregate on x-axis)
   if (type === "barX") {
     if (x && x.length > 0) {
-      aggregateSelection = ` sum(x::FLOAT) as x`;
-      labels.x = `Sum of ${toTitleCase(x)}`;
+      aggregateSelection = ` ${agg}(x::FLOAT) as x`;
+      labels.x = `${toTitleCase(agg)} of ${toTitleCase(x)}`;
     }
     groupBy = columns.filter((d) => d !== "x");
   } else {
     if (y && y.length > 0) {
-      aggregateSelection = ` sum(y)::FLOAT as y`;
-      labels.y = `Sum of ${toTitleCase(y)}`;
+      aggregateSelection = ` ${agg}(y)::FLOAT as y`;
+      labels.y = `${toTitleCase(agg)} of ${toTitleCase(y)}`;
     }
     groupBy = columns.filter((d) => d !== "y");
   }

@@ -1,5 +1,6 @@
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import {
+  Aggregate,
   ChartData,
   ChartType,
   ColumnConfig,
@@ -31,7 +32,8 @@ export async function prepareChartData(
   tableName: string | undefined,
   config: ColumnConfig,
   type: ChartType,
-  preQuery?: string
+  preQuery?: string,
+  aggregate?: Aggregate
 ): Promise<ChartData> {
   if (!ddb || !tableName) return [];
 
@@ -102,7 +104,8 @@ export async function prepareChartData(
         type,
         config,
         [...transformedTypes.keys()],
-        reshapeTableName
+        reshapeTableName,
+        aggregate
       );
     queryString = aggregateQuery;
     labels = aggregateLabels;
