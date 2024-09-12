@@ -1,6 +1,6 @@
 import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
-import type { PlotOptions } from "@observablehq/plot";
+import type { Markish, PlotOptions } from "@observablehq/plot";
 
 import {
   ChartData,
@@ -205,17 +205,55 @@ export class DuckPlot {
       ...(this._fy.column ? { fy: this._fy.column } : {}),
       ...(this._fx.column ? { fx: this._fx.column } : {}),
     };
-    return prepareChartData(
+    this._chartData = await prepareChartData(
       this._ddb,
       this._table,
       columns,
       this._mark.markType!,
       this._query
     );
+    return this._chartData;
+  }
+  async getMarks(): Promise<Markish[]> {
+    const chartData = this._newDataProps
+      ? await this.prepareChartData()
+      : this._chartData;
+    const plotOptions = await this.getPlotOptions();
+    const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
+    const primaryMarkOptions = getMarkOptions(
+      currentColumns,
+      this._mark.markType,
+      {
+        color: isColor(this._color.column) ? this._color.column : undefined,
+        r: this._config.r,
+        tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
+        xLabel: plotOptions.x?.label ?? "",
+        yLabel: plotOptions.y?.label ?? "",
+        markOptions: this._mark.options,
+      }
+    );
+
+    const primaryMark =
+      !currentColumns.includes("x") || !currentColumns.includes("y")
+        ? []
+        : [Plot[this._mark.markType](chartData, primaryMarkOptions)];
+    // TODO: double check you don't actually use border color
+    // If a user supplies marks, don't add the common marks
+    const commonPlotMarks =
+      this._options.marks ?? getCommonMarks(currentColumns);
+    const fyMarks = getfyMarks(chartData, currentColumns);
+    return [
+      ...(fyMarks || []),
+      ...(commonPlotMarks || []),
+      ...(primaryMark || []),
+    ];
   }
 
-  async render(): Promise<SVGElement | HTMLElement | null> {
-    if (!this._mark) return null;
+  async getPlotOptions(): Promise<PlotOptions> {
+    //
+    const chartData = this._newDataProps
+      ? await this.prepareChartData()
+      : this._chartData;
     // Because users can specify options either in .options or with each column, we coalese them here
     let plotOptions = {
       ...this._options,
@@ -238,9 +276,6 @@ export class DuckPlot {
         ...this._fy.options,
       },
     };
-    const chartData = this._newDataProps
-      ? await this.prepareChartData()
-      : this._chartData;
 
     // Fallback to computed labels if they are undefined
     if (plotOptions.x.label === undefined)
@@ -249,20 +284,25 @@ export class DuckPlot {
       plotOptions.y.label = chartData.labels?.y;
     if (plotOptions.color.label === undefined)
       plotOptions.color.label = chartData.labels?.series;
-
-    this._chartData = chartData;
-    const document = this._isServer ? this._jsdom!.window.document : undefined;
+    return plotOptions;
+  }
+  async render(): Promise<SVGElement | HTMLElement | null> {
+    if (!this._mark) return null;
+    const marks = await this.getMarks();
+    const chartData = this._chartData; // this is updated by getMarks
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
+    const document = this._isServer ? this._jsdom!.window.document : undefined;
+
     // TODO: custom sorts as inputs
     const sorts = getSorts(currentColumns, chartData);
-
+    const plotOptions = await this.getPlotOptions();
     // Note, displaying legends by default
-    const legendDisplay = plotOptions.color.legend ?? true;
+    const legendDisplay = plotOptions.color?.legend ?? true;
     const hasLegend = chartData.types?.series !== undefined && legendDisplay;
     const legendType =
-      plotOptions?.color.type ?? getLegendType(chartData, currentColumns);
+      plotOptions.color?.type ?? getLegendType(chartData, currentColumns);
     // TODO: maybe rename series to color....?
-    const legendLabel = plotOptions.color.label;
+    const legendLabel = plotOptions.color?.label;
 
     // Different legend height for continuous, leave space for categorical label
     const legendHeight =
@@ -270,19 +310,6 @@ export class DuckPlot {
     plotOptions.height = hasLegend
       ? (plotOptions.height || 281) - legendHeight
       : plotOptions.height || 281;
-
-    const primaryMarkOptions = getMarkOptions(
-      currentColumns,
-      this._mark.markType,
-      {
-        color: isColor(this._color.column) ? this._color.column : undefined,
-        r: this._config.r,
-        tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
-        xLabel: plotOptions.x.label ?? "",
-        yLabel: plotOptions.y.label ?? "",
-        markOptions: this._mark.options,
-      }
-    );
 
     const topLevelPlotOptions = getTopLevelPlotOptions(
       chartData,
@@ -293,18 +320,9 @@ export class DuckPlot {
       this._config
     );
 
-    const primaryMark =
-      !currentColumns.includes("x") || !currentColumns.includes("y")
-        ? []
-        : [Plot[this._mark.markType](chartData, primaryMarkOptions)];
-    // TODO: double check you don't actually use border color
-    // If a user supplies marks, don't add the common marks
-    const commonPlotMarks =
-      this._options.marks ?? getCommonMarks(currentColumns);
-    const fyMarks = getfyMarks(chartData, currentColumns);
     const options = {
       ...topLevelPlotOptions,
-      marks: [...fyMarks, ...commonPlotMarks, ...primaryMark],
+      marks,
       ...(document ? { document } : {}),
     };
 
