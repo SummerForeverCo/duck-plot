@@ -1,63 +1,31 @@
+---
 name: Publish NPM
-
 on:
   workflow_dispatch:
     inputs:
       packageVersion:
         description: "npm package version to publish"
         required: true
-
 jobs:
   publish:
     name: publish npm
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
-
+          node-version: "18" # Specify the Node.js version if needed
       - name: Install dependencies
         run: npm install
-
       - name: Build the project
         run: npm run build
-
       - name: Run tests
         run: npm test
-
-      - name: Bump version without git tagging
-        run: npm version ${{ inputs.packageVersion }} --no-git-tag-version
-
-      - name: Publish to npm
-        run: npm publish
+      - name: Publish
+        run: |
+          npm version ${{ inputs.packageVersion }} --no-git-tag-version
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get previous tag
-        id: prev_tag
-        run: |
-          git fetch --tags
-          echo "PREV_TAG=$(git describe --tags --abbrev=0 HEAD^)" >> $GITHUB_ENV
-
-      - name: Commit and tag version
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json
-          git commit -m "chore(release): v${{ inputs.packageVersion }}"
-          git tag v${{ inputs.packageVersion }}
-          git push origin main --tags
-
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ inputs.packageVersion }}
-          name: "Release v${{ inputs.packageVersion }}"
-          body: |
-            ## Changes in this release
-            See the commits for details: https://github.com/${{ github.repository }}/compare/${{ env.PREV_TAG }}...v${{ inputs.packageVersion }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
