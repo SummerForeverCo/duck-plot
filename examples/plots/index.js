@@ -8,6 +8,7 @@ export * from "./barWide.js";
 export * from "./barWideColor.js";
 export * from "./dot.js";
 export * from "./fy.js";
+export * from "./fyNoTicks.js";
 export * from "./options.js";
 export * from "./groupedBar.js";
 export * from "./groupedBarExplicit.js";

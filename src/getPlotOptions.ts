@@ -319,8 +319,13 @@ export function getCommonMarks(currentColumns: string[], inputOptions?: any) {
   ];
 }
 
-export function getfyMarks(data: ChartData, currentColumns: string[]) {
-  return currentColumns.includes("fy")
+export function getfyMarks(
+  data: ChartData,
+  currentColumns: string[],
+  options: PlotOptions["fy"]
+) {
+  return currentColumns.includes("fy") &&
+    !(Array.isArray(options?.ticks) && options?.ticks.length === 0)
     ? [
         Plot.text(
           data,

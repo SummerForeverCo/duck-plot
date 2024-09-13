@@ -248,7 +248,7 @@ export class DuckPlot {
     // If a user supplies marks, don't add the common marks
     const commonPlotMarks =
       this._options.marks ?? getCommonMarks(currentColumns);
-    const fyMarks = getfyMarks(chartData, currentColumns);
+    const fyMarks = getfyMarks(chartData, currentColumns, plotOptions.fy);
     return [
       ...(fyMarks || []),
       ...(commonPlotMarks || []),
