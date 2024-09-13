@@ -47,6 +47,7 @@ export class DuckPlot {
   private _chartData: ChartData = [];
   private _config: Config = {};
   private _query: string = "";
+  private _description: string = ""; // TODO: add tests
 
   constructor(
     ddb: AsyncDuckDB,
@@ -189,7 +190,7 @@ export class DuckPlot {
     return this._chartData || [];
   }
 
-  // TODO; private?
+  // TODO; private? Also, rename
   async prepareChartData(): Promise<ChartData> {
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
@@ -205,14 +206,15 @@ export class DuckPlot {
       ...(this._fy.column ? { fy: this._fy.column } : {}),
       ...(this._fx.column ? { fx: this._fx.column } : {}),
     };
-    this._chartData = await prepareChartData(
-      this._ddb,
-      this._table,
-      columns,
-      this._mark.markType!,
-      this._query,
-      this._config.aggregate
-    );
+    ({ data: this._chartData, description: this._description } =
+      await prepareChartData(
+        this._ddb,
+        this._table,
+        columns,
+        this._mark.markType!,
+        this._query,
+        this._config.aggregate
+      ));
     return this._chartData;
   }
   async getMarks(): Promise<Markish[]> {
@@ -285,6 +287,9 @@ export class DuckPlot {
     if (plotOptions.color.label === undefined)
       plotOptions.color.label = chartData.labels?.series;
     return plotOptions;
+  }
+  getDescription(): string {
+    return this._description;
   }
   async render(): Promise<SVGElement | HTMLElement | null> {
     if (!this._mark) return null;

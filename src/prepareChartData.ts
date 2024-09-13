@@ -34,8 +34,12 @@ export async function prepareChartData(
   type: ChartType,
   preQuery?: string,
   aggregate?: Aggregate
-): Promise<ChartData> {
-  if (!ddb || !tableName) return [];
+): Promise<{ data: ChartData; description: string }> {
+  if (!ddb || !tableName)
+    return { data: [], description: "No database or table provided" };
+  let description = {
+    value: "",
+  };
 
   let queryString: string;
   let labels: ChartData["labels"] = {};
@@ -46,6 +50,8 @@ export async function prepareChartData(
   if (preQuery) {
     preQueryTableName = getUniqueName();
     const createStatement = `CREATE TABLE ${preQueryTableName} as ${preQuery}`;
+    description.value += `The provided sql query was run.\n`;
+
     await runQuery(ddb, createStatement);
   }
   let transformTableFrom = preQuery ? preQueryTableName : tableName;
@@ -69,7 +75,8 @@ export async function prepareChartData(
     type,
     config,
     transformTableFrom,
-    reshapeTableName
+    reshapeTableName,
+    description
   );
   await runQuery(ddb, tranformQuery);
 
@@ -107,7 +114,8 @@ export async function prepareChartData(
         config,
         [...transformedTypes.keys()],
         reshapeTableName,
-        aggregate
+        aggregate,
+        description
       );
     queryString = aggregateQuery;
     labels = aggregateLabels;
@@ -142,5 +150,9 @@ export async function prepareChartData(
   await runQuery(ddb, `drop table if exists "${reshapeTableName}"`);
   if (preQueryTableName)
     await runQuery(ddb, `drop table if exists "${preQueryTableName}"`);
-  return formatted;
+  return {
+    data: formatted,
+    description:
+      description.value || "No transformations or aggregations applied.",
+  };
 }

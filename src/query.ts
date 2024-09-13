@@ -116,15 +116,20 @@ export function getTransformQuery(
   type: ChartType,
   config: ColumnConfig,
   tableName: string,
-  intoTable: string
+  intoTable: string,
+  description: { value: string }
 ) {
   // Detect what type of query we need to construct
   const transformType = getTransformType(type, omit(config, ["fy"]));
 
   // Return the constructed query
   if (transformType === "unPivotWithSeries") {
+    const transformColumns = type === "barX" ? config.x : config.y;
+    description.value += `The columns ${transformColumns} were unpivoted and then concatenated with ${config.series}, creating colors for each column-series.\n`;
     return getUnpivotWithSeriesQuery(type, config, tableName, intoTable);
   } else if (transformType === "unPivot") {
+    const transformColumns = type === "barX" ? config.x : config.y;
+    description.value += `The columns ${transformColumns} were unpivoted, creating colors for each series.\n`;
     return getUnpivotQuery(type, config, tableName, intoTable);
   } else {
     return getStandardTransformQuery(type, config, tableName, intoTable);
@@ -147,7 +152,8 @@ export function getAggregateInfo(
   config: ColumnConfig,
   columns: string[],
   tableName: string,
-  aggregate?: Aggregate // TODO: add tests
+  aggregate: Aggregate | undefined, // TODO: add tests
+  description: { value: string }
 ): { queryString: string; labels: ChartData["labels"] } {
   // Filter out null values (the case that an empty selector has been added)
   const y = extractDefinedValues(config.y);
@@ -170,6 +176,11 @@ export function getAggregateInfo(
     }
     groupBy = columns.filter((d) => d !== "y");
   }
+  description.value += `The ${
+    type === "barX" ? "x" : "y"
+  } values were aggregated with a ${agg} aggregation, grouped by ${groupBy.join(
+    `, `
+  )}.`;
   return {
     queryString: buildSqlQuery({
       select: [...groupBy],
