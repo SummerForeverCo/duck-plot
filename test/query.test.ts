@@ -253,9 +253,9 @@ describe("getTransformQuery", () => {
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
     const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as x, "y1" as y FROM ${tableName}`;
-    expect(getTransformQuery("line", config, tableName, reshapedName)).toBe(
-      expectedQuery
-    );
+    expect(
+      getTransformQuery("line", config, tableName, reshapedName, { value: "" })
+    ).toBe(expectedQuery);
   });
 });
 
@@ -280,7 +280,9 @@ describe("getAggregateInfo", () => {
     const reshapedName = "reshaped";
     const expectedQueryString = `SELECT y,  sum(x::FLOAT) as x FROM reshaped GROUP BY y`;
     expect(
-      getAggregateInfo("barX", config, columns, reshapedName).queryString
+      getAggregateInfo("barX", config, columns, reshapedName, undefined, {
+        value: "",
+      }).queryString
     ).toBe(expectedQueryString);
   });
 });
