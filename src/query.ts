@@ -1,5 +1,12 @@
 import { buildSqlQuery } from "./buildSqlQuery";
-import { Column, ColumnConfig, ChartType, ChartData, Aggregate } from "./types";
+import {
+  Column,
+  ColumnConfig,
+  ChartType,
+  ChartData,
+  Aggregate,
+  QueryMap,
+} from "./types";
 
 // Function to determine if a column (either a string or array of strings) is defined
 export function columnIsDefined(column: Column, config: ColumnConfig) {

@@ -6,6 +6,7 @@ import {
   ColumnConfig,
   DescribeSchema,
   Indexable,
+  QueryMap,
 } from "./types";
 import {
   columnIsDefined,
@@ -34,7 +35,8 @@ export async function prepareChartData(
   type: ChartType,
   preQuery?: string,
   aggregate?: Aggregate
-): Promise<{ data: ChartData; description: string }> {
+): Promise<{ data: ChartData; description: string; queries?: QueryMap }> {
+  let queries: QueryMap = {};
   if (!ddb || !tableName)
     return { data: [], description: "No database or table provided" };
   let description = {
@@ -51,7 +53,7 @@ export async function prepareChartData(
     preQueryTableName = getUniqueName();
     const createStatement = `CREATE TABLE ${preQueryTableName} as ${preQuery}`;
     description.value += `The provided sql query was run.\n`;
-
+    queries["preQuery"] = createStatement;
     await runQuery(ddb, createStatement);
   }
   let transformTableFrom = preQuery ? preQueryTableName : tableName;
@@ -78,6 +80,7 @@ export async function prepareChartData(
     reshapeTableName,
     description
   );
+  queries["transform"] = tranformQuery;
   await runQuery(ddb, tranformQuery);
 
   let distinctCols = (
@@ -122,6 +125,7 @@ export async function prepareChartData(
   }
   let data;
   let schema: DescribeSchema;
+  queries["final"] = queryString;
   data = await runQuery(ddb, queryString);
   schema = await runQuery(ddb, `DESCRIBE ${reshapeTableName}`);
   // Format data as an array of objects
@@ -154,5 +158,6 @@ export async function prepareChartData(
     data: formatted,
     description:
       description.value || "No transformations or aggregations applied.",
+    queries,
   };
 }

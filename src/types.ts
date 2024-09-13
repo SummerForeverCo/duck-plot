@@ -86,3 +86,7 @@ export type Aggregate =
   | "mode"
   | "stddev"
   | "variance";
+
+export type QueryMap = {
+  [key: string]: string;
+};

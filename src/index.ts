@@ -8,6 +8,7 @@ import {
   Config,
   MarkProperty,
   PlotProperty,
+  QueryMap,
 } from "./types";
 import { prepareChartData } from "./prepareChartData";
 import {
@@ -48,6 +49,7 @@ export class DuckPlot {
   private _config: Config = {};
   private _query: string = "";
   private _description: string = ""; // TODO: add tests
+  private _queries: QueryMap | undefined = undefined; // TODO: add tests
 
   constructor(
     ddb: AsyncDuckDB,
@@ -206,15 +208,18 @@ export class DuckPlot {
       ...(this._fy.column ? { fy: this._fy.column } : {}),
       ...(this._fx.column ? { fx: this._fx.column } : {}),
     };
-    ({ data: this._chartData, description: this._description } =
-      await prepareChartData(
-        this._ddb,
-        this._table,
-        columns,
-        this._mark.markType!,
-        this._query,
-        this._config.aggregate
-      ));
+    ({
+      data: this._chartData,
+      description: this._description,
+      queries: this._queries,
+    } = await prepareChartData(
+      this._ddb,
+      this._table,
+      columns,
+      this._mark.markType!,
+      this._query,
+      this._config.aggregate
+    ));
     return this._chartData;
   }
   async getMarks(): Promise<Markish[]> {
@@ -288,8 +293,11 @@ export class DuckPlot {
       plotOptions.color.label = chartData.labels?.series;
     return plotOptions;
   }
-  getDescription(): string {
+  describe(): string {
     return this._description;
+  }
+  queries(): QueryMap | undefined {
+    return this._queries;
   }
   async render(): Promise<SVGElement | HTMLElement | null> {
     if (!this._mark) return null;
