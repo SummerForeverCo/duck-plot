@@ -87,13 +87,15 @@ export async function prepareChartData(
   // Deteremine if we should aggregate
 
   const isDistinct = await checkDistinct(ddb, reshapeTableName, distinctCols);
-  const allowsAggregation = allowAggregation(type);
+  const allowsAggregation = allowAggregation(type) || aggregate;
 
   // If there are no distinct columns (e.g., y axis is selected before x axis), we can't aggregate
   const shouldAggregate =
     !isDistinct &&
     allowsAggregation &&
-    (distinctCols.includes("y") || distinctCols.includes("x"));
+    (distinctCols.includes("y") ||
+      distinctCols.includes("x") ||
+      distinctCols.includes("fx"));
   // TODO: do we need the distincCols includes check here...?
   if (!shouldAggregate) {
     queryString = `SELECT * FROM ${reshapeTableName}`;
