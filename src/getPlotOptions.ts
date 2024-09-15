@@ -65,7 +65,6 @@ export function getMarkOptions(
     ...tip,
     ...(type === "line" ? { stroke } : { fill }),
     ...(currentColumns.includes("x") ? { x: `x`, sort: (d: any) => d.x } : {}),
-    // TODO: should probably rename fy to 'fx'
     ...(currentColumns.includes("fy") ? { fy: "fy" } : {}),
     ...(fx ? { fx: `fx` } : {}),
     ...(currentColumns.includes("y") ? { y: `y` } : {}),

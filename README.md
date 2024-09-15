@@ -1,8 +1,14 @@
 # DuckPlot 🦆📈
 
 DuckPlot is a JavaScript library that allows you to quickly generate charts with
-[Observable Plot](https://github.com/observablehq/plot) when working with [DuckDB](https://duckdb.org/). It allows you to easily configure, prepare, and visualize your data, whether
-you are running in a Node.js environment or in the browser.
+[Observable Plot](https://github.com/observablehq/plot) when working with
+[DuckDB](https://duckdb.org/).
+
+## Disclaimer
+
+This library is actively being developed, and does not fully support all
+Observable Plot features. However, we believe it's helpful for many common use
+cases and are actively adding feature support (see [Contrubuting](#Contributing)).
 
 ## Motivation
 
@@ -30,7 +36,9 @@ DuckPlot:
 <code>
 duckplot
   .table("taxi")
-  .columns({ x: "Borough", y: "Count", series: "Borough" }) // Columns of interest
+  .x("Borough") // X-axis
+  .y("Count") // Y-axis
+  .series("Borough") // Series  
   .mark("barY") // Observable Plot mark type
   .render(); // Generate the plot
 </code>
@@ -39,13 +47,12 @@ duckplot
 
 This demonstrates the major features of the library:
 
-- Performs **data transformations** and aggregations with DuckDB before
+- Performs **data transformations** and **aggregations** with DuckDB before
   rendering
 - Automatically **adjusts the margins** and axis ticks labels for better
   readability
 - Creates **custom legends** for categorical data
 - Supports both **client and server** environments
-- Uses a **method chaining** API for easy configuration
 
 ## Installation (⚠️ NPM build not actually ready yet)
 
@@ -57,25 +64,11 @@ npm install duck-plot
 
 ## Usage
 
-### Basic Example
-
-Here’s a basic example of how to use DuckPlot to create a line plot.
-
-```javascript
-import { DuckPlot } from "duck-plot";
-// Assumes you have a DuckDB instance named `dbd` and a table named `my_table`
-const duckPlot = new DuckPlot(ddb);
-duckPlot
-  .table("my_table")
-  .columns({ x: "date", y: "cost", series: "company", fy: "department" })
-  .mark("line");
-const svg = await duckPlot.render();
-document.body.appendChild(svg);
-```
-
 ### DuckPlot Class Methods
 
 **Constructor Arguments:**
+Pass in an DuckDB instance to the class, and optionally a JSDOM instance and a
+font object for server-side rendering.
 
 ```javascript
 constructor(
@@ -84,79 +77,78 @@ constructor(
 )
 ```
 
-- **`ddb: AsyncDuckDB`**
+- **`ddb: AsyncDuckDB`** The DuckDB instance to be used for querying and data manipulation.
+- **`{ jsdom, font }: { jsdom?: JSDOM; font?: any }`**An optional configuration object
+  - **`jsdom` _(optional)_**: An instance of JSDOM for creating a simulated DOM environment when running on the server.
+  - **`font` _(optional)_**: An opentype.js loaded font object used for
+    measuring text length on the server
 
-  - **Description:** The DuckDB instance to be used for querying and data manipulation.
-  - **Type:** `AsyncDuckDB`
+**`.table(string?)`**: The name of the table to be used for plotting.
 
-- **`{ jsdom, font }: { jsdom?: JSDOM; font?: any }`**
-  - **Description:** An optional configuration object for server-side rendering.
-  - **Parameters:**
-    - **`jsdom` _(optional)_**: An instance of JSDOM for creating a simulated DOM environment when running on the server.
-      - **Type:** `JSDOM`
-    - **`font` _(optional)_**: An opentype.js loaded font object used for
-      measuring text length on the server
-      - **Type:** `any`
+To specify the columns you wish to visualize, use the following methods which
+correspond to each axis.
 
-The `DuckPlot` class offers a set of methods to configure and render your plots
-effectively. Below are the primary methods available:
+**`.x(column?: string, options?: PlotOptions["x"])`**
+**`.y(column?: string, options?: PlotOptions["y"])`**
+**`.fx(column?: string, options?: PlotOptions["fx"])`**
+**`.fy(column?: string, options?: PlotOptions["fx"])`**
+**`.color(column?: string, options?: PlotOptions["color"])`**
 
-**`.table(string?)`**
+Of note:
 
-- **Description:** Sets the table name.
-- **Parameters:**
-  - `table`: The name of the table to be used for plotting.
+- you can optionally pass in corresponding plot options for the axis
+- we're using `color` to handle fill or stroke (`line`, `rule`, and `tick` marks
+  use stoke, all others use fill)
+- All methods are **getter**/**setter** methods, meaning they can be used to
+  both set and get the values. For example, you can use the `.x("colName")` method to set
+  the x-axis column and the `.x()` method without any parameters to get the
+  current axis and options.
 
-**`.columns({x: string, y: string, series?: string, fy?: string})`**
+**`.mark("line" | "barY" | "areaY" | "dot" | "barX")`** Sets the type of plot. Options correspond to Observable Plot mark types.
 
-- **Description:** Defines the columns of interest for the plot.
-- **Parameters:**
-  - `x`: The column to be used for the x-axis.
-  - `y`: The column to be used for the y-axis.
-  - `series` _(optional)_: The column used to group data by series.
-  - `fy` _(optional)_: The column used for fying the plot.
+These options are a bit awkward, not fitting in anywhere else very cleanly.
 
-**`.mark("line" | "barY" | "areaY" | "dot" | "barX")`**
+**`.configConfig(
+  xLabelDisplay?: boolean; // Display axis labels
+  yLabelDisplay?: boolean; // Display axis labels
+  tip?: boolean; // Show tooltips
+  autoMargin?: boolean; // Automatically adjust margins, default is true
+  aggregate?: | "sum"
+  | "avg"
+  | "count"
+  | "max"
+  | "min"
+  | "median"
+  | "mode"
+  | "stddev"
+  | "variance";
+)`**
 
-- **Description:** Sets the type of plot. Options correspond to Observable Plot mark types.
-- **Parameters:**
-  - The type of plot, chosen from `"line"`, `"barY"`, `"areaY"`, `"dot"`, or `"barX"`.
+**`.render()`** Prepares the data and generates the plot (async method)
 
-**`.config({xLabel?: string, yLabel?: string, legendLabel?: string, width?: number, height?: number, xLabelDisplay?: boolean, yLabelDisplay?: boolean, legendDisplay?: boolean, hideTicks?: boolean, color?: string, r?: number})`**
-
-- **Description:** Configures various settings for the plot.
-- **Parameters:**
-  - `xLabel` _(optional)_: Label for the x-axis.
-  - `yLabel` _(optional)_: Label for the y-axis.
-  - `legendLabel` _(optional)_: Label for the legend.
-  - `width` _(optional)_: Width of the plot.
-  - `height` _(optional)_: Height of the plot.
-  - `xLabelDisplay` _(optional)_: Boolean to display the x-axis label.
-  - `yLabelDisplay` _(optional)_: Boolean to display the y-axis label.
-  - `legendDisplay` _(optional)_: Boolean to display the legend.
-  - `hideTicks` _(optional)_: Boolean to hide axis ticks.
-  - `color` _(optional)_: Color used for the plot elements.
-  - `r` _(optional)_: Radius for dot elements in the plot.
-
-**`.render()`**
-
-- **Description:** Prepares and generates the plot.
-- **Returns:** An HTML `Div` element containing the rendered plot.
-
-The `.data`, `.columns`, `.type`, and `.config` methods are **getter**/**setter** methods, meaning they can be used to both set and get the values. For example, you can use the `.data` method to set the data source and the `.data` method without any parameters to get the data source.
-
-```javascript
-const duckPlot = new DuckPlot().data({ ddb: db, table: "my_table" }); // sets the data source
-
-duckPlot.data(); // gets the data source
-```
+**`.query(string)`**: Run a custom query on the DuckDB instance _before_ data
+transformations are performed.
 
 ## Data Transformations
 
-TODO: Add a description of the data transformations that DuckPlot can perform.
+Depending on the mark type and columns, DuckPlot will perform the necessary data
+transformations and aggregations. This happens in three steps:
 
-**Note**: Data transformations are only re-run when necessary, so if you update
-the `.config` and re-render the plot, the data transformations will not be re-run.
+- **Query**: If a custom query is provided, it will be run on the DuckDB
+  instance
+- **Pivoting**: If multiple y or x columns are provided, the data will be
+  pivoted to create a single `x`, `y`, and `series` column.
+- **Aggregations**: If an aggregation is specified, the data will be aggregated
+  based on the `x`, `y`, and `series` columns. Data will also be automatically
+  aggregated for certain mark types (`barY`, `barX`, `areaY`, `line`).
+  Specifically, it will check to see if the data is distinct by the specified
+  columns, and if not, it will perform a `sum` aggregation.
+
+Does this seem like too much of a black box? You can inspect the data
+transformations by calling these methods:
+
+- `.describe()`: Get a description of the data transformations
+- `.queries()`: Get the full query strings taht were run for each step above.
 
 ## Development
 
@@ -166,7 +158,6 @@ with `npm install`.
 - To view examples in the browser, run `npm run dev` and open `http://localhost:8008/`
 - To view examples in the server, run `npm run dev-server` and view
   the outputted `.html` files in `examples/server-output`
-
 - For an example creating multiple plots from a single data source, run `npm run
 dev-multi-chart`, and see the outputted files in `examples/server-output`
 
@@ -179,9 +170,13 @@ import { renderPlot } from "../util/renderPlotClient.js";
 // This code is both displayed in the browser and executed
 const codeString = `
 duckplot
-  .data({ ddb: db, table: "income" })
-  .columns({ x: "month", y: "consensus_income"})
+  .table("income")
+  .query("SELECT * FROM income LIMIT 100")
+  .x("month", {label: "Date", axis: "top", grid: true})
+  .y("consensus_income", {type: "log"})
   .mark("line")
+  .color("red")
+  .options({width: 400, height: 500, y: {domain: [100, 30000]}})
 `;
 
 export const line = (duckplot) =>
@@ -202,6 +197,14 @@ Because DuckDB has different APIs for
 Performing axis adjustments on the server requires measuring the text width of
 the axis labels. This is done using `opentype.js`. You can pass in your own font
 for more precise measurements.
+
+## Contributing
+
+Feel free to open a pull request or issue if you have any suggestions or would
+like to contribute to the project. We are actively working on adding more
+features and improving the library. However, we are a small team and are
+actively using this library in our production software, so we may not be able to
+merge all pull requests.
 
 ## License
 
