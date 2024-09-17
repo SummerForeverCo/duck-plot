@@ -70,7 +70,7 @@ export function PlotFit(
   }
   // Extract the x-axis tick labels
   let xNodes = initialPlot.querySelectorAll(
-    '[aria-label="x-axis tick label"] text, [aria-label="fx-axis tick label"] text'
+    '[aria-label="x-axis tick label"] text, [aria-label="fx-axis tick label"] text,  [aria-label="fx-axis tick label"] g text'
   );
 
   let yNodes = initialPlot.querySelectorAll(
@@ -92,13 +92,12 @@ export function PlotFit(
   // Get the max height and width to get the margin bottom
   xNodes.forEach((node) => {
     // Get the rotated height (will be the height if not rotated)
-    const height = 14;
+    const height = 14 * (node.children.length || 1);
     const computedWidth = getWidth(node as HTMLElement);
     const theta = (tickRotate * Math.PI) / 180; // Convert degrees to radians
     const rotatedHeight = height + Math.abs(computedWidth * Math.sin(theta));
 
     maxHeight = Math.max(maxHeight, rotatedHeight);
-
     // Tracking the width as well to ensure we have enough margin LEFT
     const rotatedWidth = Math.abs(
       computedWidth * Math.cos(theta) + height * Math.sin(theta)
@@ -124,6 +123,10 @@ export function PlotFit(
       ...config.x,
       tickRotate,
     },
+    fx: {
+      ...config.fx,
+      tickRotate,
+    },
     y: {
       ...config.y,
     },
@@ -139,7 +142,7 @@ export function PlotFit(
   // Adjust the visibility of the x and y labels that may be overlapping
   if (hideOverlapping) {
     xNodes = finalChart.querySelectorAll(
-      '[aria-label="x-axis tick label"] text, [aria-label="fx-axis tick label"] text'
+      '[aria-label="x-axis tick label"] text, [aria-label="fx-axis tick label"] text, [aria-label="fx-axis tick label"] g text'
     );
     yNodes = finalChart.querySelectorAll(
       '[aria-label="y-axis tick label"] text'
