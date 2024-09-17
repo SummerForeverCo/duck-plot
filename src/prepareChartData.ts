@@ -105,7 +105,8 @@ export async function prepareChartData(
     allowsAggregation &&
     (distinctCols.includes("y") ||
       distinctCols.includes("x") ||
-      distinctCols.includes("fx"));
+      distinctCols.includes("fx") ||
+      aggregate);
   // TODO: do we need the distincCols includes check here...?
   if (!shouldAggregate) {
     queryString = `SELECT * FROM ${reshapeTableName}`;
@@ -149,7 +150,6 @@ export async function prepareChartData(
     );
   }
   formatted.labels = labels;
-
   // Drop the reshaped table
   await runQuery(ddb, `drop table if exists "${reshapeTableName}"`);
   if (preQueryTableName)

@@ -1,6 +1,6 @@
 # DuckPlot 🦆📈
 
-DuckPlot is a JavaScript library that allows you to quickly generate charts with
+DuckPlot is an open-source JavaScript library that allows you to quickly generate charts with
 [Observable Plot](https://github.com/observablehq/plot) when working with
 [DuckDB](https://duckdb.org/).
 
@@ -66,33 +66,33 @@ npm install duck-plot
 
 ### DuckPlot Class Methods
 
-**Constructor Arguments:**
+**Creating a new DuckPlot instance**
 Pass in an DuckDB instance to the class, and optionally a JSDOM instance and a
 font object for server-side rendering.
 
 ```javascript
-constructor(
-  ddb: AsyncDuckDB,
-  { jsdom, font }: { jsdom?: JSDOM; font?: any } = {}
+//
+const myPlot = new DuckPlot(
+  ddb // AsyncDuckDB,
+  { jsdom, font } // for server side rendering { jsdom?: JSDOM; font?: opentype.Font }
 )
 ```
 
-- **`ddb: AsyncDuckDB`** The DuckDB instance to be used for querying and data manipulation.
-- **`{ jsdom, font }: { jsdom?: JSDOM; font?: any }`**An optional configuration object
-  - **`jsdom` _(optional)_**: An instance of JSDOM for creating a simulated DOM environment when running on the server.
-  - **`font` _(optional)_**: An opentype.js loaded font object used for
-    measuring text length on the server
+**Specifying the table**
 
-**`.table(string?)`**: The name of the table to be used for plotting.
+```javascript
+myPlot.table("tableName");
+```
 
+**Specifying the columns**
 To specify the columns you wish to visualize, use the following methods which
 correspond to each axis.
 
-**`.x(column?: string, options?: PlotOptions["x"])`**
-**`.y(column?: string, options?: PlotOptions["y"])`**
-**`.fx(column?: string, options?: PlotOptions["fx"])`**
-**`.fy(column?: string, options?: PlotOptions["fx"])`**
-**`.color(column?: string, options?: PlotOptions["color"])`**
+- `.x(column?: string | string[], options?: PlotOptions["x"])`
+- `.y(column?: | string[], options?: PlotOptions["y"])`
+- `.color(column?: string | string[], options?: PlotOptions["color"])`
+- `.fy(column?: string, options?: PlotOptions["fx"])`
+- `.fx(column?: string | string[], options?: PlotOptions["fx"])`
 
 Of note:
 
@@ -104,30 +104,42 @@ Of note:
   the x-axis column and the `.x()` method without any parameters to get the
   current axis and options.
 
-**`.mark("line" | "barY" | "areaY" | "dot" | "barX")`** Sets the type of plot. Options correspond to Observable Plot mark types.
+```javascript
+myPlot
+  .x("date", { label: "Date", axis: "top", grid: true })
+  .y(["temp_min", "temp_max"]); // these will be pivoted, see Data Transforations
+```
 
+**Setting the mark type**
+
+- `.mark("line" | "barY" | "areaY" | "dot" | "barX", {options})` Sets the type of
+  plot, Options correspond to Observable Plot mark types.
+
+```javascript
+myPlot.mark("barY", { opacity: 0.5 });
+```
+
+**Additional configurations**
 These options are a bit awkward, not fitting in anywhere else very cleanly.
 
-**`.configConfig(
-  xLabelDisplay?: boolean; // Display axis labels
-  yLabelDisplay?: boolean; // Display axis labels
-  tip?: boolean; // Show tooltips
-  autoMargin?: boolean; // Automatically adjust margins, default is true
-  aggregate?: | "sum"
-  | "avg"
-  | "count"
-  | "max"
-  | "min"
-  | "median"
-  | "mode"
-  | "stddev"
-  | "variance";
-)`**
+```javascript
+`.configConfig(
+  xLabelDisplay?: boolean; // Display axis labels, default true
+  yLabelDisplay?: boolean; // Display axis labels, default true
+  tip?: boolean; // Show tooltips, default true
+  autoMargin?: boolean; // Automatically adjust margins, default true
+  aggregate?:  "sum" | "avg" .... // DuckDB supported aggregation type
+)`;
+```
 
-**`.render()`** Prepares the data and generates the plot (async method)
+**Rendering the plot**
 
-**`.query(string)`**: Run a custom query on the DuckDB instance _before_ data
-transformations are performed.
+- `.render()` Prepares the data and returns the plot (async method)
+
+**Tranformaing the data before plotting**
+
+- `.query(string)`: Run a custom query on the DuckDB instance _before_ data
+  transformations are performed (optional!).
 
 ## Data Transformations
 

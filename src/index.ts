@@ -240,8 +240,12 @@ export class DuckPlot {
       }
     );
 
+    // Here, we want to add the primary mark if x and y are defined OR if an
+    // aggregate has been specifid. Not a great rule, but works for now for
+    // showing aggregate marks with only one dimension
     const primaryMark =
-      !currentColumns.includes("x") || !currentColumns.includes("y")
+      (!currentColumns.includes("x") || !currentColumns.includes("y")) &&
+      !this._config.aggregate
         ? []
         : [Plot[this._mark.markType](chartData, primaryMarkOptions)];
     // TODO: double check you don't actually use border color
