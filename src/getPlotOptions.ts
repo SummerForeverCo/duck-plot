@@ -48,17 +48,21 @@ export function getMarkOptions(
           },
         }
       : {};
-
+  const ellipsis = "…";
+  function truncateLabel(label: string | undefined, length: number = 25) {
+    if (!label || label.length < length) return label;
+    return label.slice(0, length) + ellipsis;
+  }
   return {
     // Create custom labels for x and y (important if the labels are custom but hidden!)
     channels: {
       xCustom: {
-        label: options.xLabel,
+        label: truncateLabel(options.xLabel),
         // TODO: good for grouped bar charts, not good for other fx
         value: currentColumns.includes("fx") ? "fx" : "x",
       },
       yCustom: {
-        label: options.yLabel,
+        label: truncateLabel(options.yLabel),
         value: "y",
       },
     },
