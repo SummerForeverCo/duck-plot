@@ -194,7 +194,7 @@ export function getAggregateInfo(
       aggregateSelection,
       from: tableName,
       groupBy,
-      // orderBy: groupBy, // TODO: unsure about removing this
+      orderBy: groupBy, // TODO: unsure about removing this
     }),
     labels,
   };
