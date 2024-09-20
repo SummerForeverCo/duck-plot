@@ -16,4 +16,6 @@ const loadSync = (relativePath) => {
 };
 
 // Adjust the relative path to be based on the project's root directory
-export const font = loadSync("public/fonts/abc-favorit/ABCFavorit-Medium.otf");
+export const font = loadSync(
+  "public/fonts/inter/Inter-VariableFont_opsz,wght.ttf"
+);
