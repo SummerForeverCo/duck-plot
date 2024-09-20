@@ -15,7 +15,30 @@ export function PlotFit(
 ): (SVGSVGElement | HTMLElement) & Plot.Plot {
   const getWidth = function (element: HTMLElement | SVGElement): number {
     if (font && font.getAdvanceWidth) {
-      const width = font.getAdvanceWidth(element.textContent || "", 10);
+      // Because the font can be in multiple lines in tspans, find the longest
+      // tspan
+      // Use a regular expression to match the content inside <tspan> tags
+      const regex = /<tspan[^>]*>(.*?)<\/tspan>/g;
+
+      // Extract the matches or default to the full string if no <tspan> tags are found
+      let match;
+      let longestString = "";
+      let foundTspans = false;
+
+      while ((match = regex.exec(element.innerHTML)) !== null) {
+        foundTspans = true; // Flag that we found at least one <tspan>
+        const content = match[1]; // match[1] contains the content between the <tspan> tags
+        if (content.length > longestString.length) {
+          longestString = content; // Update the longest string if this one is longer
+        }
+      }
+
+      // If no <tspan> elements were found, treat the entire string as the content
+      if (!foundTspans) {
+        longestString = element.innerHTML;
+      }
+
+      const width = font.getAdvanceWidth(longestString || "", 10);
       return width;
     } else {
       const { width } = element.getBoundingClientRect();
@@ -92,7 +115,9 @@ export function PlotFit(
   // Get the max height and width to get the margin bottom
   xNodes.forEach((node) => {
     // Get the rotated height (will be the height if not rotated)
-    const height = 14 * (node.children.length || 1);
+    // Count the number of tspans (for the case when there is a line break)
+    const count = (node.innerHTML.match(/<tspan/g) || [""]).length;
+    const height = 14 * count;
     const computedWidth = getWidth(node as HTMLElement);
     const theta = (tickRotate * Math.PI) / 180; // Convert degrees to radians
     const rotatedHeight = height + Math.abs(computedWidth * Math.sin(theta));
