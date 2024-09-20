@@ -10,6 +10,7 @@
   overflow: hidden;
   position: relative; /* Add relative positioning for tooltips */
   overflow: visible;
+  margin-bottom: 2px;
 }
 
 /* Category items */
@@ -30,7 +31,7 @@
 
 .dp-category {
   display: flex;
-  padding: 6px;
+  padding: 4px 6px;
   gap: 2px;
   align-items: center;
   line-height: 120%;
