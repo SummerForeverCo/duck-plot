@@ -18,3 +18,5 @@ export * from "./barRotatedAxis.js";
 export * from "./partialChart.js";
 export * from "./partialChartY.js";
 export * from "./horizontalAverage.js";
+export * from "./textWithTransform.js";
+export * from "./textWithSeriesTransform.js";

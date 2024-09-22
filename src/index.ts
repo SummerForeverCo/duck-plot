@@ -35,6 +35,7 @@ export class DuckPlot {
   private _fy: PlotProperty<"fy"> = { ...emptyProp };
   private _fx: PlotProperty<"fx"> = { ...emptyProp };
   private _r: PlotProperty<"r"> = { ...emptyProp };
+  private _text: { column: string } = { column: "" };
   private _color: PlotProperty<"color"> = { ...emptyProp };
   private _mark: MarkProperty = {
     markType: "line",
@@ -157,6 +158,13 @@ export class DuckPlot {
     return this.handleProperty(this._r, column, options);
   }
 
+  // Text encoding: note, there are no options for text
+  text(): { column: string };
+  text(column: string): this;
+  text(column?: string): { column?: string } | this {
+    return this.handleProperty(this._text, column);
+  }
+
   mark(): MarkProperty;
   mark(markType: ChartType, options?: MarkProperty["options"]): this;
   mark(
@@ -216,6 +224,7 @@ export class DuckPlot {
       ...(this._fy.column ? { fy: this._fy.column } : {}),
       ...(this._fx.column ? { fx: this._fx.column } : {}),
       ...(this._r.column ? { r: this._r.column } : {}),
+      ...(this._text.column ? { text: this._text.column } : {}),
     };
     ({
       data: this._chartData,
