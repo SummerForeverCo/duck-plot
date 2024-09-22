@@ -28,3 +28,7 @@ examples/server-output
 
 # Add yarn.lock
 yarn.lock
+
+# vitepress (for docs)
+docs/.vitepress/cache*
+docs/.vitepress/dist*
