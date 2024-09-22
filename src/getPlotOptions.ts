@@ -70,6 +70,7 @@ export function getMarkOptions(
     ...(type === "line" ? { stroke } : { fill }),
     ...(currentColumns.includes("x") ? { x: `x`, sort: (d: any) => d.x } : {}),
     ...(currentColumns.includes("fy") ? { fy: "fy" } : {}),
+    ...(type === "dot" && currentColumns.includes("r") ? { r: "r" } : {}),
     ...(fx ? { fx: `fx` } : {}),
     ...(currentColumns.includes("y") ? { y: `y` } : {}),
     ...(options.markOptions ? { ...options.markOptions } : {}),

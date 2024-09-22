@@ -7,6 +7,8 @@ export * from "./bar.js";
 export * from "./barWide.js";
 export * from "./barWideColor.js";
 export * from "./dot.js";
+export * from "./dotWithTransform.js";
+export * from "./dotWithSeriesTransform.js";
 export * from "./fy.js";
 export * from "./fyNoTicks.js";
 export * from "./options.js";

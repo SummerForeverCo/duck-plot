@@ -34,7 +34,7 @@ export type SqlWhere = {
 export type Indexable = {
   [key: string]: any;
 };
-export type Column = "x" | "y" | "series" | "fy" | "fx";
+export type Column = "x" | "y" | "series" | "fy" | "fx" | "r";
 export type ColumnConfig = Partial<Record<Column, string | string[]>>;
 export interface ChartData extends Array<Indexable> {
   types?: { [key: string]: BasicColumnType };

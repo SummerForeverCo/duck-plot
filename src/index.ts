@@ -1,6 +1,6 @@
 import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
-import type { Markish, PlotOptions } from "@observablehq/plot";
+import type { Markish, MarkOptions, PlotOptions } from "@observablehq/plot";
 
 import {
   ChartData,
@@ -34,6 +34,7 @@ export class DuckPlot {
   private _y: PlotProperty<"y"> = { ...emptyProp };
   private _fy: PlotProperty<"fy"> = { ...emptyProp };
   private _fx: PlotProperty<"fx"> = { ...emptyProp };
+  private _r: PlotProperty<"r"> = { ...emptyProp };
   private _color: PlotProperty<"color"> = { ...emptyProp };
   private _mark: MarkProperty = {
     markType: "line",
@@ -109,21 +110,21 @@ export class DuckPlot {
     return column === undefined ? prop : this;
   }
 
-  // x method using the generic handler
+  // x column encoding
   x(): PlotProperty<"x">;
   x(column: string, options?: PlotOptions["x"]): this;
   x(column?: string, options?: PlotOptions["x"]): PlotProperty<"x"> | this {
     return this.handleProperty(this._x, column, options);
   }
 
-  // y method using the generic handler
+  // y column encoding
   y(): PlotProperty<"y">;
   y(column: string, options?: PlotOptions["y"]): this;
   y(column?: string, options?: PlotOptions["y"]): PlotProperty<"y"> | this {
     return this.handleProperty(this._y, column, options);
   }
 
-  // color method using the generic handler
+  // color column encoding
   color(): PlotProperty<"color">;
   color(column: string, options?: PlotOptions["color"]): this;
   color(
@@ -133,7 +134,7 @@ export class DuckPlot {
     return this.handleProperty(this._color, column, options);
   }
 
-  // fy method using the generic handler
+  // fy column encoding
   // TODO: maybe remove the plotOptions here
   fy(): PlotProperty<"fy">;
   fy(column: string, options?: PlotOptions["fy"]): this;
@@ -141,12 +142,19 @@ export class DuckPlot {
     return this.handleProperty(this._fy, column, options);
   }
 
-  // fy method using the generic handler
+  // fy column encoding
   // TODO: maybe remove the plotOptions here
   fx(): PlotProperty<"fx">;
   fx(column: string, options?: PlotOptions["fx"]): this;
   fx(column?: string, options?: PlotOptions["fx"]): PlotProperty<"fx"> | this {
     return this.handleProperty(this._fx, column, options);
+  }
+
+  // r (radius) column encoding
+  r(): PlotProperty<"r">;
+  r(column: string, options?: PlotOptions["r"]): this;
+  r(column?: string, options?: PlotOptions["r"]): PlotProperty<"r"> | this {
+    return this.handleProperty(this._r, column, options);
   }
 
   mark(): MarkProperty;
@@ -207,6 +215,7 @@ export class DuckPlot {
         : {}), // TODO: naming....?
       ...(this._fy.column ? { fy: this._fy.column } : {}),
       ...(this._fx.column ? { fx: this._fx.column } : {}),
+      ...(this._r.column ? { r: this._r.column } : {}),
     };
     ({
       data: this._chartData,
@@ -247,7 +256,12 @@ export class DuckPlot {
       (!currentColumns.includes("x") || !currentColumns.includes("y")) &&
       !this._config.aggregate
         ? []
-        : [Plot[this._mark.markType](chartData, primaryMarkOptions)];
+        : [
+            Plot[this._mark.markType](
+              chartData,
+              primaryMarkOptions as MarkOptions
+            ),
+          ];
     // TODO: double check you don't actually use border color
     // If a user supplies marks, don't add the common marks
     const commonPlotMarks =

@@ -40,7 +40,7 @@ export function getTransformType(
 
 export function getStandardTransformQuery(
   type: ChartType,
-  { x, y, series, fy, fx }: ColumnConfig,
+  { x, y, series, fy, fx, r }: ColumnConfig,
   tableName: string,
   into: string
 ) {
@@ -51,13 +51,14 @@ export function getStandardTransformQuery(
   if (y?.length) select.push(standardColName({ y }, "y"));
   if (series?.length) select.push(maybeConcatCols(series, "series"));
   if (fy?.length) select.push(maybeConcatCols(fy, "fy"));
+  if (r?.length) select.push(standardColName({ r }, "r"));
 
   return buildSqlQuery({ select, into, from: tableName! });
 }
 
 export function getUnpivotQuery(
   type: ChartType,
-  { x, y, fy, fx }: ColumnConfig,
+  { x, y, fy, fx, r }: ColumnConfig,
   tableName: string,
   into: string
 ) {
@@ -71,8 +72,9 @@ export function getUnpivotQuery(
   const keysStr =
     type === "barX" ? quoteColumns(x)?.join(", ") : quoteColumns(y)?.join(", ");
   const fyStr = fy ? maybeConcatCols(fy, "fy,") : "";
+  const rStr = r ? `${standardColName({ r }, "r")} ,` : "";
 
-  return `${createStatment} ${selectStr}, ${fyStr} key AS series${
+  return `${createStatment} ${selectStr}, ${rStr}${fyStr} key AS series${
     fx && !x ? ", key AS x" : ""
   } FROM "${tableName}"
         UNPIVOT (value FOR key IN (${keysStr}));`;
@@ -80,7 +82,7 @@ export function getUnpivotQuery(
 
 export function getUnpivotWithSeriesQuery(
   type: ChartType,
-  { x, y, series, fy, fx }: ColumnConfig,
+  { x, y, series, fy, fx, r }: ColumnConfig,
   tableName: string,
   into: string
 ) {
@@ -98,6 +100,7 @@ export function getUnpivotWithSeriesQuery(
   const createStatment = `CREATE TABLE ${into} as`;
   return `${createStatment} SELECT
             ${columnIsDefined("x", { x }) ? `x, ` : ""}
+            ${columnIsDefined("r", { r }) ? `r, ` : ""}
             y,
             concat_ws('-', pivotCol, series) AS series
             ${fy?.length ? ", fy" : ""}
@@ -110,6 +113,7 @@ export function getUnpivotWithSeriesQuery(
               ${maybeConcatCols(series, "series")},
               ${fy?.length ? maybeConcatCols(fy, "fy") : ""}
               ${fx?.length ? `, ${maybeConcatCols(fx, "fx")}` : ""}
+              ${r?.length ? `${maybeConcatCols(r, "r")}` : ""}
           FROM
               ${tableName}
       ) p
