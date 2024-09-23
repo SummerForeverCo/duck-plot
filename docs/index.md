@@ -4,22 +4,18 @@ layout: home
 
 hero:
   name: "DuckPlot"
-  text: "DockPlot docs"
-  tagline: My great project tagline
+  text: "Connecting DuckDB and Observable Plot"
+  tagline: By <a>SummerForeverCo</a>
   actions:
     - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
-    - theme: alt
-      text: API Examples
+      text: Get started
       link: /api-examples
 
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - title: DuckDB level aggregation
+    details: Moving computation to the database layer
+  - title: Client + server side rendering
+    details: Make your plots where you want them
+  - title: Stylized
+    details: With a little bit of flair
 ---
-

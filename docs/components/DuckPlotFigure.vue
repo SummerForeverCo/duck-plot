@@ -18,7 +18,6 @@ export const createDbClient = async (fileName) => {
   // await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
   await db.instantiate(bundle.mainModule, bundle.pthreadWorker || undefined);
   const conn = await db.connect();
-  console.log("connected");
 
   // Fetch the CSV file from the Vite server
   const response = await fetch(`/data/${fileName}`);
@@ -44,7 +43,6 @@ export default {
     };
   },
   async mounted() {
-    console.log(this.codeString);
     const db = await createDbClient("taxi.csv"); // Fetch the database
 
     const duckPlot = new DuckPlot(db);

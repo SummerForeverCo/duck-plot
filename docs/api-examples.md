@@ -2,32 +2,27 @@
 outline: deep
 ---
 
-<script setup>
-import { useData } from 'vitepress'
+# Getting started
 
-const { theme, page, frontmatter } = useData()
-import * as Plot from "@observablehq/plot"
-import * as d3 from "d3";
-import {ref} from "vue";
+Imagine you have this table of taxi rides in your DuckDB instance:
 
-const curve = ref("catmull-rom");
-const numbers = d3.range(20).map(d3.randomLcg(42));
-</script>
+| Date       | Count | Borough       |
+| ---------- | ----- | ------------- |
+| 2023-01-01 | 1     | Bronx         |
+| 2023-01-01 | 4     | Manhattan     |
+| 2022-12-31 | 144   | Bronx         |
+| 2022-12-31 | 691   | Brooklyn      |
+| 2022-12-31 | 9     | EWR           |
+| 2022-12-31 | 74415 | Manhattan     |
+| 2022-12-31 | 8512  | Queens        |
+| 2022-12-31 | 12    | Staten Island |
+| 2022-12-31 | 1292  | Unknown       |
+| 2022-12-30 | 148   | Bronx         |
 
-:::plot
+To generate this chart of the number of taxi rides per borough, you can use
+DuckPlot:
 
-```js-vue
-Plot.plot({
-  marks: [
-    Plot.lineY(numbers),
-    Plot.dotY(numbers, {x: (d, i) => i, tip: true})
-  ]
-})
-```
-
-:::
-
-:::test
+:::duckplot
 
 ```js-vue
 duckPlot
@@ -39,3 +34,25 @@ duckPlot
 ```
 
 :::
+
+:::duckplot
+
+```js-vue
+duckPlot
+  .table("taxi")
+  .x("Borough")
+  .color("Borough")
+  .y("count")
+  .mark("dot");
+```
+
+:::
+
+This demonstrates the major features of the library:
+
+- Performs **data transformations** and **aggregations** with DuckDB before
+  rendering
+- Automatically **adjusts the margins** and axis ticks labels for better
+  readability
+- Creates **custom legends** for categorical data
+- Supports both **client and server** environments

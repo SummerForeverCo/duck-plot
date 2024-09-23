@@ -3,8 +3,7 @@ import { h } from "vue";
 import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import "./style.css";
-import PlotFigure from "../../components/PlotFigure.vue";
-import PlotRender from "../../components/PlotRender";
+import DuckPlotFigure from "../../components/DuckPlotFigure.vue";
 
 export default {
   extends: DefaultTheme,
@@ -13,8 +12,7 @@ export default {
       // https://vitepress.dev/guide/extending-default-theme#layout-slots
     });
   },
-  enhanceApp({ app, router }) {
-    app.component("PlotRender", PlotRender);
-    app.component("PlotFigure", PlotFigure);
+  enhanceApp({ app }) {
+    app.component("DuckPlotFigure", DuckPlotFigure);
   },
 } satisfies Theme;

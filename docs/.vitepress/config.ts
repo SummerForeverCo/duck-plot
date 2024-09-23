@@ -2,7 +2,7 @@ import { defineConfig } from "vitepress";
 import plot from "./markdown-it-plot.js";
 import path from "node:path";
 
-import test from "./markdown-it-test.js";
+import duckplot from "./markdown-it-duckplot.js";
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "DuckPlot",
@@ -20,7 +20,7 @@ export default defineConfig({
   markdown: {
     config: (md) => {
       plot(md);
-      test(md);
+      duckplot(md);
     },
   },
   themeConfig: {
@@ -33,10 +33,7 @@ export default defineConfig({
     sidebar: [
       {
         text: "Examples",
-        items: [
-          { text: "Markdown Examples", link: "/markdown-examples" },
-          { text: "Runtime API Examples", link: "/api-examples" },
-        ],
+        items: [{ text: "Getting Started", link: "/api-examples" }],
       },
     ],
 
