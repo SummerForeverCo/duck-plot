@@ -96,10 +96,16 @@ export class DuckPlot {
   private handleProperty<T extends keyof PlotOptions>(
     prop: PlotProperty<T>,
     column?: string | false | null,
-    options?: PlotOptions[T]
+    options?: PlotOptions[T],
+    propertyName?: string
   ): PlotProperty<T> | this {
     if (column !== undefined && !equal(column, prop.column)) {
-      this._newDataProps = true; // When changed, we need to requery the data
+      // Special case handling that we don't need data if color is/was a color
+      if (
+        !(propertyName === "color" && isColor(prop.column) && isColor(column))
+      ) {
+        this._newDataProps = true; // When changed, we need to requery the data
+      }
     }
     if (column === false || column === null) {
       prop.column = "";
@@ -132,7 +138,7 @@ export class DuckPlot {
     column?: string,
     options?: PlotOptions["color"]
   ): PlotProperty<"color"> | this {
-    return this.handleProperty(this._color, column, options);
+    return this.handleProperty(this._color, column, options, "color");
   }
 
   // fy column encoding
