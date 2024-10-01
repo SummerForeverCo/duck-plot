@@ -63,6 +63,7 @@ export function buildSqlQuery(options: SqlQueryOptions): string {
       ? options.orderBy.join(", ")
       : options.orderBy;
     sql += ` ORDER BY ${orderBy}`;
+    // TODO: check if this sort option is actually ever used
   } else if (options.sort && options.sort.length > 0) {
     const sortColumns = options.sort
       .map((sortItem) => `"${sortItem.column}" ${sortItem.direction}`)

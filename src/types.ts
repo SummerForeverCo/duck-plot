@@ -86,7 +86,8 @@ export type Aggregate =
   | "median"
   | "mode"
   | "stddev"
-  | "variance";
+  | "variance"
+  | false; // no aggregation
 
 export type QueryMap = {
   [key: string]: string;

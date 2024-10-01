@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  extractDefinedValues,
+  arrayIfy,
   getAggregateInfo,
+  getOrder,
   getStandardTransformQuery,
   getTransformQuery,
   getTransformType,
@@ -259,17 +260,17 @@ describe("getTransformQuery", () => {
   });
 });
 
-describe("extractDefinedValues", () => {
+describe("arrayify", () => {
   it("should return empty array if value is undefined", () => {
-    expect(extractDefinedValues(undefined)).toEqual([]);
+    expect(arrayIfy(undefined)).toEqual([]);
   });
 
   it("should return array with single value if input is a string", () => {
-    expect(extractDefinedValues("value")).toEqual(["value"]);
+    expect(arrayIfy("value")).toEqual(["value"]);
   });
 
   it("should filter out undefined values from array", () => {
-    expect(extractDefinedValues(["value", undefined])).toEqual(["value"]);
+    expect(arrayIfy(["value", undefined])).toEqual(["value"]);
   });
 });
 
@@ -319,5 +320,65 @@ describe("toTitleCase", () => {
 
   it("should handle empty input gracefully", () => {
     expect(toTitleCase()).toBe("");
+  });
+});
+
+describe("getOrder", () => {
+  it("should return groupBy as is when no special conditions are met", () => {
+    const result = getOrder(["groupA", "series"], "barX", [], []);
+    const expected = removeSpacesAndBreaks("groupA,series");
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
+  });
+
+  it("should remove 'series' from orderBy when 'series' is included and conditions are met", () => {
+    const result = getOrder(["series", "groupA"], "barX", ["x1", "x2"], []);
+    const expected = removeSpacesAndBreaks(`groupA, CASE 
+    WHEN series like 'x1%' THEN 1
+    WHEN series like 'x2%' THEN 2
+    ELSE 3 
+END;`);
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
+  });
+
+  it("should add CASE statement for 'barX' type with multiple x values", () => {
+    const result = getOrder(["groupA", "series"], "barX", ["x1", "x2"], []);
+    const expected = removeSpacesAndBreaks(`groupA, CASE 
+    WHEN series like 'x1%' THEN 1
+    WHEN series like 'x2%' THEN 2
+    ELSE 3 
+END;`);
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
+  });
+
+  it("should add CASE statement for non-'barX' type with multiple y values", () => {
+    const result = getOrder(["groupA", "series"], "barY", [], ["y1", "y2"]);
+    const expected = removeSpacesAndBreaks(`groupA, CASE 
+    WHEN series like 'y1%' THEN 1
+    WHEN series like 'y2%' THEN 2
+    ELSE 3 
+END;`);
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
+  });
+
+  it("should remove both 'series' and 'x' from orderBy when 'fx' is in groupBy and conditions are met", () => {
+    const result = getOrder(["fx", "series", "x"], "barY", [], ["y1", "y2"]);
+    const expected = removeSpacesAndBreaks(`fx, CASE 
+    WHEN series like 'y1%' THEN 1
+    WHEN series like 'y2%' THEN 2
+    ELSE 3 
+END;`);
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
+  });
+
+  it("should handle a single x or y value without CASE statement and return groupBy", () => {
+    const result = getOrder(["groupA", "series"], "barX", ["x1"], []);
+    const expected = removeSpacesAndBreaks("groupA,series");
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
+  });
+
+  it("should handle a single y value without CASE statement for non-barX and return groupBy", () => {
+    const result = getOrder(["groupA", "series"], "barY", [], ["y1"]);
+    const expected = removeSpacesAndBreaks("groupA,series");
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 });

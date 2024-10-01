@@ -1,6 +1,9 @@
 export * from "./line.js";
 export * from "./area.js";
+export * from "./area-alt-order.js";
+export * from "./areaWithSeriesTransform.js";
 export * from "./avgAggregate.js";
+export * from "./avgAggregateAltOrder.js";
 export * from "./line-multi-y.js";
 export * from "./bar-date.js";
 export * from "./bar.js";
@@ -13,6 +16,7 @@ export * from "./fy.js";
 export * from "./fyNoTicks.js";
 export * from "./options.js";
 export * from "./groupedBar.js";
+export * from "./groupedBarAltOrder.js";
 export * from "./groupedBarExplicit.js";
 export * from "./barRotatedAxis.js";
 export * from "./partialChart.js";

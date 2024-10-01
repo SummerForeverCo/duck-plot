@@ -151,11 +151,9 @@ export function getTransformQuery(
   }
 }
 
-// Function to extract the defined values in an array, or return a string IN an
-// array.
-export function extractDefinedValues(
-  value?: string | (string | undefined)[]
-): string[] {
+// Function to convert a string or array of strings to an array of strings
+// (removes nullish values from the arrays)
+export function arrayIfy(value?: string | (string | undefined)[]): string[] {
   if (!value) return [];
   if (!Array.isArray(value)) return [value];
   return (value.filter((d) => d) as string[]) || [];
@@ -170,9 +168,9 @@ export function getAggregateInfo(
   aggregate: Aggregate | undefined, // TODO: add tests
   description: { value: string }
 ): { queryString: string; labels: ChartData["labels"] } {
-  // Filter out null values (the case that an empty selector has been added)
-  const y = extractDefinedValues(config.y);
-  const x = extractDefinedValues(config.x);
+  // Ensure that the x and y values are arrays
+  const y = arrayIfy(config.y);
+  const x = arrayIfy(config.x);
   const agg = aggregate ?? "sum";
   let aggregateSelection;
   let groupBy: string[] = [];
@@ -191,21 +189,67 @@ export function getAggregateInfo(
     }
     groupBy = columns.filter((d) => d !== "y");
   }
+
+  const orderBy = getOrder(groupBy, type, x, y);
+  if (aggregate === false) {
+    return {
+      queryString: `SELECT * FROM ${tableName}${
+        orderBy ? ` ORDER BY ${orderBy}` : ""
+      }`,
+      labels: {},
+    };
+  }
+
   description.value += `The ${
     type === "barX" ? "x" : "y"
   } values were aggregated with a ${agg} aggregation, grouped by ${groupBy.join(
     `, `
   )}.`;
+
+  // TODO maybe just remove this fn
   return {
     queryString: buildSqlQuery({
       select: [...groupBy],
       aggregateSelection,
       from: tableName,
       groupBy,
-      orderBy: groupBy, // TODO: unsure about removing this
+      orderBy,
     }),
     labels,
   };
+}
+
+// If an explicit order has been added (e.g., if multiple y values are passed
+// in) we should respect their input order. This includes the case that there
+// are multiple y values AND a series encoding. In the transform above the y
+// column names are concatenated with the series values, so the like statement
+// below maintains the order of the y groups.
+export function getOrder(
+  groupBy: string[],
+  type: ChartType,
+  x: string[],
+  y: string[]
+) {
+  let orderBy;
+  if ((type === "barX" && x.length > 1) || (type !== "barX" && y.length > 1)) {
+    const orderByArray = type === "barX" && x.length > 1 ? x : y; // columns to order
+    // This is a handling for the use of fx to create a grouped bar chart. Feels
+    // a bit fragile
+    const exclude =
+      type === "barY" && groupBy.includes("fx") ? ["series", "x"] : ["series"];
+    orderBy = [...groupBy].filter((d) => !exclude.includes(d)).join(", "); // Remove series from the ordering
+    let caseStatements = orderByArray
+      .map((item, index) => `WHEN series like '${item}%' THEN ${index + 1}`)
+      .join("\n");
+
+    orderBy += `, CASE 
+    ${caseStatements}
+    ELSE ${orderByArray.length + 1} 
+END;`;
+  } else {
+    orderBy = groupBy.join(", ");
+  }
+  return orderBy;
 }
 
 export function maybeConcatCols(cols?: string[] | string, as?: string) {

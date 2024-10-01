@@ -112,22 +112,19 @@ export async function prepareChartData(
       distinctCols.includes("fx") ||
       aggregate);
   // TODO: do we need the distincCols includes check here...?
-  if (!shouldAggregate) {
-    queryString = `SELECT * FROM ${reshapeTableName}`;
-  } else {
-    const transformedTypes = await columnTypes(ddb, reshapeTableName);
-    const { labels: aggregateLabels, queryString: aggregateQuery } =
-      getAggregateInfo(
-        type,
-        config,
-        [...transformedTypes.keys()],
-        reshapeTableName,
-        aggregate,
-        description
-      );
-    queryString = aggregateQuery;
-    labels = aggregateLabels;
-  }
+  const transformedTypes = await columnTypes(ddb, reshapeTableName);
+  // TODO: more clear arguments in here
+  const { labels: aggregateLabels, queryString: aggregateQuery } =
+    getAggregateInfo(
+      type,
+      config,
+      [...transformedTypes.keys()],
+      reshapeTableName,
+      !shouldAggregate ? false : aggregate,
+      description
+    );
+  queryString = aggregateQuery;
+  labels = aggregateLabels;
   let data;
   let schema: DescribeSchema;
   queries["final"] = queryString;
