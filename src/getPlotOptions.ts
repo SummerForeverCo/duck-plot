@@ -203,7 +203,7 @@ export function getTopLevelPlotOptions(
   // TODO: fx labels are set to override x labels (good for grouped bar charts,
   // not good for other charts)
   const computedX = currentColumns.includes("fx")
-    ? { axis: null }
+    ? { axis: null, ...xDomain }
     : {
         tickSize: 0,
         tickPadding: 5,
