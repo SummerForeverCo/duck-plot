@@ -32,6 +32,7 @@ export function mouseEnter(
     // Compare the aria-label with the hovered rect's aria-label
     element.style[`${colorType}Opacity`] =
       label !== hoveredAriaLabel ? "0.3" : "1";
+    element.style.zIndex = label !== hoveredAriaLabel ? "-1" : "1";
   });
 }
 
@@ -59,6 +60,8 @@ export function mouseOut(
     const label: string | null = element.getAttribute("aria-label");
     // Compare the aria-label with the hovered rect's aria-label
     element.style[`${colorType}Opacity`] = "1";
+    // Reset z index
+    element.style.zIndex = "1";
   });
 }
 
@@ -67,7 +70,7 @@ export function getElementType(markType: string) {
   // TODO: add more mark types
   if (markType === "barY" || markType === "barX") {
     elementType = "rect";
-  } else if (markType === "areaY") {
+  } else if (markType === "areaY" || markType === "line") {
     elementType = "path";
   } else if (markType === "dot") {
     elementType = "circle";
