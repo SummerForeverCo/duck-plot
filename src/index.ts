@@ -384,26 +384,10 @@ export class DuckPlot {
       ? PlotFit(options, {}, this._font)
       : Plot.plot(options);
 
-    if (this._config.hoverEffect !== false) {
-      // Select all elements
-      const elementType = getElementType(this._mark.markType);
-      const elements: NodeListOf<SVGElement> =
-        plt.querySelectorAll(elementType);
-
-      // Add mouseover and mouseout event listeners
-      elements.forEach((element: SVGElement) => {
-        element.addEventListener("mouseover", (event) => {
-          mouseEnter(event, plt, elementType, this._mark.markType);
-        });
-        element.addEventListener("mouseout", (event) => {
-          mouseOut(event, plt, elementType, this._mark.markType);
-        });
-      });
-    }
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     const wrapper = this._document.createElement("div");
+    let legend: HTMLDivElement | undefined = undefined;
     if (hasLegend) {
-      let legend: HTMLDivElement;
       const div = this._document.createElement("div");
 
       if (legendType === "categorical") {
@@ -426,6 +410,33 @@ export class DuckPlot {
       }
       div.appendChild(legend);
       wrapper?.appendChild(div);
+    }
+    // Add hover effect
+    if (this._config.hoverEffect !== false) {
+      // Select all elements
+      const elementType = getElementType(this._mark.markType);
+      let elements: (SVGElement | HTMLElement)[] = Array.from(
+        plt.querySelectorAll<SVGElement | HTMLElement>(elementType)
+      );
+      if (hasLegend && legend) {
+        const legendElements =
+          legend.querySelectorAll<HTMLElement>(".dp-category");
+        elements = [...elements, ...Array.from(legendElements)];
+      }
+      // Add mouseover and mouseout event listeners
+      elements.forEach((element: SVGElement | HTMLElement) => {
+        element.addEventListener("mouseover", (event) => {
+          mouseEnter(
+            event as MouseEvent,
+            plt,
+            elementType,
+            this._mark.markType
+          );
+        });
+        element.addEventListener("mouseout", (event) => {
+          mouseOut(event as MouseEvent, plt, elementType, this._mark.markType);
+        });
+      });
     }
     wrapper.appendChild(plt);
     return wrapper;

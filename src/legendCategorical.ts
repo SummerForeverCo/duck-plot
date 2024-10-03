@@ -52,6 +52,7 @@ export function legendCategorical(
     categoryDiv.appendChild(textNode);
 
     categoryDiv.setAttribute("data-tooltip", category); // Tooltip
+    categoryDiv.setAttribute("aria-label", category);
     categoriesDiv.appendChild(categoryDiv);
   });
 

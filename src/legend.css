@@ -17,6 +17,7 @@
 .dp-categories {
   display: flex;
   flex-wrap: nowrap;
+  cursor: pointer;
 }
 
 .dp-category:not(:last-child) {
