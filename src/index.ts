@@ -434,7 +434,7 @@ export class DuckPlot {
             plt,
             elementType,
             this._mark.markType,
-            "0.3"
+            "0.5"
           );
         });
         element.addEventListener("click", (event) => {
