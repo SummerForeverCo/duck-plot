@@ -26,6 +26,7 @@ import "./legend.css";
 import { legendContinuous } from "./legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import equal from "fast-deep-equal";
+import { getElementType, mouseEnter, mouseOut } from "./hoverEffect";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | null = null;
@@ -383,6 +384,22 @@ export class DuckPlot {
       ? PlotFit(options, {}, this._font)
       : Plot.plot(options);
 
+    if (this._config.hoverEffect !== false) {
+      // Select all elements
+      const elementType = getElementType(this._mark.markType);
+      const elements: NodeListOf<SVGElement> =
+        plt.querySelectorAll(elementType);
+
+      // Add mouseover and mouseout event listeners
+      elements.forEach((element: SVGElement) => {
+        element.addEventListener("mouseover", (event) => {
+          mouseEnter(event, plt, elementType, this._mark.markType);
+        });
+        element.addEventListener("mouseout", (event) => {
+          mouseOut(event, plt, elementType, this._mark.markType);
+        });
+      });
+    }
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     const wrapper = this._document.createElement("div");
     if (hasLegend) {

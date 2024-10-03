@@ -82,6 +82,7 @@ export function getMarkOptions(
           [type === "line" || type.startsWith("rule") || type.startsWith("tick")
             ? "stroke"
             : "fill"]: `series`,
+          ariaLabel: "series",
         }
       : {}),
   } satisfies MarkOptions;

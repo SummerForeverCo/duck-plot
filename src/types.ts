@@ -75,6 +75,7 @@ export type Config = {
   tip?: boolean; // Show tooltips
   autoMargin?: boolean; // Automatically adjust margins
   aggregate?: Aggregate;
+  hoverEffect?: boolean;
 };
 
 export type Aggregate =
