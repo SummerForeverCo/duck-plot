@@ -46,6 +46,7 @@ export function legendCategorical(
     square.style.height = "12px";
     square.style.borderRadius = "5px";
     square.style.border = "1px solid rgba(0,0,0, .16)";
+    square.style.pointerEvents = "none";
     categoryDiv.appendChild(square);
 
     const textNode = document.createTextNode(category);
