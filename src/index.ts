@@ -26,7 +26,7 @@ import "./legend.css";
 import { legendContinuous } from "./legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import equal from "fast-deep-equal";
-import { getElementType, mouseEnter, mouseOut } from "./hoverEffect";
+import { getElementType, focusSeries, mouseOut } from "./hoverEffect";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | null = null;
@@ -53,6 +53,7 @@ export class DuckPlot {
   private _query: string = "";
   private _description: string = ""; // TODO: add tests
   private _queries: QueryMap | undefined = undefined; // TODO: add tests
+  private _hasClick: boolean = false;
 
   constructor(
     ddb: AsyncDuckDB,
@@ -423,17 +424,32 @@ export class DuckPlot {
           legend.querySelectorAll<HTMLElement>(".dp-category");
         elements = [...elements, ...Array.from(legendElements)];
       }
+
       // Add mouseover and mouseout event listeners
       elements.forEach((element: SVGElement | HTMLElement) => {
         element.addEventListener("mouseover", (event) => {
-          mouseEnter(
+          if (this._hasClick) return;
+          focusSeries(
             event as MouseEvent,
             plt,
             elementType,
-            this._mark.markType
+            this._mark.markType,
+            "0.3"
           );
         });
+        element.addEventListener("click", (event) => {
+          const opacity = this._hasClick ? "1" : "0";
+          focusSeries(
+            event as MouseEvent,
+            plt,
+            elementType,
+            this._mark.markType,
+            opacity
+          );
+          this._hasClick = !this._hasClick;
+        });
         element.addEventListener("mouseout", (event) => {
+          if (this._hasClick) return;
           mouseOut(event as MouseEvent, plt, elementType, this._mark.markType);
         });
       });

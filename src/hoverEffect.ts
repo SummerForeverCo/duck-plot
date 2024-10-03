@@ -3,11 +3,12 @@ import * as Plot from "@observablehq/plot";
 import { ChartType } from "./types";
 
 // TODO more specific elementType
-export function mouseEnter(
+export function focusSeries(
   event: MouseEvent,
   plot: (HTMLElement | SVGSVGElement) & Plot.Plot,
   elementType: string,
-  type: ChartType
+  type: ChartType,
+  otherOpacity: string
 ) {
   // Get the hovered element
   const hoveredElement = event.target as SVGElement;
@@ -35,7 +36,7 @@ export function mouseEnter(
       element.parentNode?.appendChild(element);
       element.style[`${colorType}Opacity`] = "1";
     } else {
-      element.style[`${colorType}Opacity`] = "0.3";
+      element.style[`${colorType}Opacity`] = otherOpacity;
     }
   });
 }
