@@ -30,9 +30,13 @@ export function mouseEnter(
     const label: string | null = element.getAttribute("aria-label");
     if (label === null) return;
     // Compare the aria-label with the hovered rect's aria-label
-    element.style[`${colorType}Opacity`] =
-      label !== hoveredAriaLabel ? "0.3" : "1";
-    element.style.zIndex = label !== hoveredAriaLabel ? "-1" : "1";
+    if (label === hoveredAriaLabel) {
+      // Move the hovered element to the front
+      element.parentNode?.appendChild(element);
+      element.style[`${colorType}Opacity`] = "1";
+    } else {
+      element.style[`${colorType}Opacity`] = "0.3";
+    }
   });
 }
 
@@ -60,8 +64,6 @@ export function mouseOut(
     const label: string | null = element.getAttribute("aria-label");
     // Compare the aria-label with the hovered rect's aria-label
     element.style[`${colorType}Opacity`] = "1";
-    // Reset z index
-    element.style.zIndex = "1";
   });
 }
 
