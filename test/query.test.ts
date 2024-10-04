@@ -279,7 +279,7 @@ describe("getAggregateInfo", () => {
     const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
-    const expectedQueryString = `SELECT y,  sum(x::FLOAT) as x FROM reshaped GROUP BY y ORDER BY y`;
+    const expectedQueryString = `SELECT y,  sum(x::FLOAT) as x FROM reshaped GROUP BY y`;
     expect(
       getAggregateInfo("barX", config, columns, reshapedName, undefined, {
         value: "",
@@ -324,9 +324,9 @@ describe("toTitleCase", () => {
 });
 
 describe("getOrder", () => {
-  it("should return groupBy as is when no special conditions are met", () => {
+  it("should return no ordering without multiple axes", () => {
     const result = getOrder(["groupA", "series"], "barX", [], []);
-    const expected = removeSpacesAndBreaks("groupA,series");
+    const expected = "";
     expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 
@@ -370,15 +370,15 @@ END;`);
     expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 
-  it("should handle a single x or y value without CASE statement and return groupBy", () => {
+  it("should handle a single x or y value without CASE statement and return no order", () => {
     const result = getOrder(["groupA", "series"], "barX", ["x1"], []);
-    const expected = removeSpacesAndBreaks("groupA,series");
+    const expected = "";
     expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 
-  it("should handle a single y value without CASE statement for non-barX and return groupBy", () => {
+  it("should handle a single y value without CASE statement for non-barX and return no order", () => {
     const result = getOrder(["groupA", "series"], "barY", [], ["y1"]);
-    const expected = removeSpacesAndBreaks("groupA,series");
+    const expected = "";
     expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 });
