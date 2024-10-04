@@ -247,7 +247,7 @@ export function getOrder(
     ELSE ${orderByArray.length + 1} 
 END;`;
   } else {
-    orderBy = groupBy.join(", ");
+    orderBy = "";
   }
   return orderBy;
 }
