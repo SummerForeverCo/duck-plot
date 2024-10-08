@@ -94,9 +94,18 @@ export function getDataOrder(data: ChartData | undefined, column: string) {
 }
 
 // Gets all data orders for the current columns
-export function getSorts(currentColumns: string[] = [], data?: ChartData) {
+// TODO: perhaps cast series to varchar in the data, but that's a biggish change
+export function getSorts(
+  currentColumns: string[] = [],
+  data?: ChartData,
+  categoricalSeries?: boolean
+) {
   return currentColumns
-    .filter((column) => data && data.types && data?.types[column] === "string")
+    .filter(
+      (column) =>
+        (data && data.types && data?.types[column] === "string") ||
+        (column === "series" && categoricalSeries)
+    )
     .reduce((acc: any, column) => {
       acc[column] = getDataOrder(data, column);
       return acc;
@@ -162,7 +171,6 @@ export function getTopLevelPlotOptions(
   const { domain: sortsDomain } = sorts.series || {};
 
   let colorDomain, colorRange, colorScheme;
-
   const categoricalColor =
     data?.types?.series === "string" ||
     (!Array.isArray(options.color) && options.color.type === "categorical");

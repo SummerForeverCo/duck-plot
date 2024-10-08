@@ -359,9 +359,12 @@ export class DuckPlot {
 
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
     const document = this._isServer ? this._jsdom!.window.document : undefined;
-
-    // TODO: custom sorts as inputs
-    const sorts = getSorts(currentColumns, chartData);
+    // TODO: custom sorts as inputs?
+    const sorts = getSorts(
+      currentColumns,
+      chartData,
+      this._color.options?.type === "categorical"
+    );
     const plotOptions = await this.getPlotOptions();
     // Note, displaying legends by default
     const legendDisplay = plotOptions.color?.legend ?? true;
@@ -426,7 +429,9 @@ export class DuckPlot {
       const div = this._document.createElement("div");
 
       if (legendType === "categorical") {
-        const categories = [...new Set(chartData.map((d) => `${d.series}`))]; // stringify in case of numbers as categories
+        const categories = [
+          ...new Set(this._chartData.map((d) => `${d.series}`)),
+        ]; // stringify in case of numbers as categories
 
         if (this._visibleSeries.length === 0) {
           this._visibleSeries = categories;
