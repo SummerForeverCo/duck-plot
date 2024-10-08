@@ -26,6 +26,7 @@ import "./legend.css";
 import { legendContinuous } from "./legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import equal from "fast-deep-equal";
+import { getUniqueId } from "./helpers";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | null = null;
@@ -67,7 +68,7 @@ export class DuckPlot {
     this._document = this._isServer
       ? this._jsdom!.window.document
       : window.document;
-    this._id = `duckplot-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    this._id = getUniqueId();
   }
 
   table(): string;
