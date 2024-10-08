@@ -425,7 +425,6 @@ export class DuckPlot {
       const div = this._document.createElement("div");
 
       if (legendType === "categorical") {
-        console.log(chartData);
         const categories = [...new Set(chartData.map((d) => `${d.series}`))]; // stringify in case of numbers as categories
 
         if (this._visibleSeries.length === 0) {
@@ -442,39 +441,40 @@ export class DuckPlot {
           legendLabel ?? "",
           this._font
         );
-        // TODO: add a config option for this
-        const legendElements =
-          legend.querySelectorAll<HTMLElement>(".dp-category");
+        if (this._config.interactiveLegend !== false) {
+          const legendElements =
+            legend.querySelectorAll<HTMLElement>(".dp-category");
 
-        legendElements.forEach((element: SVGElement | HTMLElement) => {
-          const elementId = `${element.textContent}`; // stringify in case of numbers as categories
-          if (!elementId) return;
-          element.addEventListener("click", (event) => {
-            const mouseEvent = event as MouseEvent;
-            // Shift-click: hide all others
-            if (mouseEvent.shiftKey) {
-              // If this is the only visible element, reset all to visible
-              if (
-                this._visibleSeries.length === 1 &&
-                this._visibleSeries.includes(elementId)
-              ) {
-                this._visibleSeries = categories;
+          legendElements.forEach((element: SVGElement | HTMLElement) => {
+            const elementId = `${element.textContent}`; // stringify in case of numbers as categories
+            if (!elementId) return;
+            element.addEventListener("click", (event) => {
+              const mouseEvent = event as MouseEvent;
+              // Shift-click: hide all others
+              if (mouseEvent.shiftKey) {
+                // If this is the only visible element, reset all to visible
+                if (
+                  this._visibleSeries.length === 1 &&
+                  this._visibleSeries.includes(elementId)
+                ) {
+                  this._visibleSeries = categories;
+                } else {
+                  this._visibleSeries = [elementId]; // show only this one
+                }
               } else {
-                this._visibleSeries = [elementId]; // show only this one
+                // Regular click: toggle visibility of the clicked element
+                if (this._visibleSeries.includes(elementId)) {
+                  this._visibleSeries = this._visibleSeries.filter(
+                    (id) => id !== elementId
+                  ); // Hide the clicked element
+                } else {
+                  this._visibleSeries.push(elementId); // Show the clicked element
+                }
               }
-            } else {
-              // Regular click: toggle visibility of the clicked element
-              if (this._visibleSeries.includes(elementId)) {
-                this._visibleSeries = this._visibleSeries.filter(
-                  (id) => id !== elementId
-                ); // Hide the clicked element
-              } else {
-                this._visibleSeries.push(elementId); // Show the clicked element
-              }
-            }
-            this.render();
+              this.render();
+            });
           });
-        });
+        }
       } else {
         legend = legendContinuous({
           color: { ...plt.scale("color") },

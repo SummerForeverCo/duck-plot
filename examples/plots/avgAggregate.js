@@ -7,7 +7,8 @@ const codeString = `duckplot
   .y(["execution_income", "consensus_income"])
   .mark("barY")
   .config({
-    aggregate: "avg"
+    aggregate: "avg",
+    interactiveLegend: false
   })
   `;
 
