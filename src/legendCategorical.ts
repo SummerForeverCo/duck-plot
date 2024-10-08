@@ -8,6 +8,7 @@ export interface Category {
 export function legendCategorical(
   document: Document,
   categories: string[],
+  visibleCategories: string[],
   colors: string[],
   width: number,
   height: number,
@@ -38,7 +39,9 @@ export function legendCategorical(
 
   categories.forEach((category, i) => {
     const categoryDiv = document.createElement("div");
-    categoryDiv.className = "dp-category";
+    categoryDiv.className = `dp-category${
+      visibleCategories.includes(category) ? "" : " dp-inactive"
+    }`;
 
     const square = document.createElement("div");
     square.style.backgroundColor = colors[i % colors.length];
@@ -56,7 +59,7 @@ export function legendCategorical(
   });
 
   const collapsedCategoriesDiv = document.createElement("div");
-  collapsedCategoriesDiv.className = "dp-collapsed-categories dp-category";
+  collapsedCategoriesDiv.className = "dp-collapsed-categories";
   collapsedCategoriesDiv.addEventListener("click", () =>
     showPopover(container, height)
   );
@@ -140,7 +143,6 @@ function showPopover(container: HTMLDivElement, height: number): void {
     popover.style.display = "none";
   } else {
     // TODO: Move some to CSS
-    const currentColor = window.getComputedStyle(popover).color;
     popover.style.display = "block";
     popover.style.position = "absolute";
     popover.style.backgroundColor = "white";

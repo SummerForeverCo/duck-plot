@@ -52,6 +52,9 @@ export class DuckPlot {
   private _query: string = "";
   private _description: string = ""; // TODO: add tests
   private _queries: QueryMap | undefined = undefined; // TODO: add tests
+  private _visibleSeries: string[] = [];
+  private _chartElement: HTMLElement | null = null;
+  private _id: string;
 
   constructor(
     ddb: AsyncDuckDB,
@@ -64,6 +67,7 @@ export class DuckPlot {
     this._document = this._isServer
       ? this._jsdom!.window.document
       : window.document;
+    this._id = `duckplot-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
   }
 
   table(): string;
@@ -244,12 +248,27 @@ export class DuckPlot {
       this._query,
       this._config.aggregate
     ));
+
     return this._chartData;
   }
   async getMarks(): Promise<Markish[]> {
-    const chartData = this._newDataProps
+    const allData = this._newDataProps
       ? await this.prepareChartData()
       : this._chartData;
+
+    // Grab the types and labels from the data
+    const { types, labels } = allData;
+
+    // Filter down to only the visible series (handled by the legend)
+    const chartData: ChartData = this._chartData.filter(
+      (d) =>
+        this._visibleSeries.length === 0 ||
+        this._visibleSeries.includes(`${d.series}`)
+    );
+
+    // Reassign the named properties back to the filtered array
+    chartData.types = types;
+    chartData.labels = labels;
     const plotOptions = await this.getPlotOptions();
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
     const primaryMarkOptions = getMarkOptions(
@@ -336,6 +355,7 @@ export class DuckPlot {
     if (!this._mark) return null;
     const marks = await this.getMarks();
     const chartData = this._chartData; // this is updated by getMarks
+
     const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
     const document = this._isServer ? this._jsdom!.window.document : undefined;
 
@@ -385,21 +405,76 @@ export class DuckPlot {
 
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     const wrapper = this._document.createElement("div");
+    wrapper.id = this._id;
+
+    // Find the parent of the existing chart element
+    const parentElement = this._chartElement?.parentElement;
+
+    // Replace existing content if there's a parent (for interactions)
+    if (parentElement) {
+      const existingWrapper = parentElement.querySelector(`#${this._id}`);
+      if (existingWrapper) {
+        existingWrapper.innerHTML = "";
+        existingWrapper.appendChild(wrapper);
+      } else {
+        parentElement.appendChild(wrapper);
+      }
+    }
     if (hasLegend) {
       let legend: HTMLDivElement;
       const div = this._document.createElement("div");
 
       if (legendType === "categorical") {
+        console.log(chartData);
+        const categories = [...new Set(chartData.map((d) => `${d.series}`))]; // stringify in case of numbers as categories
+
+        if (this._visibleSeries.length === 0) {
+          this._visibleSeries = categories;
+        }
         // TODO: better argument order
         legend = legendCategorical(
           this._document,
-          Array.from(plt.scale("color")?.domain ?? []),
+          categories,
+          this._visibleSeries,
           Array.from(plt.scale("color")?.range ?? []),
           plotOptions?.width || 500, // TODO: default width
           plotOptions.height,
           legendLabel ?? "",
           this._font
         );
+        // TODO: add a config option for this
+        const legendElements =
+          legend.querySelectorAll<HTMLElement>(".dp-category");
+
+        legendElements.forEach((element: SVGElement | HTMLElement) => {
+          const elementId = `${element.textContent}`; // stringify in case of numbers as categories
+          if (!elementId) return;
+          element.addEventListener("click", (event) => {
+            const mouseEvent = event as MouseEvent;
+            // Shift-click: hide all others
+            if (mouseEvent.shiftKey) {
+              // If this is the only visible element, reset all to visible
+              if (
+                this._visibleSeries.length === 1 &&
+                this._visibleSeries.includes(elementId)
+              ) {
+                this._visibleSeries = categories;
+              } else {
+                this._visibleSeries = [elementId]; // show only this one
+              }
+            } else {
+              // Regular click: toggle visibility of the clicked element
+              if (this._visibleSeries.includes(elementId)) {
+                this._visibleSeries = this._visibleSeries.filter(
+                  (id) => id !== elementId
+                ); // Hide the clicked element
+              } else {
+                this._visibleSeries.push(elementId); // Show the clicked element
+              }
+            }
+            this.render();
+          });
+        });
       } else {
         legend = legendContinuous({
           color: { ...plt.scale("color") },
@@ -411,6 +486,7 @@ export class DuckPlot {
       wrapper?.appendChild(div);
     }
     wrapper.appendChild(plt);
+    this._chartElement = wrapper; // track this for re-rendering via interactivity
     return wrapper;
   }
 }
