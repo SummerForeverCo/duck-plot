@@ -25,3 +25,5 @@ export * from "./horizontalAverage.js";
 export * from "./textWithTransform.js";
 export * from "./textWithSeriesTransform.js";
 export * from "./fyExplicitColors.js";
+export * from "./stackedBarX.js";
+export * from "./stackedBarY.js";
