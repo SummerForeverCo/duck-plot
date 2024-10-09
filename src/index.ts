@@ -408,21 +408,20 @@ export class DuckPlot {
       : Plot.plot(options);
 
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-    const wrapper = this._document.createElement("div");
-    wrapper.id = this._id;
+    let wrapper: HTMLElement | SVGElement | null = null;
 
     // Find the parent of the existing chart element
     const parentElement = this._chartElement?.parentElement;
-
     // Replace existing content if there's a parent (for interactions)
     if (parentElement) {
       const existingWrapper = parentElement.querySelector(`#${this._id}`);
       if (existingWrapper) {
-        existingWrapper.innerHTML = "";
-        existingWrapper.appendChild(wrapper);
-      } else {
-        parentElement.appendChild(wrapper);
+        wrapper = existingWrapper as HTMLElement | SVGElement;
+        wrapper.innerHTML = "";
       }
+    } else {
+      wrapper = this._document.createElement("div");
+      wrapper.id = this._id;
     }
     if (hasLegend) {
       let legend: HTMLDivElement;
@@ -489,10 +488,12 @@ export class DuckPlot {
         });
       }
       div.appendChild(legend);
-      wrapper?.appendChild(div);
+      if (wrapper) wrapper?.appendChild(div);
     }
-    wrapper.appendChild(plt);
-    this._chartElement = wrapper; // track this for re-rendering via interactivity
-    return wrapper;
+    if (wrapper) {
+      wrapper.appendChild(plt);
+      this._chartElement = wrapper as HTMLElement; // track this for re-rendering via interactivity
+    }
+    return wrapper ?? null;
   }
 }

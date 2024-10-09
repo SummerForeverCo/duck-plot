@@ -142,7 +142,6 @@ export function getTopLevelPlotOptions(
 ) {
   const options = { ...defaultOptions, ...userOptions };
   const config = { ...defaultConfig, ...userConfig };
-
   // Only compute a custom x/y domain if the other axes is missing
   // Make sure a minimum of 0 is included for x/y domains
   const xDomain = sorts.x
@@ -171,6 +170,7 @@ export function getTopLevelPlotOptions(
   const { domain: sortsDomain } = sorts.series || {};
 
   let colorDomain, colorRange, colorScheme;
+  // TODO this check seems off....
   const categoricalColor =
     data?.types?.series === "string" ||
     (!Array.isArray(options.color) && options.color.type === "categorical");
