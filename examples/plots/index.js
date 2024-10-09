@@ -24,3 +24,4 @@ export * from "./partialChartY.js";
 export * from "./horizontalAverage.js";
 export * from "./textWithTransform.js";
 export * from "./textWithSeriesTransform.js";
+export * from "./fyExplicitColors.js";
