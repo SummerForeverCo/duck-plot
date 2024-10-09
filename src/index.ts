@@ -49,6 +49,7 @@ export class DuckPlot {
   private _document: Document;
   private _newDataProps: boolean = true;
   private _chartData: ChartData = [];
+  private _filteredData: ChartData = [];
   private _config: Config = {};
   private _query: string = "";
   private _description: string = ""; // TODO: add tests
@@ -261,17 +262,19 @@ export class DuckPlot {
     const { types, labels } = allData;
 
     // Filter down to only the visible series (handled by the legend)
-    const chartData: ChartData = this._chartData.filter(
+    this._filteredData = this._chartData.filter(
       (d) =>
         this._visibleSeries.length === 0 ||
         this._visibleSeries.includes(`${d.series}`)
     );
 
     // Reassign the named properties back to the filtered array
-    chartData.types = types;
-    chartData.labels = labels;
+    this._filteredData.types = types;
+    this._filteredData.labels = labels;
     const plotOptions = await this.getPlotOptions();
-    const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
+    const currentColumns = this._filteredData?.types
+      ? Object.keys(this._filteredData.types)
+      : []; // TODO: remove this arg from topLevelPlotOptions
     const primaryMarkOptions = getMarkOptions(
       currentColumns,
       this._mark.markType,
@@ -293,7 +296,7 @@ export class DuckPlot {
         ? []
         : [
             Plot[this._mark.markType](
-              chartData,
+              this._filteredData,
               primaryMarkOptions as MarkOptions
             ),
           ];
@@ -301,7 +304,11 @@ export class DuckPlot {
     // If a user supplies marks, don't add the common marks
     const commonPlotMarks =
       this._options.marks ?? getCommonMarks(currentColumns);
-    const fyMarks = getfyMarks(chartData, currentColumns, plotOptions.fy);
+    const fyMarks = getfyMarks(
+      this._filteredData,
+      currentColumns,
+      plotOptions.fy
+    );
     return [
       ...(fyMarks || []),
       ...(commonPlotMarks || []),
@@ -354,23 +361,33 @@ export class DuckPlot {
   }
   async render(): Promise<SVGElement | HTMLElement | null> {
     if (!this._mark) return null;
-    const marks = await this.getMarks();
-    const chartData = this._chartData; // this is updated by getMarks
+    const marks = await this.getMarks(); // updates this._chartData and this._filteredData
 
-    const currentColumns = chartData?.types ? Object.keys(chartData.types) : []; // TODO: remove this arg from topLevelPlotOptions
+    const currentColumns = this._chartData?.types
+      ? Object.keys(this._chartData.types)
+      : []; // TODO: remove this arg from topLevelPlotOptions
     const document = this._isServer ? this._jsdom!.window.document : undefined;
     // TODO: custom sorts as inputs?
-    const sorts = getSorts(
-      currentColumns,
-      chartData,
+    let sorts = getSorts(
+      currentColumns.filter((d) => d !== "fy"),
+      this._chartData,
       this._color.options?.type === "categorical"
     );
+    // Only display the facets for present data
+    if (currentColumns.includes("fy")) {
+      sorts.fy = getSorts(
+        ["fy"],
+        this._filteredData,
+        this._color.options?.type === "categorical"
+      );
+    }
     const plotOptions = await this.getPlotOptions();
     // Note, displaying legends by default
     const legendDisplay = plotOptions.color?.legend ?? true;
-    const hasLegend = chartData.types?.series !== undefined && legendDisplay;
+    const hasLegend =
+      this._chartData.types?.series !== undefined && legendDisplay;
     const legendType =
-      plotOptions.color?.type ?? getLegendType(chartData, currentColumns);
+      plotOptions.color?.type ?? getLegendType(this._chartData, currentColumns);
     // TODO: maybe rename series to color....?
     const legendLabel = plotOptions.color?.label;
 
@@ -382,7 +399,7 @@ export class DuckPlot {
       : plotOptions.height || 281;
 
     const topLevelPlotOptions = getTopLevelPlotOptions(
-      chartData,
+      this._chartData,
       currentColumns,
       sorts,
       this._mark.markType,
