@@ -55,6 +55,7 @@ export class DuckPlot {
   private _description: string = ""; // TODO: add tests
   private _queries: QueryMap | undefined = undefined; // TODO: add tests
   private _visibleSeries: string[] = [];
+  private _seriesDomain: any[] = [];
   private _chartElement: HTMLElement | null = null;
   private _id: string;
 
@@ -262,11 +263,15 @@ export class DuckPlot {
     const { types, labels } = allData;
 
     // Filter down to only the visible series (handled by the legend)
+    // TODO: extract to a fn
     this._filteredData = this._chartData.filter(
       (d) =>
-        this._visibleSeries.length === 0 ||
-        this._visibleSeries.includes(`${d.series}`)
+        this._seriesDomain.length === 0 ||
+        (d.series > this._seriesDomain[0] && d.series < this._seriesDomain[1])
+      // this._visibleSeries.length === 0 ||
+      // this._visibleSeries.includes(`${d.series}`)
     );
+    console.log(this._seriesDomain, this._chartData);
 
     // Reassign the named properties back to the filtered array
     this._filteredData.types = types;
@@ -359,7 +364,9 @@ export class DuckPlot {
   queries(): QueryMap | undefined {
     return this._queries;
   }
-  async render(): Promise<SVGElement | HTMLElement | null> {
+  async render(
+    newLegend: boolean = true
+  ): Promise<SVGElement | HTMLElement | null> {
     if (!this._mark) return null;
     const marks = await this.getMarks(); // updates this._chartData and this._filteredData
 
@@ -434,13 +441,19 @@ export class DuckPlot {
       const existingWrapper = parentElement.querySelector(`#${this._id}`);
       if (existingWrapper) {
         wrapper = existingWrapper as HTMLElement | SVGElement;
-        wrapper.innerHTML = "";
+        // Clear the wrapper if we're updating the legend
+        if (newLegend) {
+          wrapper.innerHTML = "";
+        } else {
+          // Otherwise just remove the plot: TODO: more careful selector
+          wrapper.removeChild(wrapper.lastChild!);
+        }
       }
     } else {
       wrapper = this._document.createElement("div");
       wrapper.id = this._id;
     }
-    if (hasLegend) {
+    if (hasLegend && newLegend) {
       let legend: HTMLDivElement;
       const div = this._document.createElement("div");
 
@@ -498,11 +511,17 @@ export class DuckPlot {
           });
         }
       } else {
-        legend = legendContinuous({
-          color: { ...plt.scale("color") },
-          label: legendLabel,
-          ...(document ? { document } : {}),
-        });
+        legend = legendContinuous(
+          {
+            color: { ...plt.scale("color") },
+            label: legendLabel,
+            ...(document ? { document } : {}),
+          },
+          (event) => {
+            this._seriesDomain = event;
+            this.render(false);
+          }
+        );
       }
       div.appendChild(legend);
       if (wrapper) wrapper?.appendChild(div);
