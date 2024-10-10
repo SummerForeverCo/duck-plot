@@ -1,13 +1,19 @@
-import type { MarkOptions, PlotOptions } from "@observablehq/plot";
+import type {
+  MarkOptions,
+  PlotOptions,
+  StackOptions,
+} from "@observablehq/plot";
 import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
 import type { BasicColumnType, ChartData, ChartType, Config } from "./types";
+// Extend the MarkOptions to include all the stack options
+interface AllMarkOptions extends MarkOptions, StackOptions {}
 export const defaultColors = [
-  "rgba(255, 0, 184, 1)", // pink (hsla(317, 100%, 50%))
-  "rgba(0, 183, 255, 1)", // blue (hsla(194, 100%, 50%))
-  "rgba(255, 237, 0, 1)", // yellow (hsla(54, 100%, 50%))
-  "rgba(0, 202, 99, 1)", // green (hsla(137, 87%, 54%))
-  "rgba(255, 83, 0, 1)", // orange (hsla(22, 100%, 62%))
+  "rgba(255, 0, 184, 1)",
+  "rgba(0, 183, 255, 1)",
+  "rgba(255, 237, 0, 1)",
+  "rgba(0, 202, 99, 1)",
+  "rgba(255, 83, 0, 1)",
 ];
 const borderOptions = {
   backgroundColor: "hsla( 0 0% 100%)",
@@ -22,7 +28,7 @@ export function getMarkOptions(
     xLabel?: string;
     yLabel?: string;
     tip?: boolean;
-    markOptions?: MarkOptions;
+    markOptions?: AllMarkOptions;
   }
 ) {
   const color = options.color || defaultColors[0];
@@ -34,13 +40,19 @@ export function getMarkOptions(
       ? {
           tip: {
             stroke: borderOptions.borderColor,
-            // Display custom values, hide the auto generated values
+            // Display custom values UNLESS the offset is normalize to ensure we
+            // display the transformed value. This unfortunately means we can't
+            // truncate the labels for normalized values
             format: {
-              xCustom: true,
-              yCustom: true,
+              x: type === "barX" && options.markOptions?.offset === "normalize",
+              xCustom: !(
+                type === "barX" && options.markOptions?.offset === "normalize"
+              ),
+              y: type === "barY" && options.markOptions?.offset === "normalize",
+              yCustom: !(
+                type === "barY" && options.markOptions?.offset === "normalize"
+              ),
               color: true,
-              x: false,
-              y: false,
               fy: false,
               fx: false,
               z: false, // Hide the auto generated "series" for area charts
