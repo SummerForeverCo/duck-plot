@@ -227,6 +227,7 @@ export class DuckPlot {
     // TODO: this error isn't being thrown when I'd expect (e.g, if type is not set)
     if (!this._mark) throw new Error("Type not set");
     this._newDataProps = false;
+    this._visibleSeries = []; // reset visible series
     const columns = {
       ...(this._x.column ? { x: this._x.column } : {}),
       ...(this._y.column ? { y: this._y.column } : {}),
