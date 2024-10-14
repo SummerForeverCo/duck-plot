@@ -180,13 +180,13 @@ export function getAggregateInfo(
 
   // Handling horizontal bar charts differently (aggregate on x-axis)
   if (type === "barX") {
-    if (x && x.length > 0) {
+    if (x && x.length > 0 && aggregate !== false) {
       aggregateSelection = ` ${agg}(x::FLOAT) as x`;
       labels.x = `${toTitleCase(agg)} of ${toTitleCase(x)}`;
     }
     groupBy = columns.filter((d) => d !== "x");
   } else {
-    if (y && y.length > 0) {
+    if (y && y.length > 0 && aggregate !== false) {
       // First aggregation (mean, sum, etc.)
       aggregateSelection = ` ${agg}(y::FLOAT) as y`;
       labels.y = `${toTitleCase(agg)} of ${toTitleCase(y)}`;
