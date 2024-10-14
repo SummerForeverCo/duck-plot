@@ -40,18 +40,11 @@ export function getMarkOptions(
       ? {
           tip: {
             stroke: borderOptions.borderColor,
-            // Display custom values UNLESS the offset is normalize to ensure we
-            // display the transformed value. This unfortunately means we can't
-            // truncate the labels for normalized values
             format: {
-              x: type === "barX" && options.markOptions?.offset === "normalize",
-              xCustom: !(
-                type === "barX" && options.markOptions?.offset === "normalize"
-              ),
-              y: type === "barY" && options.markOptions?.offset === "normalize",
-              yCustom: !(
-                type === "barY" && options.markOptions?.offset === "normalize"
-              ),
+              xCustom: true,
+              yCustom: true,
+              x: false,
+              y: false,
               color: true,
               fy: false,
               fx: false,
