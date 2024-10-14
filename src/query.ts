@@ -1,4 +1,3 @@
-import { buildSqlQuery } from "./buildSqlQuery";
 import {
   Column,
   ColumnConfig,
@@ -54,7 +53,9 @@ export function getStandardTransformQuery(
   if (r?.length) select.push(standardColName({ r }, "r"));
   if (text?.length) select.push(standardColName({ text }, "text"));
 
-  return buildSqlQuery({ select, into, from: tableName! });
+  return `CREATE TABLE ${into} as SELECT ${select.join(
+    ", "
+  )} FROM ${tableName}`;
 }
 
 export function getUnpivotQuery(
