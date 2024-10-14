@@ -4,8 +4,8 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `duckplot
   .table("income")
   .x("month", {label: "This long label should be truncated in the tooltip"})
-  .y(["consensus_income", "execution_income"], {label: "Percent income", percent: true})
-  .mark("barY", {offset: "normalize"})  
+  .y(["consensus_income", "execution_income"], {label: "Percent income"})
+  .mark("barY")  
   `;
 
 export const stackedBarY = (options) =>

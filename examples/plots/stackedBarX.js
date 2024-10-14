@@ -5,7 +5,7 @@ const codeString = `duckplot
   .table("income")
   .x(["consensus_income", "execution_income"], {label: "Percent income", percent: true})
   .y("month", {label: "This long label should be truncated in the tooltip"})
-  .mark("barX", {offset: "normalize"})
+  .mark("barX")
   .options({height: 500})
   `;
 

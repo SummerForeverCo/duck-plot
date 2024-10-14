@@ -27,3 +27,6 @@ export * from "./textWithSeriesTransform.js";
 export * from "./fyExplicitColors.js";
 export * from "./stackedBarX.js";
 export * from "./stackedBarY.js";
+export * from "./percentageBarY.js";
+export * from "./percentageBarX.js";
+export * from "./percentageFacet.js";

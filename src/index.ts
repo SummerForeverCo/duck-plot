@@ -249,9 +249,9 @@ export class DuckPlot {
       columns,
       this._mark.markType!,
       this._query,
-      this._config.aggregate
+      this._config.aggregate,
+      this._config.percent
     ));
-
     return this._chartData;
   }
   async getMarks(): Promise<Markish[]> {
