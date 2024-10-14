@@ -3,11 +3,12 @@ import { renderPlot } from "../util/renderPlotClient.js";
 
 const codeString = `duckplot
   .table("income")
-  .x(["consensus_income", "execution_income"], {label: "Percent income", percent: true})
+  .x(["consensus_income", "execution_income"], {label: "Percent income"})
   .y("month", {label: "This long label should be truncated in the tooltip"})
   .mark("barX")
   .options({height: 500})
+  .config({percent: true})
   `;
 
-export const stackedBarX = (options) =>
+export const percentageBarX = (options) =>
   renderPlot("income.csv", codeString, options);

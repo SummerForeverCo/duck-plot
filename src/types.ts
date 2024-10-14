@@ -76,6 +76,7 @@ export type Config = {
   autoMargin?: boolean; // Automatically adjust margins
   aggregate?: Aggregate;
   interactiveLegend?: boolean;
+  percent?: boolean; // for percent stacked charts, TODO document clearly
 };
 
 export type Aggregate =

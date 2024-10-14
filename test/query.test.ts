@@ -275,16 +275,165 @@ describe("arrayify", () => {
 });
 
 describe("getAggregateInfo", () => {
+  // Test for 'barX' aggregation when `x` is present
   it("barX: should sum X if x present", () => {
     const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
-    const expectedQueryString = `SELECT y,  sum(x::FLOAT) as x FROM reshaped GROUP BY y`;
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT y, sum(x::FLOAT) as x
+        FROM reshaped
+        GROUP BY y
+      )
+      SELECT y, x
+      FROM aggregated
+    `;
+
     expect(
-      getAggregateInfo("barX", config, columns, reshapedName, undefined, {
-        value: "",
-      }).queryString
-    ).toBe(expectedQueryString);
+      removeSpacesAndBreaks(
+        getAggregateInfo("barX", config, columns, reshapedName, undefined, {
+          value: "",
+        }).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test for 'barY' aggregation when `y` is present
+  it("barY: should sum Y if y present", () => {
+    const config = { x: ["x1"], y: ["y"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT x, sum(y::FLOAT) as y
+        FROM reshaped
+        GROUP BY x
+      )
+      SELECT x, y
+      FROM aggregated
+    `;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo("barY", config, columns, reshapedName, undefined, {
+          value: "",
+        }).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test with a mean aggregation (for `x`) and percentage flag false
+  it("barX: should calculate mean X without percentage", () => {
+    const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT y, avg(x::FLOAT) as x
+        FROM reshaped
+        GROUP BY y
+      )
+      SELECT y, x
+      FROM aggregated
+    `;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo(
+          "barX",
+          config,
+          columns,
+          reshapedName,
+          "avg",
+          {
+            value: "",
+          },
+          false
+        ).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test with a sum aggregation (for `x`) and percentage flag true
+  it("barX: should calculate percentage of X after sum aggregation", () => {
+    const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT y, sum(x::FLOAT) as x
+        FROM reshaped
+        GROUP BY y
+      )
+      SELECT y, (x / (SUM(x) OVER (PARTITION BY y))) * 100 as x
+      FROM aggregated
+    `;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo(
+          "barX",
+          config,
+          columns,
+          reshapedName,
+          "sum",
+          {
+            value: "",
+          },
+          true
+        ).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test with mean aggregation (for `y`) and percentage flag true
+  it("barY: should calculate percentage of Y after mean aggregation", () => {
+    const config = { x: ["x1"], y: ["y"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT x, avg(y::FLOAT) as y
+        FROM reshaped
+        GROUP BY x
+      )
+      SELECT x, (y / (SUM(y) OVER (PARTITION BY x))) * 100 as y
+      FROM aggregated
+    `;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo(
+          "barY",
+          config,
+          columns,
+          reshapedName,
+          "avg",
+          {
+            value: "",
+          },
+          true
+        ).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test with no aggregation and default selection (for non-aggregated data)
+  it("should return non-aggregated data when aggregation is false", () => {
+    const config = { x: ["x1"], y: ["y1"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `WITH aggregated AS (SELECT * FROM reshaped) 
+    SELECT y, x FROM aggregated`;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo("barX", config, columns, reshapedName, false, {
+          value: "",
+        }).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
   });
 });
 

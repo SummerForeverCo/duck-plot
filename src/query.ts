@@ -1,4 +1,3 @@
-import { buildSqlQuery } from "./buildSqlQuery";
 import {
   Column,
   ColumnConfig,
@@ -54,7 +53,9 @@ export function getStandardTransformQuery(
   if (r?.length) select.push(standardColName({ r }, "r"));
   if (text?.length) select.push(standardColName({ text }, "text"));
 
-  return buildSqlQuery({ select, into, from: tableName! });
+  return `CREATE TABLE ${into} as SELECT ${select.join(
+    ", "
+  )} FROM ${tableName}`;
 }
 
 export function getUnpivotQuery(
@@ -166,7 +167,8 @@ export function getAggregateInfo(
   columns: string[],
   tableName: string,
   aggregate: Aggregate | undefined, // TODO: add tests
-  description: { value: string }
+  description: { value: string },
+  percent?: boolean
 ): { queryString: string; labels: ChartData["labels"] } {
   // Ensure that the x and y values are arrays
   const y = arrayIfy(config.y);
@@ -175,46 +177,71 @@ export function getAggregateInfo(
   let aggregateSelection;
   let groupBy: string[] = [];
   let labels: ChartData["labels"] = {};
-  // Handling horiztonal bar charts differently (aggregate on x-axis)
+
+  // Handling horizontal bar charts differently (aggregate on x-axis)
   if (type === "barX") {
-    if (x && x.length > 0) {
+    if (x && x.length > 0 && aggregate !== false) {
       aggregateSelection = ` ${agg}(x::FLOAT) as x`;
       labels.x = `${toTitleCase(agg)} of ${toTitleCase(x)}`;
     }
     groupBy = columns.filter((d) => d !== "x");
   } else {
-    if (y && y.length > 0) {
-      aggregateSelection = ` ${agg}(y)::FLOAT as y`;
+    if (y && y.length > 0 && aggregate !== false) {
+      // First aggregation (mean, sum, etc.)
+      aggregateSelection = ` ${agg}(y::FLOAT) as y`;
       labels.y = `${toTitleCase(agg)} of ${toTitleCase(y)}`;
     }
     groupBy = columns.filter((d) => d !== "y");
   }
 
-  const orderBy = getOrder(groupBy, type, x, y);
-  if (aggregate === false) {
-    return {
-      queryString: `SELECT * FROM ${tableName}${
-        orderBy ? ` ORDER BY ${orderBy}` : ""
-      }`,
-      labels: {},
-    };
+  const orderBy = getOrder(groupBy, type, x, y); // Generates valid `ORDER BY` for outer query
+
+  if (aggregate !== false) {
+    description.value += `The ${
+      type === "barX" ? "x" : "y"
+    } values were aggregated with a ${agg} aggregation, grouped by ${groupBy.join(
+      `, `
+    )}.`;
+  }
+  // First, we aggregate the values (sum, mean, etc.) if needed
+  const subquery =
+    aggregate !== false
+      ? `
+    SELECT ${groupBy.join(", ")}, ${aggregateSelection}
+    FROM ${tableName}
+    GROUP BY ${groupBy.join(", ")}`
+      : `SELECT * FROM ${tableName}`;
+
+  // Then, calculate the percentage over the aggregated values if needed
+  let aggregateColumn = "";
+  if (type === "barX") {
+    aggregateColumn = percent
+      ? ` (x / (SUM(x) OVER (PARTITION BY ${groupBy
+          .filter((d) => d !== "series")
+          .join(", ")}))) * 100 as x`
+      : "x";
+  } else {
+    aggregateColumn = percent
+      ? ` (y / (SUM(y) OVER (PARTITION BY ${groupBy
+          .filter((d) => d !== "series")
+          .join(", ")}))) * 100 as y`
+      : "y";
   }
 
-  description.value += `The ${
-    type === "barX" ? "x" : "y"
-  } values were aggregated with a ${agg} aggregation, grouped by ${groupBy.join(
-    `, `
-  )}.`;
+  if (percent) {
+    description.value += ` The ${
+      type === "barX" ? "x" : "y"
+    } values were calculated as a percentage of the total for each group.`;
+  }
 
-  // TODO maybe just remove this fn
+  // Use the subquery to aggregate the values
   return {
-    queryString: buildSqlQuery({
-      select: [...groupBy],
-      aggregateSelection,
-      from: tableName,
-      groupBy,
-      orderBy,
-    }),
+    queryString: `
+      WITH aggregated AS (${subquery})
+      SELECT ${groupBy.join(", ")}, ${aggregateColumn}
+      FROM aggregated
+      ${orderBy ? ` ORDER BY ${orderBy}` : ""}
+    `,
     labels,
   };
 }

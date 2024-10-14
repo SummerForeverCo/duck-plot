@@ -34,7 +34,8 @@ export async function prepareChartData(
   config: ColumnConfig,
   type: ChartType,
   preQuery?: string,
-  aggregate?: Aggregate
+  aggregate?: Aggregate,
+  percent?: boolean
 ): Promise<{ data: ChartData; description: string; queries?: QueryMap }> {
   let queries: QueryMap = {};
   if (!ddb || !tableName)
@@ -121,7 +122,8 @@ export async function prepareChartData(
       [...transformedTypes.keys()],
       reshapeTableName,
       !shouldAggregate ? false : aggregate,
-      description
+      description,
+      percent
     );
   queryString = aggregateQuery;
   labels = aggregateLabels;
