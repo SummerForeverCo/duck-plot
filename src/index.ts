@@ -210,6 +210,13 @@ export class DuckPlot {
   config(config: Config): this;
   config(config?: Config): Config | this {
     if (config) {
+      // Reset the data if the aggregate or percent has changed
+      if (
+        this._config.aggregate !== config.aggregate ||
+        this._config.percent !== config.percent
+      ) {
+        this._newDataProps = true;
+      }
       this._config = config;
       return this;
     }
