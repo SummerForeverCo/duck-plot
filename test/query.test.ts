@@ -149,7 +149,7 @@ describe("getUnpivotWithSeriesQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT
+    const expectedQuery = `CREATE TABLE reshaped AS SELECT
             x,
             y,
             concat_ws('-', pivotCol, series) AS series
@@ -157,7 +157,7 @@ describe("getUnpivotWithSeriesQuery", () => {
             SELECT
                 "x1", "x2",
                 "y1" as y,
-                concat_ws('-', "s1", "s2") as series,
+                concat_ws('-', "s1", "s2") as series
             FROM
                 yourTableName
         ) p
@@ -184,7 +184,7 @@ describe("getUnpivotWithSeriesQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT
+    const expectedQuery = `CREATE TABLE reshaped AS SELECT
             x,
             y,
             concat_ws('-', pivotCol, series) AS series
@@ -192,7 +192,7 @@ describe("getUnpivotWithSeriesQuery", () => {
             SELECT
                 "x1" as x,
                 "y1", "y2",
-                concat_ws('-', "s1", "s2") as series,
+                concat_ws('-', "s1", "s2") as series
             FROM
                 yourTableName
         ) p
@@ -219,7 +219,7 @@ describe("getUnpivotWithSeriesQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT
+    const expectedQuery = `CREATE TABLE reshaped AS SELECT
             x,
             y,
             concat_ws('-', pivotCol, series) AS series,
