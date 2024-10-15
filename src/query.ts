@@ -97,6 +97,15 @@ export function getUnpivotWithSeriesQuery(
       : `"${x}" as x`
     : "";
 
+  // If there are multiple y columns AND a series column AND fx AND no x, we
+  // should treat the unpivoted series values as the x value
+  const xShouldBeSeries =
+    fx &&
+    !x &&
+    Array.isArray(y) &&
+    y.length > 1 &&
+    columnIsDefined("series", { series });
+
   const yStatement =
     type === "barX" ? `"${y}" as y` : quoteColumns(y)?.join(", ");
 
@@ -107,7 +116,11 @@ export function getUnpivotWithSeriesQuery(
   const createStatement = `CREATE TABLE ${into} AS`;
 
   const selectClause = [
-    columnIsDefined("x", { x }) ? "x" : null,
+    columnIsDefined("x", { x })
+      ? "x"
+      : xShouldBeSeries
+      ? `concat_ws('-', pivotCol, series) AS x`
+      : null,
     columnIsDefined("r", { r }) ? "r" : null,
     columnIsDefined("text", { text }) ? "text" : null,
     "y",
