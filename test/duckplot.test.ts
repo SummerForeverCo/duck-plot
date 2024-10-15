@@ -56,7 +56,7 @@ describe("DuckPlot", () => {
     it("should set and get plot config", () => {
       const config = { width: 500, height: 300 };
       plot.config(config);
-      expect(plot.config()).toEqual(config);
+      expect(plot.config()).toEqual({ ...config, hover: true });
     });
   });
 
