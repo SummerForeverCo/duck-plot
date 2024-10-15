@@ -16,6 +16,8 @@ export * from "./fy.js";
 export * from "./fyNoTicks.js";
 export * from "./options.js";
 export * from "./groupedBar.js";
+export * from "./groupedBarWithSeries.js";
+export * from "./groupedBarWithYandSeries.js";
 export * from "./groupedBarAltOrder.js";
 export * from "./groupedBarExplicit.js";
 export * from "./barRotatedAxis.js";

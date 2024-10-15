@@ -77,6 +77,8 @@ export function getUnpivotQuery(
   const rStr = r ? `${standardColName({ r }, "r")} ,` : "";
   const textStr = text ? `${standardColName({ text }, "text")} ,` : "";
 
+  // Note, "fx && !x ? key AS x" creates an x column for multi bar charts
+  // created through multiple y columns
   return `${createStatment} ${selectStr}, ${rStr}${textStr}${fyStr} key AS series${
     fx && !x ? ", key AS x" : ""
   } FROM "${tableName}"
@@ -89,42 +91,53 @@ export function getUnpivotWithSeriesQuery(
   tableName: string,
   into: string
 ) {
-  const xStatement = !columnIsDefined("x", { x })
-    ? ``
-    : type === "barX"
-    ? `${quoteColumns(x)?.join(", ")}, `
-    : `"${x}" as x, `;
+  const xStatement = columnIsDefined("x", { x })
+    ? type === "barX"
+      ? `${quoteColumns(x)?.join(", ")}`
+      : `"${x}" as x`
+    : "";
+
   const yStatement =
     type === "barX" ? `"${y}" as y` : quoteColumns(y)?.join(", ");
-  const unPivotStatment =
-    type === "barX"
-      ? `x FOR pivotCol IN (${quoteColumns(x)?.join(", ")})`
-      : `y FOR pivotCol IN (${quoteColumns(y)?.join(", ")})`;
-  const createStatment = `CREATE TABLE ${into} as`;
-  return `${createStatment} SELECT
-            ${columnIsDefined("x", { x }) ? `x, ` : ""}
-            ${columnIsDefined("r", { r }) ? `r, ` : ""}
-            ${columnIsDefined("text", { text }) ? `text, ` : ""}
-            y,
-            concat_ws('-', pivotCol, series) AS series
-            ${fy?.length ? ", fy" : ""}
-            ${fx?.length ? ", fx" : ""}
 
-        FROM (
-          SELECT
-              ${xStatement}
-              ${yStatement},
-              ${maybeConcatCols(series, "series")},
-              ${fy?.length ? maybeConcatCols(fy, "fy") : ""}
-              ${fx?.length ? `, ${maybeConcatCols(fx, "fx")}` : ""}
-              ${r?.length ? `${maybeConcatCols(r, "r")}` : ""}
-              ${text?.length ? `${maybeConcatCols(text, "text")}` : ""}
-          FROM
-              ${tableName}
-      ) p
-      UNPIVOT (
-          ${unPivotStatment}
-      );`;
+  const unPivotStatement = `FOR pivotCol IN (${quoteColumns(
+    type === "barX" ? x : y
+  )?.join(", ")})`;
+
+  const createStatement = `CREATE TABLE ${into} AS`;
+
+  const selectClause = [
+    columnIsDefined("x", { x }) ? "x" : null,
+    columnIsDefined("r", { r }) ? "r" : null,
+    columnIsDefined("text", { text }) ? "text" : null,
+    "y",
+    `concat_ws('-', pivotCol, series) AS series`,
+    fy?.length ? "fy" : null,
+    fx?.length ? "fx" : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const innerSelectClause = [
+    xStatement,
+    yStatement,
+    maybeConcatCols(series, "series"),
+    fy?.length ? maybeConcatCols(fy, "fy") : null,
+    fx?.length ? maybeConcatCols(fx, "fx") : null,
+    r?.length ? maybeConcatCols(r, "r") : null,
+    text?.length ? maybeConcatCols(text, "text") : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  return `
+    ${createStatement} SELECT ${selectClause}
+    FROM (
+      SELECT ${innerSelectClause}
+      FROM ${tableName}
+    ) p
+    UNPIVOT (${type === "barX" ? "x" : "y"} ${unPivotStatement});
+  `;
 }
 
 // Construct SQL statement, handling aggregation when necessary
