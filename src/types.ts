@@ -77,6 +77,7 @@ export type Config = {
   aggregate?: Aggregate;
   interactiveLegend?: boolean;
   percent?: boolean; // for percent stacked charts, TODO document clearly
+  hover?: boolean | number; // for hover effect, number is the opacity of unhovered elements
 };
 
 export type Aggregate =

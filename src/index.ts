@@ -51,6 +51,7 @@ export class DuckPlot {
   private _chartData: ChartData = [];
   private _filteredData: ChartData = [];
   private _config: Config = {};
+  private _defaultConfig: Config = {};
   private _query: string = "";
   private _description: string = ""; // TODO: add tests
   private _queries: QueryMap | undefined = undefined; // TODO: add tests
@@ -70,6 +71,8 @@ export class DuckPlot {
       ? this._jsdom!.window.document
       : window.document;
     this._id = getUniqueId();
+    this._defaultConfig = { hover: true };
+    this._config = { hover: true }; // Set as default until overwritten by .config()
   }
 
   table(): string;
@@ -217,7 +220,7 @@ export class DuckPlot {
       ) {
         this._newDataProps = true;
       }
-      this._config = config;
+      this._config = { ...this._defaultConfig, ...config };
       return this;
     }
     return this._config;
@@ -292,6 +295,7 @@ export class DuckPlot {
         xLabel: plotOptions.x?.label ?? "",
         yLabel: plotOptions.y?.label ?? "",
         markOptions: this._mark.options,
+        hover: this._config.hover,
       }
     );
 

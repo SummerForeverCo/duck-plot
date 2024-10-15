@@ -29,6 +29,7 @@ export function getMarkOptions(
     yLabel?: string;
     tip?: boolean;
     markOptions?: AllMarkOptions;
+    hover?: boolean | number;
   }
 ) {
   const color = options.color || defaultColors[0];
@@ -89,7 +90,64 @@ export function getMarkOptions(
             : "fill"]: `series`,
         }
       : {}),
+    // Add hover effects to highlight series
+    ...(!options.hover
+      ? {}
+      : {
+          ariaLabel: "series",
+          render: (index, scales, values, dimensions, context, next) => {
+            const colorType =
+              type === "line" ||
+              type.startsWith("rule") ||
+              type.startsWith("tick")
+                ? "stroke"
+                : "fill";
+            const elementType = getElementType(type);
+            if (!next) return null;
+            const el = next(index, scales, values, dimensions, context);
+            if (!el) return null;
+            const elements = el.querySelectorAll(elementType);
+            for (let i = 0; i < elements.length; i++) {
+              elements[i].addEventListener("mouseenter", (ele) => {
+                const focusCategory = elements[i].getAttribute("aria-label");
+                Array.from(elements).map((element, idx) => {
+                  const category = element.getAttribute("aria-label");
+                  if (category === focusCategory) {
+                    // Move the hovered element to the front
+                    element.parentNode?.appendChild(element);
+                    element.style[`${colorType}Opacity`] = "1";
+                  } else {
+                    element.style[`${colorType}Opacity`] = "0.7"; // TODO arg?
+                  }
+                });
+              });
+              elements[i].addEventListener("mouseout", () => {
+                Array.from(elements).map((element) => {
+                  element.style[`${colorType}Opacity`] = "1";
+                });
+              });
+            }
+            return el;
+          },
+        }),
   } satisfies MarkOptions;
+}
+
+export function getElementType(
+  markType: ChartType
+): "circle" | "rect" | "path" | "text" {
+  let elementType: "circle" | "rect" | "path" | "text";
+  // TODO: add more mark types
+  if (markType === "barY" || markType === "barX") {
+    elementType = "rect";
+  } else if (markType === "areaY" || markType === "line") {
+    elementType = "path";
+  } else if (markType === "dot") {
+    elementType = "circle";
+  } else {
+    elementType = "text";
+  }
+  return elementType;
 }
 
 // Identify the data currently in the dataset
