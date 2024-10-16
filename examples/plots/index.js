@@ -22,6 +22,7 @@ export * from "./groupedBarAltOrder.js";
 export * from "./groupedBarExplicit.js";
 export * from "./barRotatedAxis.js";
 export * from "./partialChart.js";
+export * from "./partialChartX.js";
 export * from "./partialChartY.js";
 export * from "./horizontalAverage.js";
 export * from "./textWithTransform.js";
