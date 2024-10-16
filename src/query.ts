@@ -240,13 +240,13 @@ export function getAggregateInfo(
 
   // Then, calculate the percentage over the aggregated values if needed
   let aggregateColumn = "";
-  if (type === "barX") {
+  if (type === "barX" && x && x.length > 0) {
     aggregateColumn = percent
       ? ` (x / (SUM(x) OVER (PARTITION BY ${groupBy
           .filter((d) => d !== "series")
           .join(", ")}))) * 100 as x`
       : "x";
-  } else {
+  } else if (y && y.length > 0) {
     aggregateColumn = percent
       ? ` (y / (SUM(y) OVER (PARTITION BY ${groupBy
           .filter((d) => d !== "series")
