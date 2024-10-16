@@ -105,7 +105,10 @@ export class DuckPlot {
     options?: PlotOptions[T],
     propertyName?: string
   ): PlotProperty<T> | this {
-    if (column !== undefined && !equal(column, prop.column)) {
+    // Because we store empty string for falsey values, we need to check them
+    const columnValue = column === false || column === null ? "" : column;
+
+    if (column !== undefined && !equal(columnValue, prop.column)) {
       // Special case handling that we don't need data if color is/was a color
       if (
         !(propertyName === "color" && isColor(prop.column) && isColor(column))
@@ -115,7 +118,7 @@ export class DuckPlot {
     }
     if (column === false || column === null) {
       prop.column = "";
-      if (options !== undefined) prop.options = options;
+      prop.options = undefined;
     } else {
       if (column !== undefined) prop.column = column;
       if (options !== undefined) prop.options = options;
@@ -265,7 +268,6 @@ export class DuckPlot {
     const allData = this._newDataProps
       ? await this.prepareChartData()
       : this._chartData;
-
     // Grab the types and labels from the data
     const { types, labels } = allData;
 
@@ -370,7 +372,6 @@ export class DuckPlot {
   async render(): Promise<SVGElement | HTMLElement | null> {
     if (!this._mark) return null;
     const marks = await this.getMarks(); // updates this._chartData and this._filteredData
-
     const currentColumns = this._chartData?.types
       ? Object.keys(this._chartData.types)
       : []; // TODO: remove this arg from topLevelPlotOptions
