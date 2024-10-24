@@ -233,7 +233,9 @@ export function getAggregateInfo(
   const subquery =
     aggregate !== false
       ? `
-    SELECT ${groupBy.join(", ")}, ${aggregateSelection}
+    SELECT ${groupBy.join(", ")}${
+          aggregateSelection ? `, ${aggregateSelection}` : ""
+        }
     FROM ${tableName}
     GROUP BY ${groupBy.join(", ")}`
       : `SELECT * FROM ${tableName}`;
@@ -264,7 +266,9 @@ export function getAggregateInfo(
   return {
     queryString: `
       WITH aggregated AS (${subquery})
-      SELECT ${groupBy.join(", ")}, ${aggregateColumn}
+      SELECT ${groupBy.join(", ")}${
+      aggregateColumn ? `, ${aggregateColumn}` : ""
+    }
       FROM aggregated
       ${orderBy ? ` ORDER BY ${orderBy}` : ""}
     `,

@@ -172,7 +172,19 @@ export function getTopLevelPlotOptions(
 
   // Handle 3 options for color: note, color as a string is assigned in the mark
   const { color: colorConfig } = options;
-  const { domain: sortsDomain } = sorts.series || {};
+  const { domain: sortsDomainRaw } = sorts.series || {};
+  // Create a custom domain if x OR y is missing (because a mark won't be on the
+  // chart, so we need to compute the domain)
+  const sortsDomain = sortsDomainRaw
+    ? sortsDomainRaw
+    : currentColumns.includes("x") && currentColumns.includes("y")
+    ? undefined
+    : data?.types?.series === "number" || data?.types?.series === "date"
+    ? extent(
+        [...data!, ...[data?.types?.series === "number" ? { series: 0 } : {}]],
+        (d) => d.series
+      )
+    : undefined;
 
   let colorDomain, colorRange, colorScheme;
   // TODO this check seems off....

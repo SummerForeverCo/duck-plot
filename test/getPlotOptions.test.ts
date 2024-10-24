@@ -176,7 +176,7 @@ describe("getTopLevelPlotOptions", () => {
       x: { domain: ["a", "b", "c"] },
       y: { domain: ["1", "2", "3"] },
     };
-    const result = getTopLevelPlotOptions(undefined, [], sorts, "barY", {});
+    const result = getTopLevelPlotOptions([], [], sorts, "barY", {});
     expect(result.x).toEqual(expect.objectContaining(sorts.x));
     expect(result.y).toEqual(expect.objectContaining(sorts.y));
   });
