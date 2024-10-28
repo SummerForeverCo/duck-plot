@@ -3,6 +3,7 @@ import { JSDOM } from "jsdom";
 import type { Markish, MarkOptions, PlotOptions } from "@observablehq/plot";
 
 import {
+  BasicColumnType,
   ChartData,
   ChartType,
   Config,
@@ -49,6 +50,7 @@ export class DuckPlot {
   private _document: Document;
   private _newDataProps: boolean = true;
   private _chartData: ChartData = [];
+  private _rawData: ChartData = [];
   private _filteredData: ChartData = [];
   private _config: Config = {};
   private _query: string = "";
@@ -230,8 +232,69 @@ export class DuckPlot {
     return this._chartData || [];
   }
 
+  // If someone wants to set the data directly rather than working with duckdb
+  rawData(): ChartData;
+  rawData(
+    data?: ChartData,
+    types?: { [key: string]: BasicColumnType }
+  ): ChartData | this {
+    if (data && types) {
+      data.types = types;
+      this._newDataProps = true;
+      this._rawData = data;
+      return this;
+    }
+    return this._chartData; // TODO: does this make sense...?
+  }
+
   // TODO; private? Also, rename
   async prepareChartData(): Promise<ChartData> {
+    if (this._rawData && this._rawData.types) {
+      // If columns (x, y, color, fy, fx, radius, text) are defined, get those
+      // values from the raw data
+      this._chartData = this._rawData.map((d) => ({
+        ...(this._x.column ? { x: d[this._x.column] } : {}),
+        ...(this._y.column ? { y: d[this._y.column] } : {}),
+        ...(this._color.column ? { series: d[this._color.column] } : {}),
+        ...(this._fy.column ? { fy: d[this._fy.column] } : {}),
+        ...(this._fx.column ? { fx: d[this._fx.column] } : {}),
+        ...(this._r.column ? { r: d[this._r.column] } : {}),
+        ...(this._text.column ? { text: d[this._text.column] } : {}),
+      }));
+
+      // Same idea, but with types
+      // TODO: rename series to color...?
+      this._chartData.types = {
+        ...(this._x.column ? { x: this._rawData.types[this._x.column] } : {}),
+        ...(this._y.column ? { y: this._rawData.types[this._y.column] } : {}),
+        ...(this._color.column
+          ? { series: this._rawData.types[this._color.column] }
+          : {}),
+        ...(this._fy.column
+          ? { fy: this._rawData.types[this._fy.column] }
+          : {}),
+        ...(this._fx.column
+          ? { fx: this._rawData.types[this._fx.column] }
+          : {}),
+        ...(this._r.column ? { r: this._rawData.types[this._r.column] } : {}),
+        ...(this._text.column
+          ? { text: this._rawData.types[this._text.column] }
+          : {}),
+      };
+
+      // ... and labels
+      this._chartData.labels = {
+        ...(this._x.column ? { x: this._x.column } : {}),
+        ...(this._y.column ? { y: this._y.column } : {}),
+        ...(this._color.column ? { series: this._color.column } : {}),
+        ...(this._fy.column ? { fy: this._fy.column } : {}),
+        ...(this._fx.column ? { fx: this._fx.column } : {}),
+        ...(this._r.column ? { r: this._r.column } : {}),
+        ...(this._text.column ? { text: this._text.column } : {}),
+      };
+      this._newDataProps = false;
+      return this._chartData;
+    }
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
     // TODO: this error isn't being thrown when I'd expect (e.g, if type is not set)
@@ -268,6 +331,7 @@ export class DuckPlot {
     const allData = this._newDataProps
       ? await this.prepareChartData()
       : this._chartData;
+
     // Grab the types and labels from the data
     const { types, labels } = allData;
 
