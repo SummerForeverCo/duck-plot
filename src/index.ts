@@ -375,9 +375,12 @@ export class DuckPlot {
             ),
           ];
     // TODO: double check you don't actually use border color
-    // If a user supplies marks, don't add the common marks
-    const commonPlotMarks =
-      this._options.marks ?? getCommonMarks(currentColumns);
+    // TODO: Make frame/grid config options(?)
+    const commonPlotMarks = [
+      ...getCommonMarks(currentColumns),
+      ...(this._options.marks || []),
+    ];
+
     const fyMarks = getfyMarks(
       this._filteredData,
       currentColumns,
