@@ -73,6 +73,12 @@ export type Config = {
   xLabelDisplay?: boolean;
   yLabelDisplay?: boolean;
   tip?: boolean; // Show tooltips
+  // For use in the tooltip
+  tipLabels?: {
+    x?: string;
+    y?: string;
+    color?: string;
+  };
   autoMargin?: boolean; // Automatically adjust margins
   aggregate?: Aggregate;
   interactiveLegend?: boolean;
