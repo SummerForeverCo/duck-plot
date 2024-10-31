@@ -233,6 +233,7 @@ export class DuckPlot {
   }
 
   // If someone wants to set the data directly rather than working with duckdb
+  // TODO: should this just be how the data() method works when passed args...?
   rawData(): ChartData;
   rawData(
     data?: ChartData,
@@ -249,6 +250,10 @@ export class DuckPlot {
 
   // TODO; private? Also, rename
   async prepareChartData(): Promise<ChartData> {
+    // If no new data properties, return the chartData
+    if (!this._newDataProps) return this._chartData;
+
+    // If there is raw data rather than a database, extract chart data from it
     if (this._rawData && this._rawData.types) {
       // If columns (x, y, color, fy, fx, radius, text) are defined, get those
       // values from the raw data
@@ -328,9 +333,7 @@ export class DuckPlot {
     return this._chartData;
   }
   async getMarks(): Promise<Markish[]> {
-    const allData = this._newDataProps
-      ? await this.prepareChartData()
-      : this._chartData;
+    const allData = await this.prepareChartData();
 
     // Grab the types and labels from the data
     const { types, labels } = allData;
@@ -394,10 +397,8 @@ export class DuckPlot {
   }
 
   async getPlotOptions(): Promise<PlotOptions> {
-    //
-    const chartData = this._newDataProps
-      ? await this.prepareChartData()
-      : this._chartData;
+    const chartData = await this.prepareChartData();
+
     // Because users can specify options either in .options or with each column, we coalese them here
     let plotOptions = {
       ...this._options,
