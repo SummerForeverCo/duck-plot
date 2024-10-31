@@ -7,16 +7,14 @@ export type PlotFitOptions = {
   hideOverlapping?: boolean;
 };
 
-// The y nodes are nested differently when there is an fx present, this should
-// handle both cases
+// The y nodes are nested differently sometimes (fx?), this should handle both cases
 const yNodeSelector =
   'g[aria-label="y-axis tick label"][text-anchor="end"] text, ' + // Case where text-anchor is on the parent g
-  'g[aria-label="y-axis tick label"] g[text-anchor="end"] text'; // Case where text-anchor is on a child g (fx)
+  'g[aria-label="y-axis tick label"] g[text-anchor="end"] text'; // Case where text-anchor is on a child g
 const xNodeSelector =
   '[aria-label="x-axis tick label"] text, [aria-label="fx-axis tick label"] text, [aria-label="fx-axis tick label"] g text';
 
-const yNodeRightSeletor =
-  'g[aria-label="y-axis tick label"][text-anchor="start"] text';
+const yNodeRightSelector = yNodeSelector.replaceAll("end", "start");
 export function PlotFit(
   // TODO: probably swap the name of options and config for consistency
   config: PlotOptions,
@@ -105,7 +103,7 @@ export function PlotFit(
   let xNodes = initialPlot.querySelectorAll(xNodeSelector);
 
   let yNodes = initialPlot.querySelectorAll(yNodeSelector);
-  let yNodesRight = initialPlot.querySelectorAll(yNodeRightSeletor);
+  let yNodesRight = initialPlot.querySelectorAll(yNodeRightSelector);
 
   // Get the margin left to determine the full width for the x labels
   let maxYWidth = 0,
@@ -183,7 +181,7 @@ export function PlotFit(
     xNodes = finalChart.querySelectorAll(xNodeSelector);
 
     yNodes = finalChart.querySelectorAll(yNodeSelector);
-    yNodesRight = finalChart.querySelectorAll(yNodeRightSeletor);
+    yNodesRight = finalChart.querySelectorAll(yNodeRightSelector);
     const fyNodes = finalChart.querySelectorAll('[aria-label="text"] g text');
     adjustVisibility(fyNodes, config.height! - (config.marginBottom || 0));
     adjustVisibility(

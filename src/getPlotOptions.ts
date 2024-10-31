@@ -73,7 +73,7 @@ export function getMarkOptions(
     },
     ...tip,
     ...(type === "line" ? { stroke } : { fill }),
-    ...(currentColumns.includes("x") ? { x: `x` } : {}),
+    ...(currentColumns.includes("x") ? { x: `x`, sort: (d: any) => d.x } : {}),
     ...(currentColumns.includes("fy") ? { fy: "fy" } : {}),
     ...(type === "dot" && currentColumns.includes("r") ? { r: "r" } : {}),
     ...(type === "text" && currentColumns.includes("text")
