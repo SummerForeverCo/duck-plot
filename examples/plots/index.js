@@ -1,3 +1,4 @@
+export * from "./axisRight.js";
 export * from "./line.js";
 export * from "./rawData.js";
 export * from "./area.js";

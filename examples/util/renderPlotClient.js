@@ -1,5 +1,7 @@
 // renderPlotClient.js
 import { createDb } from "./createDb.js";
+import * as Plot from "@observablehq/plot";
+import * as d3 from "d3";
 // import { DuckPlot } from "../../src/index.ts";
 let DuckPlot;
 
@@ -16,7 +18,13 @@ export async function renderPlot(fileName, codeString, constructorOptions) {
     const duckplot = constructorOptions
       ? new DuckPlot(db, constructorOptions)
       : new DuckPlot(db);
-    Function("duckplot", "db", codeString)(duckplot, db);
+    Function(
+      "duckplot",
+      "db",
+      "Plot",
+      "d3",
+      codeString
+    )(duckplot, db, Plot, d3);
     const plot = await duckplot.render();
     return [plot, codeString];
   } catch (error) {
