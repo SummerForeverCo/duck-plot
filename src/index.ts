@@ -298,12 +298,13 @@ export class DuckPlot {
         ...(this._text.column ? { text: this._text.column } : {}),
       };
       this._newDataProps = false;
+      this._visibleSeries = []; // reset visible series
       return this._chartData;
     }
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
     // TODO: this error isn't being thrown when I'd expect (e.g, if type is not set)
-    if (!this._mark) throw new Error("Type not set");
+    if (!this._mark) throw new Error("Mark type not set");
     this._newDataProps = false;
     this._visibleSeries = []; // reset visible series
     const columns = {
@@ -355,6 +356,7 @@ export class DuckPlot {
     const primaryMarkOptions = getMarkOptions(
       currentColumns,
       this._mark.markType,
+      types,
       {
         color: isColor(this._color.column) ? this._color.column : undefined,
         tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
