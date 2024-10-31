@@ -360,8 +360,9 @@ export class DuckPlot {
       {
         color: isColor(this._color.column) ? this._color.column : undefined,
         tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
-        xLabel: plotOptions.x?.label ?? "",
-        yLabel: plotOptions.y?.label ?? "",
+        xLabel: this._config.tipLabels?.x ?? plotOptions.x?.label ?? "",
+        yLabel: this._config.tipLabels?.y ?? plotOptions.y?.label ?? "",
+        // TODO: suppport colorLabel
         markOptions: this._mark.options,
       }
     );

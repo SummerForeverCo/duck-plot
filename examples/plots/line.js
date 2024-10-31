@@ -9,6 +9,12 @@ duckplot
   .mark("line")
   .color("red")
   .options({width: 400, height: 500, y: {domain: [100, 30000]}})
+  .config({
+    tipLabels: {
+      x: "My cool x label, and it still get truncated",
+      y: "Test label"
+    }
+  })
 `;
 
 export const line = (options) => renderPlot("income.csv", codeString, options);
