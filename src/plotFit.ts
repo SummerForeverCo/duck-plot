@@ -7,6 +7,16 @@ export type PlotFitOptions = {
   hideOverlapping?: boolean;
 };
 
+// The y nodes are nested differently when there is an fx present, this should
+// handle both cases
+const yNodeSelector =
+  'g[aria-label="y-axis tick label"][text-anchor="end"] text, ' + // Case where text-anchor is on the parent g
+  'g[aria-label="y-axis tick label"] g[text-anchor="end"] text'; // Case where text-anchor is on a child g (fx)
+const xNodeSelector =
+  '[aria-label="x-axis tick label"] text, [aria-label="fx-axis tick label"] text, [aria-label="fx-axis tick label"] g text';
+
+const yNodeRightSeletor =
+  'g[aria-label="y-axis tick label"][text-anchor="start"] text';
 export function PlotFit(
   // TODO: probably swap the name of options and config for consistency
   config: PlotOptions,
@@ -92,23 +102,25 @@ export function PlotFit(
     document.body.appendChild(initialPlot);
   }
   // Extract the x-axis tick labels
-  let xNodes = initialPlot.querySelectorAll(
-    '[aria-label="x-axis tick label"] text, [aria-label="fx-axis tick label"] text,  [aria-label="fx-axis tick label"] g text'
-  );
+  let xNodes = initialPlot.querySelectorAll(xNodeSelector);
 
-  let yNodes = initialPlot.querySelectorAll(
-    '[aria-label="y-axis tick label"] text'
-  );
+  let yNodes = initialPlot.querySelectorAll(yNodeSelector);
+  let yNodesRight = initialPlot.querySelectorAll(yNodeRightSeletor);
 
   // Get the margin left to determine the full width for the x labels
-  let maxYWidth = 0;
+  let maxYWidth = 0,
+    maxYRightWidth = 0;
   yNodes.forEach((node) => {
     const computedWidth = getWidth(node as HTMLElement);
     maxYWidth = Math.max(maxYWidth, computedWidth + 10);
   });
+  yNodesRight.forEach((node) => {
+    const computedWidth = getWidth(node as HTMLElement);
+    maxYRightWidth = Math.max(maxYRightWidth, computedWidth + 10);
+  });
   // Get rotation angle
   const tickRotate = rotateX
-    ? getRotation(xNodes, (config.width || 0) - maxYWidth)
+    ? getRotation(xNodes, (config.width || 0) - (maxYWidth + maxYRightWidth))
     : 0;
   let maxHeight = 0;
   let maxWidthFromX = 0;
@@ -142,11 +154,13 @@ export function PlotFit(
     ...config,
     marginBottom: maxHeight + 15,
     marginLeft: Math.max(maxWidthFromX, maxYWidth),
-    marginRight: 0,
+    marginRight: maxYRightWidth,
     insetTop: 0,
     x: {
       ...config.x,
       tickRotate,
+      // If there is a second axis, center the x label
+      ...(yNodesRight.length > 0 ? { labelAnchor: "center" } : {}),
     },
     fx: {
       ...config.fx,
@@ -166,16 +180,18 @@ export function PlotFit(
 
   // Adjust the visibility of the x and y labels that may be overlapping
   if (hideOverlapping) {
-    xNodes = finalChart.querySelectorAll(
-      '[aria-label="x-axis tick label"] text, [aria-label="fx-axis tick label"] text, [aria-label="fx-axis tick label"] g text'
-    );
-    yNodes = finalChart.querySelectorAll(
-      '[aria-label="y-axis tick label"] text'
-    );
+    xNodes = finalChart.querySelectorAll(xNodeSelector);
+
+    yNodes = finalChart.querySelectorAll(yNodeSelector);
+    yNodesRight = finalChart.querySelectorAll(yNodeRightSeletor);
     const fyNodes = finalChart.querySelectorAll('[aria-label="text"] g text');
     adjustVisibility(fyNodes, config.height! - (config.marginBottom || 0));
-    adjustVisibility(xNodes, config.width! - (config.marginLeft || 0));
+    adjustVisibility(
+      xNodes,
+      config.width! - (config.marginLeft || 0) - (config.marginRight || 0)
+    );
     adjustVisibility(yNodes, config.height! - (config.marginBottom || 0));
+    adjustVisibility(yNodesRight, config.height! - (config.marginBottom || 0));
   }
   // Hide any plot warnings
   if (hideWarnings) {
