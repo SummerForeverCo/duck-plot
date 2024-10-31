@@ -23,6 +23,11 @@ const borderOptions = {
 export function getMarkOptions(
   currentColumns: string[] = [],
   type: ChartType,
+  colTypes:
+    | {
+        [key: string]: BasicColumnType;
+      }
+    | undefined,
   options: {
     color?: string;
     xLabel?: string;
@@ -58,6 +63,8 @@ export function getMarkOptions(
     if (!label || label.length < length) return label;
     return label.slice(0, length) + ellipsis;
   }
+  const xSort = colTypes?.x !== "string" ? { sort: (d: any) => d.x } : {};
+
   return {
     // Create custom labels for x and y (important if the labels are custom but hidden!)
     channels: {
@@ -73,7 +80,7 @@ export function getMarkOptions(
     },
     ...tip,
     ...(type === "line" ? { stroke } : { fill }),
-    ...(currentColumns.includes("x") ? { x: `x`, sort: (d: any) => d.x } : {}),
+    ...(currentColumns.includes("x") ? { x: `x`, ...xSort } : {}),
     ...(currentColumns.includes("fy") ? { fy: "fy" } : {}),
     ...(type === "dot" && currentColumns.includes("r") ? { r: "r" } : {}),
     ...(type === "text" && currentColumns.includes("text")
