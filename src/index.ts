@@ -3,6 +3,7 @@ import { JSDOM } from "jsdom";
 import type { Markish, MarkOptions, PlotOptions } from "@observablehq/plot";
 
 import {
+  BasicColumnType,
   ChartData,
   ChartType,
   Config,
@@ -49,6 +50,7 @@ export class DuckPlot {
   private _document: Document;
   private _newDataProps: boolean = true;
   private _chartData: ChartData = [];
+  private _rawData: ChartData = [];
   private _filteredData: ChartData = [];
   private _config: Config = {};
   private _query: string = "";
@@ -230,8 +232,74 @@ export class DuckPlot {
     return this._chartData || [];
   }
 
+  // If someone wants to set the data directly rather than working with duckdb
+  // TODO: should this just be how the data() method works when passed args...?
+  rawData(): ChartData;
+  rawData(
+    data?: ChartData,
+    types?: { [key: string]: BasicColumnType }
+  ): ChartData | this {
+    if (data && types) {
+      data.types = types;
+      this._newDataProps = true;
+      this._rawData = data;
+      return this;
+    }
+    return this._chartData; // TODO: does this make sense...?
+  }
+
   // TODO; private? Also, rename
   async prepareChartData(): Promise<ChartData> {
+    // If no new data properties, return the chartData
+    if (!this._newDataProps) return this._chartData;
+
+    // If there is raw data rather than a database, extract chart data from it
+    if (this._rawData && this._rawData.types) {
+      // If columns (x, y, color, fy, fx, radius, text) are defined, get those
+      // values from the raw data
+      this._chartData = this._rawData.map((d) => ({
+        ...(this._x.column ? { x: d[this._x.column] } : {}),
+        ...(this._y.column ? { y: d[this._y.column] } : {}),
+        ...(this._color.column ? { series: d[this._color.column] } : {}),
+        ...(this._fy.column ? { fy: d[this._fy.column] } : {}),
+        ...(this._fx.column ? { fx: d[this._fx.column] } : {}),
+        ...(this._r.column ? { r: d[this._r.column] } : {}),
+        ...(this._text.column ? { text: d[this._text.column] } : {}),
+      }));
+
+      // Same idea, but with types
+      // TODO: rename series to color...?
+      this._chartData.types = {
+        ...(this._x.column ? { x: this._rawData.types[this._x.column] } : {}),
+        ...(this._y.column ? { y: this._rawData.types[this._y.column] } : {}),
+        ...(this._color.column
+          ? { series: this._rawData.types[this._color.column] }
+          : {}),
+        ...(this._fy.column
+          ? { fy: this._rawData.types[this._fy.column] }
+          : {}),
+        ...(this._fx.column
+          ? { fx: this._rawData.types[this._fx.column] }
+          : {}),
+        ...(this._r.column ? { r: this._rawData.types[this._r.column] } : {}),
+        ...(this._text.column
+          ? { text: this._rawData.types[this._text.column] }
+          : {}),
+      };
+
+      // ... and labels
+      this._chartData.labels = {
+        ...(this._x.column ? { x: this._x.column } : {}),
+        ...(this._y.column ? { y: this._y.column } : {}),
+        ...(this._color.column ? { series: this._color.column } : {}),
+        ...(this._fy.column ? { fy: this._fy.column } : {}),
+        ...(this._fx.column ? { fx: this._fx.column } : {}),
+        ...(this._r.column ? { r: this._r.column } : {}),
+        ...(this._text.column ? { text: this._text.column } : {}),
+      };
+      this._newDataProps = false;
+      return this._chartData;
+    }
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
     // TODO: this error isn't being thrown when I'd expect (e.g, if type is not set)
@@ -265,9 +333,8 @@ export class DuckPlot {
     return this._chartData;
   }
   async getMarks(): Promise<Markish[]> {
-    const allData = this._newDataProps
-      ? await this.prepareChartData()
-      : this._chartData;
+    const allData = await this.prepareChartData();
+
     // Grab the types and labels from the data
     const { types, labels } = allData;
 
@@ -311,9 +378,12 @@ export class DuckPlot {
             ),
           ];
     // TODO: double check you don't actually use border color
-    // If a user supplies marks, don't add the common marks
-    const commonPlotMarks =
-      this._options.marks ?? getCommonMarks(currentColumns);
+    // TODO: Make frame/grid config options(?)
+    const commonPlotMarks = [
+      ...getCommonMarks(currentColumns),
+      ...(this._options.marks || []),
+    ];
+
     const fyMarks = getfyMarks(
       this._filteredData,
       currentColumns,
@@ -327,10 +397,8 @@ export class DuckPlot {
   }
 
   async getPlotOptions(): Promise<PlotOptions> {
-    //
-    const chartData = this._newDataProps
-      ? await this.prepareChartData()
-      : this._chartData;
+    const chartData = await this.prepareChartData();
+
     // Because users can specify options either in .options or with each column, we coalese them here
     let plotOptions = {
       ...this._options,

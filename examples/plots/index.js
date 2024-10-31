@@ -1,4 +1,5 @@
 export * from "./line.js";
+export * from "./rawData.js";
 export * from "./area.js";
 export * from "./area-alt-order.js";
 export * from "./areaWithSeriesTransform.js";

@@ -4,7 +4,8 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `duckplot
   .table("taxi")
   .x("Borough", {label: "Neighborhood"})
-  .y("count")  
+  .y("count")
+  .color("Borough")
   .mark("barY")
   .config({xLabelDisplay: false});`;
 
