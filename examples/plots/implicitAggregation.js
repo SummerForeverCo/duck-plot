@@ -1,11 +1,12 @@
 import { renderPlot } from "../util/renderPlotClient.js";
 // This code is both displayed in the browser and executed
-
-const codeString = `duckplot
+const codeString = `// Explicitly take the avg of the values by date
+duckplot
   .table("stocks")
-  .y("Close")
-  .color("Symbol")
-  .mark("barY");`;
+  .x("Date")
+  .y(["High", "Low"])
+  .mark("line")
+`;
 
-export const partialChartY = (options) =>
+export const implicitAggregation = (options) =>
   renderPlot("stocks.csv", codeString, options);
