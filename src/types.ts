@@ -44,6 +44,7 @@ export interface ChartData extends Array<Indexable> {
 export type BasicColumnType = "string" | "number" | "date" | undefined;
 // TODO: maybe rename this...?
 export type ColumnType = string | string[];
+export type IncomingColumType = ColumnType | false | null;
 export interface ColumnSchema {
   column_name: string;
   column_type: string;
