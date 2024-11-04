@@ -69,7 +69,10 @@ export function getMarkOptions(
     if (!label || label.length < length) return label;
     return label.slice(0, length) + ellipsis;
   }
-  const xSort = colTypes?.x !== "string" ? { sort: (d: any) => d.x } : {};
+  const xSort =
+    colTypes?.x !== "string" && type !== "barX"
+      ? { sort: (d: any) => d.x }
+      : {};
 
   return {
     // Create custom labels for x and y (important if the labels are custom but hidden!)
