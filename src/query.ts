@@ -5,6 +5,7 @@ import {
   ChartData,
   Aggregate,
   QueryMap,
+  ColumnType,
 } from "./types";
 
 // Function to determine if a column (either a string or array of strings) is defined
@@ -27,15 +28,18 @@ export function getTransformType(
 ) {
   if (type === "barX") {
     if (Array.isArray(x) && x.length > 1) {
-      return series?.length ? "unPivotWithSeries" : "unPivot";
+      return hasProperty(series) ? "unPivotWithSeries" : "unPivot";
     }
   } else {
     if (Array.isArray(y) && y.length > 1) {
-      return series?.length ? "unPivotWithSeries" : "unPivot";
+      return hasProperty(series) ? "unPivotWithSeries" : "unPivot";
     }
   }
   return "standard";
 }
+
+const hasProperty = (prop?: ColumnType): boolean =>
+  Array.isArray(prop) ? prop.length > 0 : prop !== undefined;
 
 export function getStandardTransformQuery(
   type: ChartType,
@@ -44,14 +48,13 @@ export function getStandardTransformQuery(
   into: string
 ) {
   let select = [];
-
-  if (x?.length) select.push(standardColName({ x }, "x"));
-  if (fx?.length) select.push(standardColName({ fx }, "fx"));
-  if (y?.length) select.push(standardColName({ y }, "y"));
-  if (series?.length) select.push(maybeConcatCols(series, "series"));
-  if (fy?.length) select.push(maybeConcatCols(fy, "fy"));
-  if (r?.length) select.push(standardColName({ r }, "r"));
-  if (text?.length) select.push(standardColName({ text }, "text"));
+  if (hasProperty(x)) select.push(standardColName({ x }, "x"));
+  if (hasProperty(fx)) select.push(standardColName({ fx }, "fx"));
+  if (hasProperty(y)) select.push(standardColName({ y }, "y"));
+  if (hasProperty(series)) select.push(maybeConcatCols(series, "series"));
+  if (hasProperty(fy)) select.push(maybeConcatCols(fy, "fy"));
+  if (hasProperty(r)) select.push(standardColName({ r }, "r"));
+  if (hasProperty(text)) select.push(standardColName({ text }, "text"));
 
   return `CREATE TABLE ${into} as SELECT ${select.join(
     ", "
@@ -309,7 +312,7 @@ END;`;
   return orderBy;
 }
 
-export function maybeConcatCols(cols?: string[] | string, as?: string) {
+export function maybeConcatCols(cols?: ColumnType, as?: string) {
   if (!cols || !cols.length) return "";
   const colName = as ? ` as ${as}` : "";
   const colArr = Array.isArray(cols) ? cols : [cols];
@@ -328,9 +331,7 @@ export function standardColName(obj: any, column: string, colName?: string) {
   return `"${col}" as ${colName || column}`;
 }
 
-export const quoteColumns = (
-  columns: string | undefined | (string | undefined)[]
-) => {
+export const quoteColumns = (columns?: ColumnType) => {
   if (!columns) return [];
   return !Array.isArray(columns)
     ? [`"${columns}"`]

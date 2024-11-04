@@ -6,6 +6,7 @@ import {
   BasicColumnType,
   ChartData,
   ChartType,
+  ColumnType,
   Config,
   MarkProperty,
   PlotProperty,
@@ -27,7 +28,7 @@ import "./legend.css";
 import { legendContinuous } from "./legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import equal from "fast-deep-equal";
-import { getUniqueId } from "./helpers";
+import { getUniqueId, processRawData } from "./helpers";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | null = null;
@@ -103,7 +104,7 @@ export class DuckPlot {
   // Helper method for getting and setting x, y, color, and fy properties
   private handleProperty<T extends keyof PlotOptions>(
     prop: PlotProperty<T>,
-    column?: string | false | null,
+    column?: ColumnType | false | null,
     options?: PlotOptions[T],
     propertyName?: string
   ): PlotProperty<T> | this {
@@ -113,7 +114,12 @@ export class DuckPlot {
     if (column !== undefined && !equal(columnValue, prop.column)) {
       // Special case handling that we don't need data if color is/was a color
       if (
-        !(propertyName === "color" && isColor(prop.column) && isColor(column))
+        !(
+          propertyName === "color" &&
+          isColor(prop.column) &&
+          typeof column === "string" &&
+          isColor(column)
+        )
       ) {
         this._newDataProps = true; // When changed, we need to requery the data
       }
@@ -130,8 +136,8 @@ export class DuckPlot {
 
   // x column encoding
   x(): PlotProperty<"x">;
-  x(column: string, options?: PlotOptions["x"]): this;
-  x(column?: string, options?: PlotOptions["x"]): PlotProperty<"x"> | this {
+  x(column: ColumnType, options?: PlotOptions["x"]): this;
+  x(column?: ColumnType, options?: PlotOptions["x"]): PlotProperty<"x"> | this {
     return this.handleProperty(this._x, column, options);
   }
 
@@ -177,8 +183,8 @@ export class DuckPlot {
 
   // Text encoding: note, there are no options for text
   text(): { column: string };
-  text(column: string): this;
-  text(column?: string): { column?: string } | this {
+  text(column: ColumnType): this;
+  text(column?: ColumnType): { column?: ColumnType } | this {
     return this.handleProperty(this._text, column);
   }
 
@@ -235,6 +241,7 @@ export class DuckPlot {
   // If someone wants to set the data directly rather than working with duckdb
   // TODO: should this just be how the data() method works when passed args...?
   rawData(): ChartData;
+  rawData(data?: ChartData, types?: { [key: string]: BasicColumnType }): this;
   rawData(
     data?: ChartData,
     types?: { [key: string]: BasicColumnType }
@@ -255,48 +262,15 @@ export class DuckPlot {
 
     // If there is raw data rather than a database, extract chart data from it
     if (this._rawData && this._rawData.types) {
-      // If columns (x, y, color, fy, fx, radius, text) are defined, get those
-      // values from the raw data
-      this._chartData = this._rawData.map((d) => ({
-        ...(this._x.column ? { x: d[this._x.column] } : {}),
-        ...(this._y.column ? { y: d[this._y.column] } : {}),
-        ...(this._color.column ? { series: d[this._color.column] } : {}),
-        ...(this._fy.column ? { fy: d[this._fy.column] } : {}),
-        ...(this._fx.column ? { fx: d[this._fx.column] } : {}),
-        ...(this._r.column ? { r: d[this._r.column] } : {}),
-        ...(this._text.column ? { text: d[this._text.column] } : {}),
-      }));
-
-      // Same idea, but with types
-      // TODO: rename series to color...?
-      this._chartData.types = {
-        ...(this._x.column ? { x: this._rawData.types[this._x.column] } : {}),
-        ...(this._y.column ? { y: this._rawData.types[this._y.column] } : {}),
-        ...(this._color.column
-          ? { series: this._rawData.types[this._color.column] }
-          : {}),
-        ...(this._fy.column
-          ? { fy: this._rawData.types[this._fy.column] }
-          : {}),
-        ...(this._fx.column
-          ? { fx: this._rawData.types[this._fx.column] }
-          : {}),
-        ...(this._r.column ? { r: this._rawData.types[this._r.column] } : {}),
-        ...(this._text.column
-          ? { text: this._rawData.types[this._text.column] }
-          : {}),
-      };
-
-      // ... and labels
-      this._chartData.labels = {
-        ...(this._x.column ? { x: this._x.column } : {}),
-        ...(this._y.column ? { y: this._y.column } : {}),
-        ...(this._color.column ? { series: this._color.column } : {}),
-        ...(this._fy.column ? { fy: this._fy.column } : {}),
-        ...(this._fx.column ? { fx: this._fx.column } : {}),
-        ...(this._r.column ? { r: this._r.column } : {}),
-        ...(this._text.column ? { text: this._text.column } : {}),
-      };
+      this._chartData = processRawData(this._rawData, {
+        x: this._x.column,
+        y: this._y.column,
+        color: this._color.column,
+        fy: this._fy.column,
+        fx: this._fx.column,
+        r: this._r.column,
+        text: this._text.column,
+      });
       this._newDataProps = false;
       this._visibleSeries = []; // reset visible series
       return this._chartData;
@@ -358,7 +332,9 @@ export class DuckPlot {
       this._mark.markType,
       types,
       {
-        color: isColor(this._color.column) ? this._color.column : undefined,
+        color: isColor(this._color.column)
+          ? String(this._color.column)
+          : undefined,
         tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
         xLabel: this._config.tipLabels?.x ?? plotOptions.x?.label ?? "",
         yLabel: this._config.tipLabels?.y ?? plotOptions.y?.label ?? "",

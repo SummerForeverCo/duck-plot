@@ -36,13 +36,14 @@ export type Indexable = {
   [key: string]: any;
 };
 export type Column = "x" | "y" | "series" | "fy" | "fx" | "r" | "text";
-export type ColumnConfig = Partial<Record<Column, string | string[]>>;
+export type ColumnConfig = Partial<Record<Column, ColumnType>>;
 export interface ChartData extends Array<Indexable> {
   types?: { [key: string]: BasicColumnType };
   labels?: { x?: string; y?: string; series?: string };
 }
 export type BasicColumnType = "string" | "number" | "date" | undefined;
-
+// TODO: maybe rename this...?
+export type ColumnType = string | string[];
 export interface ColumnSchema {
   column_name: string;
   column_type: string;
@@ -57,7 +58,7 @@ export interface TypesObject {
 
 // Define a generic type for property
 export type PlotProperty<T extends keyof PlotOptions> = {
-  column: string | undefined;
+  column: ColumnType;
   options?: PlotOptions[T];
 };
 

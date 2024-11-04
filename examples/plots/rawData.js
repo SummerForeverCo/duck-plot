@@ -6,6 +6,7 @@ duckplot
   .x("col1")
   .y("col2")
   .color("col1")
+  .fy("col1")
   .mark("barY")
 `;
 
