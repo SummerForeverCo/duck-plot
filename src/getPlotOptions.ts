@@ -5,7 +5,13 @@ import type {
 } from "@observablehq/plot";
 import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
-import type { BasicColumnType, ChartData, ChartType, Config } from "./types";
+import type {
+  BasicColumnType,
+  ChartData,
+  ChartType,
+  ColumnType,
+  Config,
+} from "./types";
 // Extend the MarkOptions to include all the stack options
 interface AllMarkOptions extends MarkOptions, StackOptions {}
 export const defaultColors = [
@@ -394,7 +400,7 @@ const namedColors = new Set(
 // colors—we just need to disambiguate them from column names.
 // https://www.w3.org/TR/SVG11/painting.html#SpecifyingPaint
 // https://www.w3.org/TR/css-color-5/
-export function isColor(value?: string | string[] | false | null) {
+export function isColor(value?: ColumnType) {
   if (typeof value !== "string") return false;
   value = value.toLowerCase().trim();
   return (
