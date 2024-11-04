@@ -8,6 +8,10 @@ import {
   ColumnType,
 } from "./types";
 
+// Quick helper
+const hasProperty = (prop?: ColumnType): boolean =>
+  Array.isArray(prop) ? prop.length > 0 : prop !== undefined;
+
 // Function to determine if a column (either a string or array of strings) is defined
 export function columnIsDefined(column: Column, config: ColumnConfig) {
   return Array.isArray(config[column])
@@ -37,9 +41,6 @@ export function getTransformType(
   }
   return "standard";
 }
-
-const hasProperty = (prop?: ColumnType): boolean =>
-  Array.isArray(prop) ? prop.length > 0 : prop !== undefined;
 
 export function getStandardTransformQuery(
   type: ChartType,
