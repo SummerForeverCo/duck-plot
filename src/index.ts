@@ -354,7 +354,9 @@ export class DuckPlot {
         tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
         xLabel: this._config.tipLabels?.x ?? plotOptions.x?.label ?? "",
         yLabel: this._config.tipLabels?.y ?? plotOptions.y?.label ?? "",
-        // TODO: suppport colorLabel
+        xValue: this._config.tipValues?.x,
+        yValue: this._config.tipValues?.y,
+        // TODO: suppport colorLabel, colorValue
         markOptions: this._mark.options,
       }
     );
