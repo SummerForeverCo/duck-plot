@@ -276,13 +276,14 @@ export function getAggregateInfo(
   }
   FROM aggregated
       ${
-        percent
+        percent && aggregate === false
           ? ` ORDER BY original_order`
           : orderBy
           ? ` ORDER BY ${orderBy}`
           : ""
       }
     `;
+
   return {
     queryString,
     labels,

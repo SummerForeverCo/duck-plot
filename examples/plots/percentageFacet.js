@@ -13,7 +13,7 @@ duckplot
   .y("value")
   .color("Symbol")
   .fy("measure")
-  .options({width: 1600, height: 600})
+  .options({width: 600, height: 600})
   .mark("barY")
   .config({percent: true})
 `;
