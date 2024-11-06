@@ -155,7 +155,7 @@ export function processRawData(
 
   // Helper function to determine if a column is a string and defined
   const isStringCol = (col?: ColumnType): boolean =>
-    col !== undefined && typeof col === "string";
+    col !== "" && col !== undefined && typeof col === "string";
 
   // Define column mappings for chartData, types, and labels
   // TODO: if we rename series to color this should get simpler

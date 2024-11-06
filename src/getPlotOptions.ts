@@ -11,6 +11,7 @@ import type {
   ChartType,
   ColumnType,
   Config,
+  Indexable,
 } from "./types";
 // Extend the MarkOptions to include all the stack options
 interface AllMarkOptions extends MarkOptions, StackOptions {}
@@ -39,6 +40,8 @@ export function getMarkOptions(
     xLabel?: string;
     yLabel?: string;
     tip?: boolean;
+    xValue?: (d: Indexable, i: number) => string;
+    yValue?: (d: Indexable, i: number) => string;
     markOptions?: AllMarkOptions;
   }
 ) {
@@ -69,7 +72,10 @@ export function getMarkOptions(
     if (!label || label.length < length) return label;
     return label.slice(0, length) + ellipsis;
   }
-  const xSort = colTypes?.x !== "string" ? { sort: (d: any) => d.x } : {};
+  const xSort =
+    colTypes?.x !== "string" && type !== "barX"
+      ? { sort: (d: any) => d.x }
+      : {};
 
   return {
     // Create custom labels for x and y (important if the labels are custom but hidden!)
@@ -77,11 +83,16 @@ export function getMarkOptions(
       xCustom: {
         label: truncateLabel(options.xLabel),
         // TODO: good for grouped bar charts, not good for other fx
-        value: currentColumns.includes("fx") ? "fx" : "x",
+        value:
+          typeof options.xValue === "function"
+            ? options.xValue
+            : currentColumns.includes("fx")
+            ? "fx"
+            : "x",
       },
       yCustom: {
         label: truncateLabel(options.yLabel),
-        value: "y",
+        value: typeof options.yValue === "function" ? options.yValue : "y",
       },
     },
     ...tip,
