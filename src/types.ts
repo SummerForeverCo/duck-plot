@@ -81,6 +81,11 @@ export type Config = {
     y?: string;
     color?: string;
   };
+  tipValues?: {
+    x?: (d: Indexable, i: number) => string;
+    y?: (d: Indexable, i: number) => string;
+    color?: (d: Indexable, i: number) => string;
+  };
   autoMargin?: boolean; // Automatically adjust margins
   aggregate?: Aggregate;
   interactiveLegend?: boolean;
