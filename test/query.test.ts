@@ -367,7 +367,7 @@ describe("getAggregateInfo", () => {
         GROUP BY y
       )
       SELECT y, (x / (SUM(x) OVER (PARTITION BY y))) * 100 as x
-      FROM aggregated
+      FROM aggregated ORDER BY original_order
     `;
 
     expect(
@@ -399,7 +399,7 @@ describe("getAggregateInfo", () => {
         GROUP BY x
       )
       SELECT x, (y / (SUM(y) OVER (PARTITION BY x))) * 100 as y
-      FROM aggregated
+      FROM aggregated ORDER BY original_order
     `;
 
     expect(

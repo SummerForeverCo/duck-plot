@@ -11,10 +11,10 @@ export * from "./partialChartContinuousColor.js";
 export * from "./partialChartY.js";
 export * from "./percentageBarY.js";
 export * from "./percentageBarX.js";
+export * from "./percentageFacet.js";
 
 // Up next!
 
-// export * from "./percentageFacet.js";
 // export * from "./axisRight.js";
 // export * from "./line.js";
 // export * from "./rawData.js";

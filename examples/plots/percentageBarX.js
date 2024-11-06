@@ -7,7 +7,7 @@ const codeString = `duckplot
   .y("Date", {label: "This long label should be truncated in the tooltip"})
   .x(["IBM", "AAPL"])
   .mark("barX")
-  // .config({percent: true})
+  .config({percent: true})
   .options({height: 800, width: 400})
 `;
 
