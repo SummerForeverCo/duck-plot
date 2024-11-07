@@ -519,9 +519,10 @@ export class DuckPlot {
       const div = this._document.createElement("div");
 
       if (legendType === "categorical") {
-        const categories = [
-          ...new Set(this._chartData.map((d) => `${d.series}`)),
-        ]; // stringify in case of numbers as categories
+        // stringify in case of numbers as categories
+        const categories = Array.from(plt.scale("color")?.domain ?? [])?.map(
+          (d) => `${d}`
+        );
 
         if (this._visibleSeries.length === 0) {
           this._visibleSeries = categories;
