@@ -1,5 +1,6 @@
 // Updated!
 export * from "./area.js";
+export * from "./colorDomain.js";
 export * from "./multiY.js";
 export * from "./multiYReordered.js";
 export * from "./multiYandSeries.js";
@@ -12,38 +13,30 @@ export * from "./partialChartY.js";
 export * from "./percentageBarY.js";
 export * from "./percentageBarX.js";
 export * from "./percentageFacet.js";
-
+export * from "./rawData.js";
+export * from "./fy.js";
+export * from "./barY.js";
+export * from "./barX.js";
+export * from "./dot.js";
+export * from "./groupedBarSeries.js";
+export * from "./groupedBarMultiY.js";
+export * from "./groupedBarMultiYReorder.js";
+export * from "./groupedBarSeriesAndY.js";
+export * from "./horizontalAverage.js";
+export * from "./axisRight.js";
+export * from "./xLabelRotate.js";
 // Up next!
 
 // export * from "./axisRight.js";
 // export * from "./line.js";
-// export * from "./rawData.js";
 // export * from "./area-alt-order.js";
 // export * from "./areaWithSeriesTransform.js";
-// export * from "./avgAggregate.js";
 // export * from "./avgAggregateAltOrder.js";
 // export * from "./line-multi-y.js";
-// export * from "./bar-date.js";
-// export * from "./bar.js";
-// export * from "./barWide.js";
-// export * from "./barWideColor.js";
-// export * from "./dot.js";
 // export * from "./dotWithTransform.js";
 // export * from "./dotWithSeriesTransform.js";
-// export * from "./fy.js";
 // export * from "./fyNoTicks.js";
 // export * from "./options.js";
-// export * from "./groupedBar.js";
-// export * from "./groupedBarWithSeries.js";
-// export * from "./groupedBarWithYandSeries.js";
-// export * from "./groupedBarAltOrder.js";
-// export * from "./groupedBarExplicit.js";
-// export * from "./barRotatedAxis.js";
-// export * from "./partialChart.js";
-// export * from "./partialChartX.js";
-// export * from "./partialChartContinuousColor.js";
-// export * from "./partialChartY.js";
-// export * from "./horizontalAverage.js";
 // export * from "./textWithTransform.js";
 // export * from "./textWithSeriesTransform.js";
 // export * from "./fyExplicitColors.js";
