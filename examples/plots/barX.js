@@ -7,6 +7,6 @@ const codeString = `duckplot
   .x("Close")
   .y("Date")
   .color("Symbol")
-  .mark("barX", {stroke: "black"});`;
+  .mark("barX");`;
 
 export const barX = (options) => renderPlot("stocks.csv", codeString, options);
