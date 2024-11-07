@@ -7,6 +7,13 @@ duckplot
   .y("Open")
   .color("Symbol")
   .mark("areaY")
+  .options({
+    color: {
+        domain: ["AAPL", "GOOG", "IBM", "AMZN",],
+        range: ["red", "green", "blue", "purple"]
+    }
+  })
 `;
 
-export const area = (options) => renderPlot("stocks.csv", codeString, options);
+export const colorDomain = (options) =>
+  renderPlot("stocks.csv", codeString, options);

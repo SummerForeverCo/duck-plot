@@ -1,20 +1,12 @@
 import { renderPlot } from "../util/renderPlotClient.js";
 // This code is both displayed in the browser and executed
-const codeString = `
+const codeString = `// Standard area chart
 duckplot
-  .table("income")
-  .query("SELECT * FROM income LIMIT 100")
-  .x("month", {label: "Date", axis: "top", grid: true})
-  .y("consensus_income", {type: "log"})
+  .table("stocks")
+  .x("Date")
+  .y("Open")
+  .color("Symbol")
   .mark("line")
-  .color("red")
-  .options({width: 400, height: 500, y: {domain: [100, 30000]}})
-  .config({
-    tipLabels: {
-      x: "My cool x label, and it still get truncated",
-      y: "Test label"
-    }
-  })
 `;
 
-export const line = (options) => renderPlot("income.csv", codeString, options);
+export const line = (options) => renderPlot("stocks.csv", codeString, options);

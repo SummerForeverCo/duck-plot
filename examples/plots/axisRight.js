@@ -1,13 +1,12 @@
 import { renderPlot } from "../util/renderPlotClient.js";
 // This code is both displayed in the browser and executed
-const codeString = `
-// Mimicking a dual axis plot to assess margins
-const scale = d3.scaleLinear().domain([0, 1000000000]).range([0, 12000])
+const codeString = `// Mimicking a dual axis plot to assess margins
+const scale = d3.scaleLinear().domain([0, 100000]).range([0, 400])
 duckplot
-  .table("income")
-  .query("SELECT * FROM income LIMIT 100")
-  .x("month")
-  .y("consensus_income")
+  .table("stocks")
+  .query("SELECT * FROM stocks LIMIT 1000")
+  .x("Date")
+  .y("Close")
   .mark("line")
   .color("red")
   .options({
@@ -24,4 +23,4 @@ duckplot
 `;
 
 export const axisRight = (options) =>
-  renderPlot("income.csv", codeString, options);
+  renderPlot("stocks.csv", codeString, options);
