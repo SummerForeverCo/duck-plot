@@ -6,7 +6,13 @@ duckplot
   .x("Date")
   .y("Open")
   .color("Symbol")
-  .mark("line")
+  .mark("areaY")
+  .options({
+    color: {
+        scheme: "category10"
+    }
+  })
 `;
 
-export const line = (options) => renderPlot("stocks.csv", codeString, options);
+export const colorScheme = (options) =>
+  renderPlot("stocks.csv", codeString, options);
