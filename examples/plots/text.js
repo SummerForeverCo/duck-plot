@@ -5,7 +5,6 @@ const codeString = `duckplot
     .table("stocks")
     .x("Date")
     .y("Close")
-    .color("Symbol")
     .text("Close")
     // This is a nice trick to format the value!
     .mark("text", {text: d => Math.floor(d.text)})
