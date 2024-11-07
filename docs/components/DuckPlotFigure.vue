@@ -43,15 +43,20 @@ export default {
     };
   },
   async mounted() {
-    const db = await createDbClient("taxi.csv"); // Fetch the database
+    const tableNameMatch = this.codeString.match(/\.table\(["'`](\w+)["'`]\)/);
+    const tableName = tableNameMatch ? tableNameMatch[1] : false;
+    if (tableName) {
+      console.log({ tableName, codeString: this.codeString });
+      const db = await createDbClient(`${tableName}.csv`); // Fetch the database
 
-    const duckPlot = new DuckPlot(db);
-    Function("duckPlot", "db", this.codeString)(duckPlot, db);
+      const duckPlot = new DuckPlot(db);
+      Function("duckPlot", "db", this.codeString)(duckPlot, db);
 
-    // Render the plot asynchronously
-    const plot = await duckPlot.render();
-    this.plot = plot; // Store the plot in the component's data
-    this.renderPlot(); // Call the method to append the plot
+      // Render the plot asynchronously
+      const plot = await duckPlot.render();
+      this.plot = plot; // Store the plot in the component's data
+      this.renderPlot(); // Call the method to append the plot
+    }
   },
   methods: {
     renderPlot() {

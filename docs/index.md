@@ -9,7 +9,7 @@ hero:
   actions:
     - theme: brand
       text: Get started
-      link: /api-examples
+      link: /getting-started
 
 features:
   - title: DuckDB level aggregation

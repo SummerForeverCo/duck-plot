@@ -32,8 +32,50 @@ export default defineConfig({
 
     sidebar: [
       {
-        text: "Examples",
-        items: [{ text: "Getting Started", link: "/api-examples" }],
+        text: "Introduction",
+        items: [
+          { text: "Motivation", link: "/motivation" },
+          { text: "Getting Started", link: "getting-started" },
+        ],
+      },
+      {
+        text: "Data",
+        items: [
+          { text: "Data transformations", link: "data-transformations" },
+          { text: "Specifying columns", link: "/specifying-columns" },
+          { text: "Using raw data", link: "" },
+        ],
+      },
+      {
+        text: "Charts",
+        items: [
+          { text: "Using Marks", link: "" },
+          { text: "Color", link: "" },
+          { text: "Grouped bar charts", link: "" },
+          { text: "Percentage charts", link: "" },
+          { text: "Partial charts", link: "" },
+        ],
+      },
+      {
+        text: "Marks",
+        items: [],
+      },
+      {
+        text: "Options",
+        items: [],
+      },
+      {
+        text: "Interactions",
+        items: [
+          {
+            text: "Legends",
+            link: "",
+          },
+          {
+            text: "Tooltips",
+            link: "",
+          },
+        ],
       },
     ],
 
