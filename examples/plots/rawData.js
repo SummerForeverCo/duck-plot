@@ -11,4 +11,4 @@ duckplot
 `;
 
 export const rawData = (options) =>
-  renderPlot("income.csv", codeString, options);
+  renderPlot("stocks.csv", codeString, options);
