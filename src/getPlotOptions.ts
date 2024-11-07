@@ -1,13 +1,26 @@
-import type { MarkOptions, PlotOptions } from "@observablehq/plot";
+import type {
+  MarkOptions,
+  PlotOptions,
+  StackOptions,
+} from "@observablehq/plot";
 import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
-import type { BasicColumnType, ChartData, ChartType, Config } from "./types";
+import type {
+  BasicColumnType,
+  ChartData,
+  ChartType,
+  ColumnType,
+  Config,
+  Indexable,
+} from "./types";
+// Extend the MarkOptions to include all the stack options
+interface AllMarkOptions extends MarkOptions, StackOptions {}
 export const defaultColors = [
-  "rgba(255, 0, 184, 1)", // pink (hsla(317, 100%, 50%))
-  "rgba(0, 183, 255, 1)", // blue (hsla(194, 100%, 50%))
-  "rgba(255, 237, 0, 1)", // yellow (hsla(54, 100%, 50%))
-  "rgba(0, 202, 99, 1)", // green (hsla(137, 87%, 54%))
-  "rgba(255, 83, 0, 1)", // orange (hsla(22, 100%, 62%))
+  "rgba(255, 0, 184, 1)",
+  "rgba(0, 183, 255, 1)",
+  "rgba(255, 237, 0, 1)",
+  "rgba(0, 202, 99, 1)",
+  "rgba(255, 83, 0, 1)",
 ];
 const borderOptions = {
   backgroundColor: "hsla( 0 0% 100%)",
@@ -17,12 +30,19 @@ const borderOptions = {
 export function getMarkOptions(
   currentColumns: string[] = [],
   type: ChartType,
+  colTypes:
+    | {
+        [key: string]: BasicColumnType;
+      }
+    | undefined,
   options: {
     color?: string;
     xLabel?: string;
     yLabel?: string;
     tip?: boolean;
-    markOptions?: MarkOptions;
+    xValue?: (d: Indexable, i: number) => string;
+    yValue?: (d: Indexable, i: number) => string;
+    markOptions?: AllMarkOptions;
   }
 ) {
   const color = options.color || defaultColors[0];
@@ -34,13 +54,12 @@ export function getMarkOptions(
       ? {
           tip: {
             stroke: borderOptions.borderColor,
-            // Display custom values, hide the auto generated values
             format: {
               xCustom: true,
               yCustom: true,
-              color: true,
               x: false,
               y: false,
+              color: true,
               fy: false,
               fx: false,
               z: false, // Hide the auto generated "series" for area charts
@@ -53,23 +72,37 @@ export function getMarkOptions(
     if (!label || label.length < length) return label;
     return label.slice(0, length) + ellipsis;
   }
+  const xSort =
+    colTypes?.x !== "string" && type !== "barX"
+      ? { sort: (d: any) => d.x }
+      : {};
+
   return {
     // Create custom labels for x and y (important if the labels are custom but hidden!)
     channels: {
       xCustom: {
         label: truncateLabel(options.xLabel),
         // TODO: good for grouped bar charts, not good for other fx
-        value: currentColumns.includes("fx") ? "fx" : "x",
+        value:
+          typeof options.xValue === "function"
+            ? options.xValue
+            : currentColumns.includes("fx")
+            ? "fx"
+            : "x",
       },
       yCustom: {
         label: truncateLabel(options.yLabel),
-        value: "y",
+        value: typeof options.yValue === "function" ? options.yValue : "y",
       },
     },
     ...tip,
     ...(type === "line" ? { stroke } : { fill }),
-    ...(currentColumns.includes("x") ? { x: `x`, sort: (d: any) => d.x } : {}),
+    ...(currentColumns.includes("x") ? { x: `x`, ...xSort } : {}),
     ...(currentColumns.includes("fy") ? { fy: "fy" } : {}),
+    ...(type === "dot" && currentColumns.includes("r") ? { r: "r" } : {}),
+    ...(type === "text" && currentColumns.includes("text")
+      ? { text: "text" }
+      : {}),
     ...(fx ? { fx: `fx` } : {}),
     ...(currentColumns.includes("y") ? { y: `y` } : {}),
     ...(options.markOptions ? { ...options.markOptions } : {}),
@@ -90,9 +123,18 @@ export function getDataOrder(data: ChartData | undefined, column: string) {
 }
 
 // Gets all data orders for the current columns
-export function getSorts(currentColumns: string[] = [], data?: ChartData) {
+// TODO: perhaps cast series to varchar in the data, but that's a biggish change
+export function getSorts(
+  currentColumns: string[] = [],
+  data?: ChartData,
+  categoricalSeries?: boolean
+) {
   return currentColumns
-    .filter((column) => data && data.types && data?.types[column] === "string")
+    .filter(
+      (column) =>
+        (data && data.types && data?.types[column] === "string") ||
+        (column === "series" && categoricalSeries)
+    )
     .reduce((acc: any, column) => {
       acc[column] = getDataOrder(data, column);
       return acc;
@@ -129,7 +171,6 @@ export function getTopLevelPlotOptions(
 ) {
   const options = { ...defaultOptions, ...userOptions };
   const config = { ...defaultConfig, ...userConfig };
-
   // Only compute a custom x/y domain if the other axes is missing
   // Make sure a minimum of 0 is included for x/y domains
   const xDomain = sorts.x
@@ -155,10 +196,22 @@ export function getTopLevelPlotOptions(
 
   // Handle 3 options for color: note, color as a string is assigned in the mark
   const { color: colorConfig } = options;
-  const { domain: sortsDomain } = sorts.series || {};
+  const { domain: sortsDomainRaw } = sorts.series || {};
+  // Create a custom domain if x OR y is missing (because a mark won't be on the
+  // chart, so we need to compute the domain)
+  const sortsDomain = sortsDomainRaw
+    ? sortsDomainRaw
+    : currentColumns.includes("x") && currentColumns.includes("y")
+    ? undefined
+    : data?.types?.series === "number" || data?.types?.series === "date"
+    ? extent(
+        [...data!, ...[data?.types?.series === "number" ? { series: 0 } : {}]],
+        (d) => d.series
+      )
+    : undefined;
 
   let colorDomain, colorRange, colorScheme;
-
+  // TODO this check seems off....
   const categoricalColor =
     data?.types?.series === "string" ||
     (!Array.isArray(options.color) && options.color.type === "categorical");
@@ -199,7 +252,7 @@ export function getTopLevelPlotOptions(
   // TODO: fx labels are set to override x labels (good for grouped bar charts,
   // not good for other charts)
   const computedX = currentColumns.includes("fx")
-    ? { axis: null }
+    ? { axis: null, ...xDomain }
     : {
         tickSize: 0,
         tickPadding: 5,
@@ -358,8 +411,8 @@ const namedColors = new Set(
 // colors—we just need to disambiguate them from column names.
 // https://www.w3.org/TR/SVG11/painting.html#SpecifyingPaint
 // https://www.w3.org/TR/css-color-5/
-export function isColor(value?: string | string[]) {
-  if (Array.isArray(value) || value === undefined) return false;
+export function isColor(value?: ColumnType) {
+  if (typeof value !== "string") return false;
   value = value.toLowerCase().trim();
   return (
     /^#[0-9a-f]{3,8}$/.test(value) || // hex rgb, rgba, rrggbb, rrggbbaa

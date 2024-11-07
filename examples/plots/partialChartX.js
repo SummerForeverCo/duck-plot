@@ -3,9 +3,8 @@ import { renderPlot } from "../util/renderPlotClient.js";
 
 const codeString = `duckplot
   .table("stocks")
-  .y("Close")
-  .color("Symbol")
+  .x("Date")
   .mark("barY");`;
 
-export const partialChartY = (options) =>
+export const partialChartX = (options) =>
   renderPlot("stocks.csv", codeString, options);

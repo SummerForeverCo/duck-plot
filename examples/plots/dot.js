@@ -1,10 +1,12 @@
 import { renderPlot } from "../util/renderPlotClient.js";
 // This code is both displayed in the browser and executed
 const codeString = `duckplot
-    .table("income")
-    .x("execution_income")
-    .y("consensus_income")
-    .mark("dot", {r: 2, opacity: .1})
+    .table("stocks")
+    .x("Date")
+    .y("Close")
+    .color("Symbol")
+    .r("Close")
+    .mark("dot", {opacity: .3})
     `;
 
-export const dot = (options) => renderPlot("income.csv", codeString, options);
+export const dot = (options) => renderPlot("stocks.csv", codeString, options);

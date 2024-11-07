@@ -34,7 +34,8 @@ export async function prepareChartData(
   config: ColumnConfig,
   type: ChartType,
   preQuery?: string,
-  aggregate?: Aggregate
+  aggregate?: Aggregate,
+  percent?: boolean
 ): Promise<{ data: ChartData; description: string; queries?: QueryMap }> {
   let queries: QueryMap = {};
   if (!ddb || !tableName)
@@ -72,7 +73,7 @@ export async function prepareChartData(
     );
   }
   // First, reshape the data if necessary: this will create a NEW DUCKDB TABLE
-  // that ALWAYS has the columns `x`, `y`, and `series`.
+  // that has generic column names (e.g., `x`, `y`, `series`, etc.)
   const tranformQuery = getTransformQuery(
     type,
     config,
@@ -83,6 +84,10 @@ export async function prepareChartData(
   queries["transform"] = tranformQuery;
   await runQuery(ddb, tranformQuery);
 
+  // Detect if the values are distincy across the other columns, for example if
+  // the y values are distinct by x, series, and facets for a barY chart. Note,
+  // the `r` and `label` columns are not considered for distinct-ness but are
+  // passed through for usage
   let distinctCols = (
     type === "barX" ? ["y", "series", "fy", "fx"] : ["x", "series", "fy", "fx"]
   ).filter((d) => columnIsDefined(d as keyof ColumnConfig, config));
@@ -99,7 +104,7 @@ export async function prepareChartData(
   const isDistinct = await checkDistinct(ddb, reshapeTableName, distinctCols);
   const allowsAggregation = allowAggregation(type) || aggregate;
 
-  // If there are no distinct columns (e.g., y axis is selected before x axis), we can't aggregate
+  // If there are no distinct columns (e.g., y axis is selected without x axis), we can't aggregate
   const shouldAggregate =
     !isDistinct &&
     allowsAggregation &&
@@ -108,22 +113,20 @@ export async function prepareChartData(
       distinctCols.includes("fx") ||
       aggregate);
   // TODO: do we need the distincCols includes check here...?
-  if (!shouldAggregate) {
-    queryString = `SELECT * FROM ${reshapeTableName}`;
-  } else {
-    const transformedTypes = await columnTypes(ddb, reshapeTableName);
-    const { labels: aggregateLabels, queryString: aggregateQuery } =
-      getAggregateInfo(
-        type,
-        config,
-        [...transformedTypes.keys()],
-        reshapeTableName,
-        aggregate,
-        description
-      );
-    queryString = aggregateQuery;
-    labels = aggregateLabels;
-  }
+  const transformedTypes = await columnTypes(ddb, reshapeTableName);
+  // TODO: more clear arguments in here
+  const { labels: aggregateLabels, queryString: aggregateQuery } =
+    getAggregateInfo(
+      type,
+      config,
+      [...transformedTypes.keys()],
+      reshapeTableName,
+      !shouldAggregate ? false : aggregate,
+      description,
+      percent
+    );
+  queryString = aggregateQuery;
+  labels = aggregateLabels;
   let data;
   let schema: DescribeSchema;
   queries["final"] = queryString;

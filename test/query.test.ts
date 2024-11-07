@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  extractDefinedValues,
+  arrayIfy,
   getAggregateInfo,
+  getOrder,
   getStandardTransformQuery,
   getTransformQuery,
   getTransformType,
@@ -148,7 +149,7 @@ describe("getUnpivotWithSeriesQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT
+    const expectedQuery = `CREATE TABLE reshaped AS SELECT
             x,
             y,
             concat_ws('-', pivotCol, series) AS series
@@ -156,7 +157,7 @@ describe("getUnpivotWithSeriesQuery", () => {
             SELECT
                 "x1", "x2",
                 "y1" as y,
-                concat_ws('-', "s1", "s2") as series,
+                concat_ws('-', "s1", "s2") as series
             FROM
                 yourTableName
         ) p
@@ -183,7 +184,7 @@ describe("getUnpivotWithSeriesQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT
+    const expectedQuery = `CREATE TABLE reshaped AS SELECT
             x,
             y,
             concat_ws('-', pivotCol, series) AS series
@@ -191,7 +192,7 @@ describe("getUnpivotWithSeriesQuery", () => {
             SELECT
                 "x1" as x,
                 "y1", "y2",
-                concat_ws('-', "s1", "s2") as series,
+                concat_ws('-', "s1", "s2") as series
             FROM
                 yourTableName
         ) p
@@ -218,7 +219,7 @@ describe("getUnpivotWithSeriesQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT
+    const expectedQuery = `CREATE TABLE reshaped AS SELECT
             x,
             y,
             concat_ws('-', pivotCol, series) AS series,
@@ -259,31 +260,180 @@ describe("getTransformQuery", () => {
   });
 });
 
-describe("extractDefinedValues", () => {
+describe("arrayify", () => {
   it("should return empty array if value is undefined", () => {
-    expect(extractDefinedValues(undefined)).toEqual([]);
+    expect(arrayIfy(undefined)).toEqual([]);
   });
 
   it("should return array with single value if input is a string", () => {
-    expect(extractDefinedValues("value")).toEqual(["value"]);
+    expect(arrayIfy("value")).toEqual(["value"]);
   });
 
   it("should filter out undefined values from array", () => {
-    expect(extractDefinedValues(["value", undefined])).toEqual(["value"]);
+    expect(arrayIfy(["value", undefined])).toEqual(["value"]);
   });
 });
 
 describe("getAggregateInfo", () => {
+  // Test for 'barX' aggregation when `x` is present
   it("barX: should sum X if x present", () => {
     const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
-    const expectedQueryString = `SELECT y,  sum(x::FLOAT) as x FROM reshaped GROUP BY y`;
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT y, sum(x::FLOAT) as x
+        FROM reshaped
+        GROUP BY y
+      )
+      SELECT y, x
+      FROM aggregated
+    `;
+
     expect(
-      getAggregateInfo("barX", config, columns, reshapedName, undefined, {
-        value: "",
-      }).queryString
-    ).toBe(expectedQueryString);
+      removeSpacesAndBreaks(
+        getAggregateInfo("barX", config, columns, reshapedName, undefined, {
+          value: "",
+        }).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test for 'barY' aggregation when `y` is present
+  it("barY: should sum Y if y present", () => {
+    const config = { x: ["x1"], y: ["y"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT x, sum(y::FLOAT) as y
+        FROM reshaped
+        GROUP BY x
+      )
+      SELECT x, y
+      FROM aggregated
+    `;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo("barY", config, columns, reshapedName, undefined, {
+          value: "",
+        }).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test with a mean aggregation (for `x`) and percentage flag false
+  it("barX: should calculate mean X without percentage", () => {
+    const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT y, avg(x::FLOAT) as x
+        FROM reshaped
+        GROUP BY y
+      )
+      SELECT y, x
+      FROM aggregated
+    `;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo(
+          "barX",
+          config,
+          columns,
+          reshapedName,
+          "avg",
+          {
+            value: "",
+          },
+          false
+        ).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test with a sum aggregation (for `x`) and percentage flag true
+  it("barX: should calculate percentage of X after sum aggregation", () => {
+    const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT y, sum(x::FLOAT) as x
+        FROM reshaped
+        GROUP BY y
+      )
+      SELECT y, (x / (SUM(x) OVER (PARTITION BY y))) * 100 as x
+      FROM aggregated
+    `;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo(
+          "barX",
+          config,
+          columns,
+          reshapedName,
+          "sum",
+          {
+            value: "",
+          },
+          true
+        ).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test with mean aggregation (for `y`) and percentage flag true
+  it("barY: should calculate percentage of Y after mean aggregation", () => {
+    const config = { x: ["x1"], y: ["y"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT x, avg(y::FLOAT) as y
+        FROM reshaped
+        GROUP BY x
+      )
+      SELECT x, (y / (SUM(y) OVER (PARTITION BY x))) * 100 as y
+      FROM aggregated
+    `;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo(
+          "barY",
+          config,
+          columns,
+          reshapedName,
+          "avg",
+          {
+            value: "",
+          },
+          true
+        ).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test with no aggregation and default selection (for non-aggregated data)
+  it("should return non-aggregated data when aggregation is false", () => {
+    const config = { x: ["x1"], y: ["y1"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `WITH aggregated AS (SELECT * FROM reshaped) 
+    SELECT y, x FROM aggregated`;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo("barX", config, columns, reshapedName, false, {
+          value: "",
+        }).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
   });
 });
 
@@ -319,5 +469,65 @@ describe("toTitleCase", () => {
 
   it("should handle empty input gracefully", () => {
     expect(toTitleCase()).toBe("");
+  });
+});
+
+describe("getOrder", () => {
+  it("should return no ordering without multiple axes", () => {
+    const result = getOrder(["groupA", "series"], "barX", [], []);
+    const expected = "";
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
+  });
+
+  it("should remove 'series' from orderBy when 'series' is included and conditions are met", () => {
+    const result = getOrder(["series", "groupA"], "barX", ["x1", "x2"], []);
+    const expected = removeSpacesAndBreaks(`groupA, CASE 
+    WHEN series like 'x1%' THEN 1
+    WHEN series like 'x2%' THEN 2
+    ELSE 3 
+END;`);
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
+  });
+
+  it("should add CASE statement for 'barX' type with multiple x values", () => {
+    const result = getOrder(["groupA", "series"], "barX", ["x1", "x2"], []);
+    const expected = removeSpacesAndBreaks(`groupA, CASE 
+    WHEN series like 'x1%' THEN 1
+    WHEN series like 'x2%' THEN 2
+    ELSE 3 
+END;`);
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
+  });
+
+  it("should add CASE statement for non-'barX' type with multiple y values", () => {
+    const result = getOrder(["groupA", "series"], "barY", [], ["y1", "y2"]);
+    const expected = removeSpacesAndBreaks(`groupA, CASE 
+    WHEN series like 'y1%' THEN 1
+    WHEN series like 'y2%' THEN 2
+    ELSE 3 
+END;`);
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
+  });
+
+  it("should remove both 'series' and 'x' from orderBy when 'fx' is in groupBy and conditions are met", () => {
+    const result = getOrder(["fx", "series", "x"], "barY", [], ["y1", "y2"]);
+    const expected = removeSpacesAndBreaks(`fx, CASE 
+    WHEN series like 'y1%' THEN 1
+    WHEN series like 'y2%' THEN 2
+    ELSE 3 
+END;`);
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
+  });
+
+  it("should handle a single x or y value without CASE statement and return no order", () => {
+    const result = getOrder(["groupA", "series"], "barX", ["x1"], []);
+    const expected = "";
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
+  });
+
+  it("should handle a single y value without CASE statement for non-barX and return no order", () => {
+    const result = getOrder(["groupA", "series"], "barY", [], ["y1"]);
+    const expected = "";
+    expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 });

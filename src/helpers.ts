@@ -5,6 +5,7 @@ import {
   BasicColumnType,
   ChartData,
   ChartType,
+  ColumnType,
   DescribeSchema,
   Indexable,
   TypesObject,
@@ -14,7 +15,7 @@ import { Database } from "duckdb-async";
 export async function checkDistinct(
   duckDB: AsyncDuckDB | Database,
   tableName: string,
-  cols: string | undefined | (string | undefined)[]
+  cols: ColumnType
 ) {
   if (!duckDB || !tableName || !cols || !cols.length) return false;
   const query = `SELECT CASE WHEN count(distinct(${quoteColumns(cols)?.join(
@@ -133,3 +134,64 @@ const dateTypes: string[] = [
   "TIMESTAMP",
   "DATETIME",
 ];
+
+export function getUniqueId() {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+}
+
+export function processRawData(
+  rawData: ChartData,
+  columnConfig: {
+    x?: ColumnType;
+    y?: ColumnType;
+    color?: ColumnType;
+    fy?: ColumnType;
+    fx?: ColumnType;
+    r?: ColumnType;
+    text?: ColumnType;
+  }
+): ChartData {
+  if (!rawData || !rawData.types) return [];
+
+  // Helper function to determine if a column is a string and defined
+  const isStringCol = (col?: ColumnType): boolean =>
+    col !== "" && col !== undefined && typeof col === "string";
+
+  // Define column mappings for chartData, types, and labels
+  // TODO: if we rename series to color this should get simpler
+  const columnMappings = [
+    { key: "x", column: columnConfig.x },
+    { key: "y", column: columnConfig.y },
+    { key: "series", column: columnConfig.color },
+    { key: "fy", column: columnConfig.fy },
+    { key: "fx", column: columnConfig.fx },
+    { key: "r", column: columnConfig.r },
+    { key: "text", column: columnConfig.text },
+  ];
+
+  // Map over raw data to extract chart data based on defined columns
+  const chartDataArray: ChartData = rawData.map((d) =>
+    Object.fromEntries(
+      columnMappings
+        .filter(({ column }) => isStringCol(column))
+        .map(({ key, column }) => [key, d[column as string]])
+    )
+  );
+
+  // Extract types based on the defined columns
+  const chartDataTypes = Object.fromEntries(
+    columnMappings
+      .filter(({ column }) => isStringCol(column))
+      .map(({ key, column }) => [key, rawData?.types?.[column as string]])
+  );
+
+  // Extract labels based on the defined columns
+  const chartDataLabels = Object.fromEntries(
+    columnMappings
+      .filter(({ column }) => column)
+      .map(({ key, column }) => [key, column])
+  );
+  chartDataArray.types = chartDataTypes;
+  chartDataArray.labels = chartDataLabels;
+  return chartDataArray;
+}

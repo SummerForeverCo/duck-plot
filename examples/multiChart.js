@@ -27,28 +27,26 @@ const jsdom = new JSDOM(`
 <body></body>`);
 
 async function makePlots() {
-  const db = await createDb("taxi.csv");
+  const db = await createDb("stocks.csv");
   const duckPlot = new DuckPlot(db, { jsdom, font });
 
-  duckPlot.table("taxi").x("date").y("count").mark("line");
+  duckPlot.table("stocks").x("Date").y("Close").mark("line");
   const line = await duckPlot.render();
   savePlot(jsdom, line, "line");
 
   // Adjust the labels and resave
   duckPlot
     .options({
-      y: { label: "Taxi rides by borough" },
+      y: { label: "Updated the Y Label" },
     })
     .config({ xLabelDisplay: false });
   const labeled = await duckPlot.render();
   savePlot(jsdom, labeled, "labeled");
 
-  // Adjust the data and type and resave
+  // Adjust the color and options
   duckPlot
-    .table("taxi")
-    .x("date")
-    .y("count")
-    .color("Borough")
+    .table("stocks")
+    .color("Symbol")
     .options({ width: 400, x: { label: null } })
     .mark("barY");
 
@@ -59,10 +57,10 @@ async function makePlots() {
   const duckPlotNoFont = new DuckPlot(db, { jsdom });
 
   duckPlotNoFont
-    .table("taxi")
-    .x("date")
-    .y("count")
-    .color("Borough")
+    .table("stocks")
+    .x("Date")
+    .y("Close")
+    .color("Symbol")
     .mark("barY")
     .options({ width: 400, x: { label: null } });
   const noFont = await duckPlotNoFont.render();
@@ -75,7 +73,7 @@ function savePlot(jsdom, chart, name) {
   jsdom.window.document.body.appendChild(chart);
   // Write the generated HTML content
   const outputPath = `examples/server-output/${name}.html`;
-  const outDir = path.resolve(__dirname, "examples/server-output");
+  const outDir = path.resolve(__dirname, "server-output");
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
   }

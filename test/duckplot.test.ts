@@ -17,7 +17,7 @@ describe("DuckPlot", () => {
 
   beforeEach(async () => {
     jsdom = new JSDOM();
-    ddb = await createDbServer("income.csv");
+    ddb = await createDbServer("stocks.csv");
     plot = new DuckPlot(ddb, { jsdom, font: fakeFont });
   });
 
@@ -68,7 +68,7 @@ describe("DuckPlot", () => {
     });
 
     it("should prepare chart data when data is set", async () => {
-      plot.table("income").x("month").y("consensus_income").mark("line");
+      plot.table("stocks").x("Date").y("Close").mark("line");
       const data = await plot.prepareChartData();
       expect(data).toBeDefined();
       expect(plot["_newDataProps"]).toBe(false);
@@ -83,7 +83,7 @@ describe("DuckPlot", () => {
     });
 
     it("should render an SVG element when everything is set", async () => {
-      plot.table("income").x("month").y("consensus_income").mark("line");
+      plot.table("stocks").x("Date").y("Close").mark("line");
       const result = await plot.render();
       expect(result).toBeDefined();
       expect(result!.nodeName).toBe("DIV");
@@ -91,11 +91,7 @@ describe("DuckPlot", () => {
     });
 
     it("should render a legend", async () => {
-      plot
-        .table("income")
-        .x("month")
-        .y(["consensus_income", "execution_income"])
-        .mark("line");
+      plot.table("stocks").x("Date").y(["Close", "Open"]).mark("line");
 
       const result = await plot.render();
       expect(result!.querySelector(".legend")).toBeDefined();

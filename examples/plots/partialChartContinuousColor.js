@@ -3,9 +3,9 @@ import { renderPlot } from "../util/renderPlotClient.js";
 
 const codeString = `duckplot
   .table("stocks")
-  .y("Close")
-  .color("Symbol")
+  .x("Date")
+  .color("High", {domain: [0, 1000], scheme: "oranges"})
   .mark("barY");`;
 
-export const partialChartY = (options) =>
+export const partialChartContinuousColor = (options) =>
   renderPlot("stocks.csv", codeString, options);

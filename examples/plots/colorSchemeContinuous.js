@@ -5,8 +5,14 @@ duckplot
   .table("stocks")
   .x("Date")
   .y("Open")
-  .color("Symbol")
-  .mark("areaY")
+  .color("Open")
+  .mark("dot")
+  .options({
+    color: {
+        scheme: "blues"
+    }
+  })
 `;
 
-export const area = (options) => renderPlot("stocks.csv", codeString, options);
+export const colorSchemeContinuous = (options) =>
+  renderPlot("stocks.csv", codeString, options);

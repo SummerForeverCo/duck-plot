@@ -11,24 +11,29 @@ import { describe, expect, it } from "vitest";
 
 describe("getMarkOptions", () => {
   it("for a line chart with series, the *stroke* should be set to the series", () => {
-    const result = getMarkOptions(["series"], "line", {});
+    const result = getMarkOptions(["series"], "line", {}, {});
     expect(result).toHaveProperty("stroke", "series");
   });
 
   it("for not-line charts with series, the *fill* should be set to the series", () => {
-    const result = getMarkOptions(["series"], "areaY", {});
+    const result = getMarkOptions(["series"], "areaY", {}, {});
     expect(result).toHaveProperty("fill", "series");
   });
 
   it("should return the correct options when fy is included", () => {
-    const result = getMarkOptions(["fy"], "line", {});
+    const result = getMarkOptions(["fy"], "line", {}, {});
     expect(result).toHaveProperty("fy", "fy");
   });
   it("should use custom x and y labels in the tooltip", () => {
-    const result = getMarkOptions(["x", "y"], "line", {
-      xLabel: "Custom X Axis",
-      yLabel: "Custom Y Axis",
-    });
+    const result = getMarkOptions(
+      ["x", "y"],
+      "line",
+      {},
+      {
+        xLabel: "Custom X Axis",
+        yLabel: "Custom Y Axis",
+      }
+    );
     expect(result).toHaveProperty("channels", {
       xCustom: {
         label: "Custom X Axis",
@@ -176,7 +181,7 @@ describe("getTopLevelPlotOptions", () => {
       x: { domain: ["a", "b", "c"] },
       y: { domain: ["1", "2", "3"] },
     };
-    const result = getTopLevelPlotOptions(undefined, [], sorts, "barY", {});
+    const result = getTopLevelPlotOptions([], [], sorts, "barY", {});
     expect(result.x).toEqual(expect.objectContaining(sorts.x));
     expect(result.y).toEqual(expect.objectContaining(sorts.y));
   });

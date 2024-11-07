@@ -1,4 +1,3 @@
-import { buildSqlQuery } from "./buildSqlQuery";
 import {
   Column,
   ColumnConfig,
@@ -6,7 +5,12 @@ import {
   ChartData,
   Aggregate,
   QueryMap,
+  ColumnType,
 } from "./types";
+
+// Quick helper
+const hasProperty = (prop?: ColumnType): boolean =>
+  Array.isArray(prop) ? prop.length > 0 : prop !== undefined;
 
 // Function to determine if a column (either a string or array of strings) is defined
 export function columnIsDefined(column: Column, config: ColumnConfig) {
@@ -28,11 +32,11 @@ export function getTransformType(
 ) {
   if (type === "barX") {
     if (Array.isArray(x) && x.length > 1) {
-      return series?.length ? "unPivotWithSeries" : "unPivot";
+      return hasProperty(series) ? "unPivotWithSeries" : "unPivot";
     }
   } else {
     if (Array.isArray(y) && y.length > 1) {
-      return series?.length ? "unPivotWithSeries" : "unPivot";
+      return hasProperty(series) ? "unPivotWithSeries" : "unPivot";
     }
   }
   return "standard";
@@ -40,24 +44,27 @@ export function getTransformType(
 
 export function getStandardTransformQuery(
   type: ChartType,
-  { x, y, series, fy, fx }: ColumnConfig,
+  { x, y, series, fy, fx, r, text }: ColumnConfig,
   tableName: string,
   into: string
 ) {
   let select = [];
+  if (hasProperty(x)) select.push(standardColName({ x }, "x"));
+  if (hasProperty(fx)) select.push(standardColName({ fx }, "fx"));
+  if (hasProperty(y)) select.push(standardColName({ y }, "y"));
+  if (hasProperty(series)) select.push(maybeConcatCols(series, "series"));
+  if (hasProperty(fy)) select.push(maybeConcatCols(fy, "fy"));
+  if (hasProperty(r)) select.push(standardColName({ r }, "r"));
+  if (hasProperty(text)) select.push(standardColName({ text }, "text"));
 
-  if (x?.length) select.push(standardColName({ x }, "x"));
-  if (fx?.length) select.push(standardColName({ fx }, "fx"));
-  if (y?.length) select.push(standardColName({ y }, "y"));
-  if (series?.length) select.push(maybeConcatCols(series, "series"));
-  if (fy?.length) select.push(maybeConcatCols(fy, "fy"));
-
-  return buildSqlQuery({ select, into, from: tableName! });
+  return `CREATE TABLE ${into} as SELECT ${select.join(
+    ", "
+  )} FROM ${tableName}`;
 }
 
 export function getUnpivotQuery(
   type: ChartType,
-  { x, y, fy, fx }: ColumnConfig,
+  { x, y, fy, fx, r, text }: ColumnConfig,
   tableName: string,
   into: string
 ) {
@@ -71,8 +78,12 @@ export function getUnpivotQuery(
   const keysStr =
     type === "barX" ? quoteColumns(x)?.join(", ") : quoteColumns(y)?.join(", ");
   const fyStr = fy ? maybeConcatCols(fy, "fy,") : "";
+  const rStr = r ? `${standardColName({ r }, "r")} ,` : "";
+  const textStr = text ? `${standardColName({ text }, "text")} ,` : "";
 
-  return `${createStatment} ${selectStr}, ${fyStr} key AS series${
+  // Note, "fx && !x ? key AS x" creates an x column for multi bar charts
+  // created through multiple y columns
+  return `${createStatment} ${selectStr}, ${rStr}${textStr}${fyStr} key AS series${
     fx && !x ? ", key AS x" : ""
   } FROM "${tableName}"
         UNPIVOT (value FOR key IN (${keysStr}));`;
@@ -80,42 +91,70 @@ export function getUnpivotQuery(
 
 export function getUnpivotWithSeriesQuery(
   type: ChartType,
-  { x, y, series, fy, fx }: ColumnConfig,
+  { x, y, series, fy, fx, r, text }: ColumnConfig,
   tableName: string,
   into: string
 ) {
-  const xStatement = !columnIsDefined("x", { x })
-    ? ``
-    : type === "barX"
-    ? `${quoteColumns(x)?.join(", ")}, `
-    : `"${x}" as x, `;
+  const xStatement = columnIsDefined("x", { x })
+    ? type === "barX"
+      ? `${quoteColumns(x)?.join(", ")}`
+      : `"${x}" as x`
+    : "";
+
+  // If there are multiple y columns AND a series column AND fx AND no x, we
+  // should treat the unpivoted series values as the x value
+  const xShouldBeSeries =
+    fx &&
+    !x &&
+    Array.isArray(y) &&
+    y.length > 1 &&
+    columnIsDefined("series", { series });
+
   const yStatement =
     type === "barX" ? `"${y}" as y` : quoteColumns(y)?.join(", ");
-  const unPivotStatment =
-    type === "barX"
-      ? `x FOR pivotCol IN (${quoteColumns(x)?.join(", ")})`
-      : `y FOR pivotCol IN (${quoteColumns(y)?.join(", ")})`;
-  const createStatment = `CREATE TABLE ${into} as`;
-  return `${createStatment} SELECT
-            ${columnIsDefined("x", { x }) ? `x, ` : ""}
-            y,
-            concat_ws('-', pivotCol, series) AS series
-            ${fy?.length ? ", fy" : ""}
-            ${fx?.length ? ", fx" : ""}
 
-        FROM (
-          SELECT
-              ${xStatement}
-              ${yStatement},
-              ${maybeConcatCols(series, "series")},
-              ${fy?.length ? maybeConcatCols(fy, "fy") : ""}
-              ${fx?.length ? `, ${maybeConcatCols(fx, "fx")}` : ""}
-          FROM
-              ${tableName}
-      ) p
-      UNPIVOT (
-          ${unPivotStatment}
-      );`;
+  const unPivotStatement = `FOR pivotCol IN (${quoteColumns(
+    type === "barX" ? x : y
+  )?.join(", ")})`;
+
+  const createStatement = `CREATE TABLE ${into} AS`;
+
+  const selectClause = [
+    columnIsDefined("x", { x })
+      ? "x"
+      : xShouldBeSeries
+      ? `concat_ws('-', pivotCol, series) AS x`
+      : null,
+    columnIsDefined("r", { r }) ? "r" : null,
+    columnIsDefined("text", { text }) ? "text" : null,
+    "y",
+    `concat_ws('-', pivotCol, series) AS series`,
+    fy?.length ? "fy" : null,
+    fx?.length ? "fx" : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const innerSelectClause = [
+    xStatement,
+    yStatement,
+    maybeConcatCols(series, "series"),
+    fy?.length ? maybeConcatCols(fy, "fy") : null,
+    fx?.length ? maybeConcatCols(fx, "fx") : null,
+    r?.length ? maybeConcatCols(r, "r") : null,
+    text?.length ? maybeConcatCols(text, "text") : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  return `
+    ${createStatement} SELECT ${selectClause}
+    FROM (
+      SELECT ${innerSelectClause}
+      FROM ${tableName}
+    ) p
+    UNPIVOT (${type === "barX" ? "x" : "y"} ${unPivotStatement});
+  `;
 }
 
 // Construct SQL statement, handling aggregation when necessary
@@ -143,11 +182,9 @@ export function getTransformQuery(
   }
 }
 
-// Function to extract the defined values in an array, or return a string IN an
-// array.
-export function extractDefinedValues(
-  value?: string | (string | undefined)[]
-): string[] {
+// Function to convert a string or array of strings to an array of strings
+// (removes nullish values from the arrays)
+export function arrayIfy(value?: string | (string | undefined)[]): string[] {
   if (!value) return [];
   if (!Array.isArray(value)) return [value];
   return (value.filter((d) => d) as string[]) || [];
@@ -160,47 +197,133 @@ export function getAggregateInfo(
   columns: string[],
   tableName: string,
   aggregate: Aggregate | undefined, // TODO: add tests
-  description: { value: string }
+  description: { value: string },
+  percent?: boolean
 ): { queryString: string; labels: ChartData["labels"] } {
-  // Filter out null values (the case that an empty selector has been added)
-  const y = extractDefinedValues(config.y);
-  const x = extractDefinedValues(config.x);
+  // Ensure that the x and y values are arrays
+  const y = arrayIfy(config.y);
+  const x = arrayIfy(config.x);
   const agg = aggregate ?? "sum";
   let aggregateSelection;
   let groupBy: string[] = [];
   let labels: ChartData["labels"] = {};
-  // Handling horiztonal bar charts differently (aggregate on x-axis)
+
+  // Handling horizontal bar charts differently (aggregate on x-axis)
   if (type === "barX") {
-    if (x && x.length > 0) {
+    if (x && x.length > 0 && aggregate !== false) {
       aggregateSelection = ` ${agg}(x::FLOAT) as x`;
       labels.x = `${toTitleCase(agg)} of ${toTitleCase(x)}`;
     }
     groupBy = columns.filter((d) => d !== "x");
   } else {
-    if (y && y.length > 0) {
-      aggregateSelection = ` ${agg}(y)::FLOAT as y`;
+    if (y && y.length > 0 && aggregate !== false) {
+      // First aggregation (mean, sum, etc.)
+      aggregateSelection = ` ${agg}(y::FLOAT) as y`;
       labels.y = `${toTitleCase(agg)} of ${toTitleCase(y)}`;
     }
     groupBy = columns.filter((d) => d !== "y");
   }
-  description.value += `The ${
-    type === "barX" ? "x" : "y"
-  } values were aggregated with a ${agg} aggregation, grouped by ${groupBy.join(
-    `, `
-  )}.`;
+
+  const orderBy = getOrder(groupBy, type, x, y); // Generates valid `ORDER BY` for outer query
+
+  if (aggregate !== false) {
+    description.value += `The ${
+      type === "barX" ? "x" : "y"
+    } values were aggregated with a ${agg} aggregation, grouped by ${groupBy.join(
+      `, `
+    )}.`;
+  }
+  // First, we aggregate the values (sum, mean, etc.) if needed
+  const subquery =
+    aggregate !== false
+      ? `
+    SELECT ${groupBy.join(", ")}${
+          aggregateSelection ? `, ${aggregateSelection}` : ""
+        }
+    FROM ${tableName}
+    GROUP BY ${groupBy.join(", ")}`
+      : `SELECT *${
+          percent ? `, ROW_NUMBER() OVER () AS original_order` : ""
+        } FROM ${tableName}`;
+
+  // Then, calculate the percentage over the aggregated values if needed
+  let aggregateColumn = "";
+  if (type === "barX" && x && x.length > 0) {
+    aggregateColumn = percent
+      ? ` (x / (SUM(x) OVER (PARTITION BY ${groupBy
+          .filter((d) => d !== "series")
+          .join(", ")}))) * 100 as x`
+      : "x";
+  } else if (y && y.length > 0) {
+    aggregateColumn = percent
+      ? ` (y / (SUM(y) OVER (PARTITION BY ${groupBy
+          .filter((d) => d !== "series")
+          .join(", ")}))) * 100 as y`
+      : "y";
+  }
+
+  if (percent) {
+    description.value += ` The ${
+      type === "barX" ? "x" : "y"
+    } values were calculated as a percentage of the total for each group.`;
+  }
+
+  // Use the subquery to aggregate the values
+  const queryString = `
+      WITH aggregated AS (${subquery})
+      SELECT ${groupBy.join(", ")}${
+    aggregateColumn ? `, ${aggregateColumn}` : ""
+  }
+  FROM aggregated
+      ${
+        percent && aggregate === false
+          ? ` ORDER BY original_order`
+          : orderBy
+          ? ` ORDER BY ${orderBy}`
+          : ""
+      }
+    `;
+
   return {
-    queryString: buildSqlQuery({
-      select: [...groupBy],
-      aggregateSelection,
-      from: tableName,
-      groupBy,
-      orderBy: groupBy, // TODO: unsure about removing this
-    }),
+    queryString,
     labels,
   };
 }
 
-export function maybeConcatCols(cols?: string[] | string, as?: string) {
+// If an explicit order has been added (e.g., if multiple y values are passed
+// in) we should respect their input order. This includes the case that there
+// are multiple y values AND a series encoding. In the transform above the y
+// column names are concatenated with the series values, so the like statement
+// below maintains the order of the y groups.
+export function getOrder(
+  groupBy: string[],
+  type: ChartType,
+  x: string[],
+  y: string[]
+) {
+  let orderBy;
+  if ((type === "barX" && x.length > 1) || (type !== "barX" && y.length > 1)) {
+    const orderByArray = type === "barX" && x.length > 1 ? x : y; // columns to order
+    // This is a handling for the use of fx to create a grouped bar chart. Feels
+    // a bit fragile
+    const exclude =
+      type === "barY" && groupBy.includes("fx") ? ["series", "x"] : ["series"];
+    orderBy = [...groupBy].filter((d) => !exclude.includes(d)).join(", "); // Remove series from the ordering
+    let caseStatements = orderByArray
+      .map((item, index) => `WHEN series like '${item}%' THEN ${index + 1}`)
+      .join("\n");
+
+    orderBy += `, CASE 
+    ${caseStatements}
+    ELSE ${orderByArray.length + 1} 
+END;`;
+  } else {
+    orderBy = "";
+  }
+  return orderBy;
+}
+
+export function maybeConcatCols(cols?: ColumnType, as?: string) {
   if (!cols || !cols.length) return "";
   const colName = as ? ` as ${as}` : "";
   const colArr = Array.isArray(cols) ? cols : [cols];
@@ -219,9 +342,7 @@ export function standardColName(obj: any, column: string, colName?: string) {
   return `"${col}" as ${colName || column}`;
 }
 
-export const quoteColumns = (
-  columns: string | undefined | (string | undefined)[]
-) => {
+export const quoteColumns = (columns?: ColumnType) => {
   if (!columns) return [];
   return !Array.isArray(columns)
     ? [`"${columns}"`]
