@@ -10,26 +10,42 @@ DuckPlot is an open-source JavaScript library that allows you to quickly generat
 
 Imagine you have this table of stock prices in a DuckDB database:
 
-| Symbol | Date       | Open    | High    | Low     | Close   |
-| ------ | ---------- | ------- | ------- | ------- | ------- |
-| AAPL   | 2013-05-13 | 64.5014 | 65.4143 | 64.5    | 64.9629 |
-| AAPL   | 2013-05-14 | 64.8357 | 65.0286 | 63.1643 | 63.4086 |
-| AAPL   | 2013-05-15 | 62.7371 | 63      | 60.3371 | 61.2643 |
-| AAPL   | 2013-05-16 | 60.4629 | 62.55   | 59.8429 | 62.0829 |
-| AAPL   | 2013-05-17 | 62.7214 | 62.87   | 61.5729 | 61.8943 |
+:::csv-preview
+data/simpsons.csv
+:::
 
 You can use DuckPlot to generate this chart of the total High/low stock prices in 2018:
 
 :::duckplot
 
-```js-vue
+```js
 // Create a chart showing the sum of the high and low stock prices 2018
 duckPlot
-  .table("stocks")
-  .query("SELECT * from stocks where year(Date) = 2018")
-  .x("Date")
-  .y(["High", "Low"])
-  .mark("line");
+  .table("simpsons")
+  .x("season")
+  .y("us_viewers")
+  .mark("barY", { stroke: "#f3f3f3" })
+  .options({
+    width: 600,
+    height: 600,
+    color: { scheme: "magma" },
+  });
+```
+
+:::
+
+:::duckplot
+
+```js
+// Create a chart showing the sum of the high and low stock prices 2018
+duckPlot
+  .table("athletes")
+  .x("nationality")
+  .y(["gold", "silver", "bronze"])
+  .mark("barY", { sort: { x: "y", limit: 20, reverse: true } })
+  .options({
+    color: { range: ["gold", "silver", "#CD7F32"] },
+  });
 ```
 
 :::
