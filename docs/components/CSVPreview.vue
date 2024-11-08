@@ -28,6 +28,10 @@ export default {
       type: String,
       required: true,
     },
+    columns: {
+      type: Array,
+      required: false,
+    },
   },
   data() {
     return {
@@ -51,7 +55,15 @@ export default {
     async loadCsvData(file) {
       try {
         // Fetch and parse the CSV file using d3.csv
-        const data = await d3.csv(file);
+        const rawData = await d3.csv(file);
+        const data = this.columns
+          ? rawData.map((row) =>
+              this.columns.reduce(
+                (acc, key) => ({ ...acc, [key]: row[key] }),
+                {}
+              )
+            )
+          : rawData;
 
         // Store headers and first 5 rows of data, with the last row showing ellipses
         this.headers = Object.keys(data[0]);

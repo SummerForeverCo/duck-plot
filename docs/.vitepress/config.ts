@@ -3,7 +3,6 @@ import plot from "./markdown-it-plot.js";
 import path from "node:path";
 
 import duckplot from "./markdown-it-duckplot.js";
-import csvPreview from "./markdown-it-csv.js";
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "DuckPlot",
@@ -22,7 +21,6 @@ export default defineConfig({
     config: (md) => {
       plot(md);
       duckplot(md);
-      csvPreview(md);
     },
   },
   themeConfig: {

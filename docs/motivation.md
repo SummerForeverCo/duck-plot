@@ -8,40 +8,20 @@ DuckPlot is an open-source JavaScript library that allows you to quickly generat
 [Observable Plot](https://github.com/observablehq/plot) when working with
 [DuckDB](https://duckdb.org/).
 
-Imagine you have this table of stock prices in a DuckDB database:
+Imagine you have this table of athletes and medals won in a DuckDB database:
 
-:::csv-preview
-data/simpsons.csv
-:::
+<CSVPreview fileName="data/athletes.csv" :columns="['name', 'nationality', 'gold', 'silver', 'bronze']" />
 
-You can use DuckPlot to generate this chart of the total High/low stock prices in 2018:
+If you want to know the **number of medals by nationality**, you can use DuckPlot to transform and aggregate your data, and render your chart:
 
 :::duckplot
 
 ```js
-// Create a chart showing the sum of the high and low stock prices 2018
-duckPlot
-  .table("simpsons")
-  .x("season")
-  .y("us_viewers")
-  .mark("barY", { stroke: "#f3f3f3" })
-  .options({
-    width: 600,
-    height: 600,
-    color: { scheme: "magma" },
-  });
-```
-
-:::
-
-:::duckplot
-
-```js
-// Create a chart showing the sum of the high and low stock prices 2018
+// Create a chart showing the sum of the medals by nationality
 duckPlot
   .table("athletes")
   .x("nationality")
-  .y(["gold", "silver", "bronze"])
+  .y(["gold", "silver", "bronze"]) // UNPIVOT these!
   .mark("barY", { sort: { x: "y", limit: 20, reverse: true } })
   .options({
     color: { range: ["gold", "silver", "#CD7F32"] },
@@ -52,8 +32,9 @@ duckPlot
 
 This demonstrates the major features of the library:
 
-- Performs **data transformations** and **aggregations** with DuckDB before
-  rendering
+- Performs **data transformations** based on the specified columns, allowing you
+  to **unpivot** the data
+- **Aggregates data** at the database layer with DuckDB before rendering
 - Automatically **adjusts the margins** and axis ticks labels for better
   readability
 - Creates **custom interactive legends** for categorical data
