@@ -28,5 +28,7 @@ export * from "./percentageBarX.js";
 export * from "./percentageBarY.js";
 export * from "./percentageFacet.js";
 export * from "./rawData.js";
+export * from "./sortXbyY.js";
+export * from "./sortYbyX.js";
 export * from "./text.js";
 export * from "./xLabelRotate.js";

@@ -374,6 +374,7 @@ export class DuckPlot {
               primaryMarkOptions as MarkOptions
             ),
           ];
+
     // TODO: double check you don't actually use border color
     // TODO: Make frame/grid config options(?)
     const commonPlotMarks = [
@@ -441,9 +442,11 @@ export class DuckPlot {
       ? Object.keys(this._chartData.types)
       : []; // TODO: remove this arg from topLevelPlotOptions
     const document = this._isServer ? this._jsdom!.window.document : undefined;
-    // TODO: custom sorts as inputs?
+    // Because the sort can be specified in the options, remove any colums who
+    // have a sort specified
+    const haveSorts = Object.keys(this._mark?.options?.sort ?? {});
     let sorts = getSorts(
-      currentColumns.filter((d) => d !== "fy"),
+      currentColumns.filter((d) => d !== "fy" && !haveSorts.includes(d)),
       this._chartData,
       this._color.options?.type === "categorical"
     );
