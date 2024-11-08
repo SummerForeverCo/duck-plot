@@ -72,8 +72,9 @@ export function getMarkOptions(
     if (!label || label.length < length) return label;
     return label.slice(0, length) + ellipsis;
   }
-  const xSort =
-    colTypes?.x !== "string" && type !== "barX"
+
+  const sort =
+    options.markOptions?.sort ?? (colTypes?.x !== "string" && type !== "barX")
       ? { sort: (d: any) => d.x }
       : {};
 
@@ -97,7 +98,8 @@ export function getMarkOptions(
     },
     ...tip,
     ...(type === "line" ? { stroke } : { fill }),
-    ...(currentColumns.includes("x") ? { x: `x`, ...xSort } : {}),
+    ...(currentColumns.includes("x") ? { x: `x` } : {}),
+    ...(sort ? sort : {}),
     ...(currentColumns.includes("fy") ? { fy: "fy" } : {}),
     ...(type === "dot" && currentColumns.includes("r") ? { r: "r" } : {}),
     ...(type === "text" && currentColumns.includes("text")
