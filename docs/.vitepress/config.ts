@@ -35,15 +35,15 @@ export default defineConfig({
         text: "Introduction",
         items: [
           { text: "Motivation", link: "/motivation" },
-          { text: "Getting Started", link: "getting-started" },
+          { text: "Getting Started", link: "/getting-started" },
         ],
       },
       {
         text: "Data",
         items: [
-          { text: "Data transformations", link: "data-transformations" },
+          { text: "Data transformations", link: "/data-transformations" },
           { text: "Specifying columns", link: "/specifying-columns" },
-          { text: "Using raw data", link: "" },
+          { text: "Using raw data", link: "raw-data" },
         ],
       },
       {

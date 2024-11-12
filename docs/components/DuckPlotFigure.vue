@@ -45,9 +45,12 @@ export default {
   async mounted() {
     const tableNameMatch = this.codeString.match(/\.table\(["'`](\w+)["'`]\)/);
     const tableName = tableNameMatch ? tableNameMatch[1] : false;
-    if (tableName) {
+    const isRawData = this.codeString.includes("rawData");
+    if (tableName || isRawData) {
       console.log({ tableName, codeString: this.codeString });
-      const db = await createDbClient(`${tableName}.csv`); // Fetch the database
+      const db = isRawData
+        ? undefined
+        : await createDbClient(`${tableName}.csv`); // Fetch the database
 
       const duckPlot = new DuckPlot(db);
       Function("duckPlot", "db", this.codeString)(duckPlot, db);
