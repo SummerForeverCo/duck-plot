@@ -3,6 +3,7 @@ import { h } from "vue";
 import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import "./style.css";
+import "./custom.css";
 import DuckPlotFigure from "../../components/DuckPlotFigure.vue";
 import CSVPreview from "../../components/CSVPreview.vue";
 

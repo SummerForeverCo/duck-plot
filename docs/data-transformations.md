@@ -9,7 +9,7 @@ outline: deep
 A central problem behind data visualization is the need to transform your data
 to a target structure. DuckPlot aims to solve this problem by allowing users to
 target the same visualizaiton with different data structures. Let's take a long
-and wide view of the same data structure:
+and wide view of the same sales data ([souce](https://github.com/uwdata/mosaic/blob/main/data/stocks.csv)):
 
 <div style="display: flex; gap: 10px;">
 <div>
@@ -45,18 +45,17 @@ data to a long structure with generic column names:
 ## Multiple Y Columns
 
 Specified Y columns will be **unpivoted** to create two columns: `y`, and `color`,
-where the `y` column holds the value, and the `color` holds the name of the
-column.
+where the `y` column holds the value, and the `color` holds the name of the unpivoted
+columns.
 
 :::duckplot
 
-```js-vue
+```js
 // Use wide data to show the AAPL and GOOG stock prices
 duckPlot
-  .table("stocks_pivoted")
-  .query("SELECT * from stocks_pivoted where year(Date) = 2018")
+  .table("stocks_wide")
   .x("Date")
-  .y(["AAPL", "GOOG"])
+  .y(["AAPL", "GOOG"]) // These become the values in the color column
   .mark("line");
 ```
 
@@ -96,15 +95,13 @@ be concatenated with the specified `color` columns.
 
 :::duckplot
 
-```js-vue
+```js
 duckPlot
-  .query("select * from stocks_long_alt where year(Date) = 2017 AND month(Date) = 1")
   .table("stocks_long_alt")
   .x("Date")
   .y(["AAPL", "GOOG"])
   .color("Metric")
   .mark("line");
-
 ```
 
 :::
@@ -112,17 +109,19 @@ duckPlot
 ## Multiple X columns
 
 Multiple X columns are only supported in the case of horizontal bar chart
-(`barX`).
+(`barX`). As a correlary to mulitple inputting multiple Y axes for other marks,
+this creates two columns: `x`, and `color`,
+where the `x` column holds the value, and the `color` holds the name of the unpivoted
+columns.
 
 :::duckplot
 
 ```js-vue
 duckPlot
-  .query("select * from stocks where year(Date) = 2017 AND month(Date) = 1")
-  .table("stocks")
-  .x("Close")
+  .table("stocks_wide")
+  .query("select * from stocks_wide where year(Date) = 2017 AND month(Date) = 1")
+  .x(["AMZN", "AAPL"])
   .y("Date")
-  .color("Symbol")
   .mark("barX");
 
 ```

@@ -1,0 +1,4 @@
+.tagline a:hover {
+  color: var(--vp-c-text-1);
+  text-decoration: underline;
+}
