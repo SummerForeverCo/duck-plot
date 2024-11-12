@@ -1,6 +1,6 @@
 import { renderPlot } from "../util/renderPlotClient.js";
 // This code is both displayed in the browser and executed
-const codeString = `// Standard area chart
+const codeString = `// Standard line chart
 duckplot
   .table("stocks")
   .x("Date")

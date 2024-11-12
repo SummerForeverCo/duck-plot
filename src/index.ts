@@ -361,7 +361,12 @@ export class DuckPlot {
     // Here, we want to add the primary mark if x and y are defined OR if an
     // aggregate has been specifid. Not a great rule, but works for now for
     // showing aggregate marks with only one dimension
+    const isValidTickChart =
+      (this._mark.markType === "tickX" && currentColumns.includes("x")) ||
+      (this._mark.markType === "tickY" && currentColumns.includes("y"));
+
     const primaryMark =
+      !isValidTickChart &&
       (!currentColumns.includes("x") || !currentColumns.includes("y")) &&
       !this._config.aggregate
         ? []

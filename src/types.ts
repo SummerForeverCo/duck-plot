@@ -1,7 +1,15 @@
 import type { MarkOptions, PlotOptions } from "@observablehq/plot";
 
 // TODO: all plot chart types?
-export type ChartType = "dot" | "areaY" | "line" | "barX" | "barY" | "text";
+export type ChartType =
+  | "dot"
+  | "areaY"
+  | "line"
+  | "barX"
+  | "barY"
+  | "text"
+  | "tickX"
+  | "tickY";
 
 export type SqlSort = {
   column: string;
