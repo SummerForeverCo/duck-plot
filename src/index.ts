@@ -393,9 +393,9 @@ export class DuckPlot {
       plotOptions.fy
     );
     return [
-      ...(fyMarks || []),
       ...(commonPlotMarks || []),
       ...(primaryMark || []),
+      ...(fyMarks || []),
     ];
   }
 
