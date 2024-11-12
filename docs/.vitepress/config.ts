@@ -42,14 +42,14 @@ export default defineConfig({
         text: "Data",
         items: [
           { text: "Data transformations", link: "/data-transformations" },
-          { text: "Specifying columns", link: "/specifying-columns" },
-          { text: "Using raw data", link: "raw-data" },
+          { text: "Queries", link: "/queries" },
+          { text: "Using raw data", link: "/raw-data" },
         ],
       },
       {
         text: "Charts",
         items: [
-          { text: "Using Marks", link: "" },
+          { text: "Configuring charts", link: "/configuring-charts" },
           { text: "Color", link: "" },
           { text: "Grouped bar charts", link: "" },
           { text: "Percentage charts", link: "" },
@@ -60,10 +60,7 @@ export default defineConfig({
         text: "Marks",
         items: [],
       },
-      {
-        text: "Options",
-        items: [],
-      },
+
       {
         text: "Interactions",
         items: [
