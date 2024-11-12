@@ -83,7 +83,7 @@ duckPlot
   .x("Date")
   .color("High")
   .fy("Symbol")
-  .mark("tickY");
+  .mark("tickX");
 ```
 
 :::
