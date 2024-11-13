@@ -338,8 +338,9 @@ export function getTickFormatter(
 ) {
   if (colType === "string") {
     return {
-      tickFormat: (text: string) =>
-        truncateText(text, direction, width, height),
+      tickFormat: (value: unknown) => {
+        return truncateText(String(value), direction, width, height);
+      },
     };
   }
   return {};
