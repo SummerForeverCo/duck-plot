@@ -13,6 +13,10 @@ export default defineConfig({
           find: "@summerforeverco/duck-plot",
           replacement: path.resolve(__dirname, "../../dist/index.es"),
         },
+        {
+          find: "@summerforeverco/tmp/dist/style.css",
+          replacement: path.resolve(__dirname, "../../dist/style.css"),
+        },
       ],
     },
   },

@@ -7,8 +7,9 @@ outline: deep
 **In short:**
 
 ```javascript
-// Import the library
+// Import the library and the CSS
 import { DuckPlot } from "@summerforeverco/duck-plot";
+import "@summerforeverco/duck-plot/dist/style.css";
 
 // Create a new DuckPlot instance
 const chart = new DuckPlot(ddb); // AsyncDuckDB instacne
