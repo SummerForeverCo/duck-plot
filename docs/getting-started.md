@@ -11,15 +11,23 @@ outline: deep
 import { DuckPlot } from "@summerforeverco/duck-plot";
 
 // Create a new DuckPlot instance
-new DuckPlot(ddb) // AsyncDuckDB instacne
+const chart = new DuckPlot(ddb); // AsyncDuckDB instacne
+
+// Set the table and columns
+chart
   .table("tableName") // table in the database
   .x("xColumn") // x-axis column
   .y(["yColumn1", "yColumn2"]) // y-axis column(s) that will be unpivoted
-  .color("colorColumn") // color column (or a color name)
+  .color("colorColumn"); // color column (or a color name)
+
+// Set the mark type and options
+chart
   .mark("barY") // Observable Plot mark type
   .options({ width: 800, height: 600 }) // Observable Plot options
-  .config({ percent: true }) // additional config options
-  .render(); // render the plot
+  .config({ percent: true }); // additional config options
+
+// Render the chart
+chart.render(); // render the plot
 ```
 
 > [!CAUTION]

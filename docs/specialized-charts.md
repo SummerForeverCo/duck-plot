@@ -4,13 +4,13 @@ outline: deep
 
 # Specialized charts
 
-There are a handful of charts that are unique to DuckPlot (or worth noting how
-to create them).
+There are a handful of charts that are unique to DuckPlot (or a bit tricky to
+specify, so it's worth describing them).
 
 ## Partial charts
 
 If a chart is only partially specified (e.g., missing an `x` or `y` column),
-DuckPlot will render a partial chart, which is to say the axes and legend
+DuckPlot will render a partial chart, which is to say the specified axes and legend
 without any marks.
 
 :::duckplot
@@ -65,7 +65,7 @@ y columns, a color column, or both!
 :::duckplot
 
 ```js
-// Specify multiple y column and an fx column
+// Specify multiple y columns and an fx column
 duckPlot
   .query(
     "select * from stocks_wide where year(Date) = 2017 AND month(Date) = 1"
@@ -111,7 +111,7 @@ duckPlot
 
 ## Multiple marks
 
-To create a chart with multiple marks, you can pass an array of marks to the `.options()`
+To create a chart with multiple marks, you can pass an array of marks to `.options()`
 
 :::duckplot
 

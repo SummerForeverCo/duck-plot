@@ -23,5 +23,5 @@ features:
   - title: Client + server side rendering
     details: Make your plots where you want them
   - title: Stylized and Interative
-    details: Axes that <em>just work</em> and interactive legends
+    details: Automatic spacing and interactive legends
 ---

@@ -6,7 +6,7 @@ outline: deep
 
 ## Philosophy
 
-A central problem behind data visualization is the need to transform your data
+A central challenge of data visualization is the need to transform your data
 to a target structure. DuckPlot aims to solve this problem by allowing users to
 target the same visualizaiton with different underlying data structures. Let's take a long
 and wide view of the same sales data ([souce](https://github.com/uwdata/mosaic/blob/main/data/stocks.csv)):
