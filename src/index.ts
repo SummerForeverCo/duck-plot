@@ -188,13 +188,10 @@ export class DuckPlot {
   }
 
   // r (radius) column encoding
-  r(): PlotProperty<"r">;
-  r(column: IncomingColumType, options?: PlotOptions["r"]): this;
-  r(
-    column?: IncomingColumType,
-    options?: PlotOptions["r"]
-  ): PlotProperty<"r"> | this {
-    return this.handleProperty(this._r, column, options);
+  r(): { column: string };
+  r(column: IncomingColumType): this;
+  r(column?: IncomingColumType): { column?: ColumnType } | this {
+    return this.handleProperty(this._r, column);
   }
 
   // Text encoding: note, there are no options for text
