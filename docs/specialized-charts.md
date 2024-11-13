@@ -108,3 +108,24 @@ duckPlot
 ```
 
 :::
+
+## Multiple marks
+
+To create a chart with multiple marks, you can pass an array of marks to the `.options()`
+
+:::duckplot
+
+```js
+duckPlot
+  .table("stocks")
+  .x("Date")
+  .y("High")
+  .color("Symbol")
+  .mark("line")
+  .options({ marks: [Plot.ruleY([1000])] });
+```
+
+:::
+
+This example is obviously contrived, but it demonstrates how you can pass
+additional marks to the plot.

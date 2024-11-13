@@ -25,10 +25,7 @@ export default defineConfig({
   },
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    nav: [
-      { text: "Home", link: "/" },
-      { text: "Examples", link: "/markdown-examples" },
-    ],
+    nav: [{ text: "Home", link: "/" }],
 
     sidebar: [
       {
@@ -62,18 +59,18 @@ export default defineConfig({
         items: [
           {
             text: "Legends",
-            link: "",
+            link: "/legends",
           },
           {
             text: "Tooltips",
-            link: "",
+            link: "/tooltips",
           },
         ],
       },
     ],
 
     socialLinks: [
-      { icon: "github", link: "https://github.com/vuejs/vitepress" },
+      { icon: "github", link: "https://github.com/summerforeverco/duck-plot" },
     ],
   },
 });

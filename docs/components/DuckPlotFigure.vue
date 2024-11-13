@@ -1,7 +1,6 @@
 <template>
   <div>
-    <!-- Conditionally render the CodeDisplay component if showQueries is true
-    -->
+    <!-- Conditionally render the CodeDisplay component -->
     <CodeDisplay v-if="showQueries" :codeObject="queries" />
     <div v-else-if="showDescribe">
       <strong
@@ -15,10 +14,9 @@
   </div>
 </template>
 <script>
-// import { h } from "vue";
-import CodeDisplay from "./CodeDisplay.vue"; // Adjust the path as needed
-
+import CodeDisplay from "./CodeDisplay.vue";
 import * as duckdb from "@duckdb/duckdb-wasm";
+import * as Plot from "@observablehq/plot";
 import { DuckPlot } from "../../dist/index.es";
 import "../../dist/style.css";
 import mvp_worker from "@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url";
@@ -73,7 +71,7 @@ export default {
         : await createDbClient(`${tableName}.csv`); // Fetch the database
 
       const duckPlot = new DuckPlot(db);
-      Function("duckPlot", "db", this.codeString)(duckPlot, db);
+      Function("duckPlot", "db", "Plot", this.codeString)(duckPlot, db, Plot);
 
       // Render the plot asynchronously
       const plot = await duckPlot.render();
@@ -109,9 +107,5 @@ export default {
   components: {
     CodeDisplay,
   },
-  // render() {
-  //   // The render function remains simple, creating a container for the plot
-  //   return h("div");
-  // },
 };
 </script>

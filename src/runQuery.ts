@@ -28,7 +28,6 @@ const runQueryServer = async (db: Database, sql: string): Promise<any[]> => {
 
 const runQueryClient = async (db: AsyncDuckDB, sql: string): Promise<any[]> => {
   const conn = await db.connect();
-  console.log({ sql });
   try {
     const arrow = await conn.query(sql);
     return arrow.toArray();
