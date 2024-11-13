@@ -12,7 +12,12 @@ click on a legend item, all other items will be hidden.
 
 ```js
 // Click on the legend to toggle visibility
-duckPlot.table("stocks").x("Date").y("High").color("Symbol").mark("line");
+duckPlot
+  .table("stocks")
+  .x("Date")
+  .y(["High", "Low"])
+  .color("Symbol")
+  .mark("line");
 ```
 
 :::
@@ -27,7 +32,7 @@ interactiveLegend: false})`.
 duckPlot
   .table("stocks")
   .x("Date")
-  .y("High")
+  .y(["High", "Low"])
   .color("Symbol")
   .mark("line")
   .config({

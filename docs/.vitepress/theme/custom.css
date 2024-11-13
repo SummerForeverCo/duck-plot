@@ -2,3 +2,31 @@
   color: var(--vp-c-text-1);
   text-decoration: underline;
 }
+
+/* Handling dark mode for tooltips, legends, strokes */
+
+/* Define custom properties for dark mode */
+:root.dark {
+  --background: 0, 0%, 10%; /* near-black */
+  --border: 0, 0%, 80%; /* light gray */
+  --text-color: 0, 0%, 90%; /* light color */
+}
+.dark g[aria-label="tip"] {
+  --plot-background: hsla(var(--background)) !important;
+  --plot-border: hsla(var(--border)) !important;
+  stroke: hsla(var(--border)) !important;
+}
+
+.dark g[aria-label="frame"] rect,
+.dark rect[aria-label="frame"],
+.dark g[aria-label="y-grid"],
+.dark g[aria-label="y-grid"] > * {
+  stroke: hsla(var(--border)) !important;
+}
+.dark .dp-popover {
+  background-color: hsla(var(--background)) !important;
+}
+.dark .dp-categories-container,
+.dark .dp-category {
+  border-color: hsla(var(--border)) !important;
+}
