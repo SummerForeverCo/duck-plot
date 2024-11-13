@@ -96,7 +96,7 @@ describe("getUnpivotQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "y1" as y, value AS x, key AS series FROM "yourTableName"
+    const expectedQuery = `CREATE TABLE reshaped as SELECT "y1" as y, value AS x, key AS series FROM yourTableName
         UNPIVOT (value FOR key IN ("x1", "x2"));`;
     const result = getUnpivotQuery("barX", config, tableName, reshapedName);
     expect(removeSpacesAndBreaks(result)).toBe(
@@ -113,7 +113,7 @@ describe("getUnpivotQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "y1" as y, value AS x, concat_ws('-', "fy 1", "fy 2") as fy, key AS series FROM "yourTableName"
+    const expectedQuery = `CREATE TABLE reshaped as SELECT "y1" as y, value AS x, concat_ws('-', "fy 1", "fy 2") as fy, key AS series FROM yourTableName
         UNPIVOT (value FOR key IN ("x1", "x2"));`;
 
     expect(getUnpivotQuery("barX", config, tableName, reshapedName)).toBe(
@@ -131,7 +131,7 @@ describe("getUnpivotQuery", () => {
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
 
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as x, value AS y, concat_ws('-', "fy 1", "fy 2") as fy, key AS series FROM "yourTableName"
+    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as x, value AS y, concat_ws('-', "fy 1", "fy 2") as fy, key AS series FROM yourTableName
         UNPIVOT (value FOR key IN ("y1", "y2"));`;
     const result = getUnpivotQuery("areaY", config, tableName, reshapedName);
     expect(removeSpacesAndBreaks(result)).toBe(
