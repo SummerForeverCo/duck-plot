@@ -4,6 +4,7 @@ import {
   ChartData,
   ChartType,
   ColumnConfig,
+  ColumnType,
   DescribeSchema,
   Indexable,
   QueryMap,
@@ -11,6 +12,7 @@ import {
 import {
   columnIsDefined,
   getAggregateInfo,
+  getLabel,
   getTransformQuery,
   toTitleCase,
 } from "./query";
@@ -136,21 +138,14 @@ export async function prepareChartData(
   let formatted: ChartData = formatResults(data, schema);
 
   if (!labels!.series) {
-    labels!.series = toTitleCase(
-      Array.isArray(config.series)
-        ? config.series?.filter((d) => d)?.join(", ")
-        : config.series
-    );
+    labels!.series = getLabel(config.series);
   }
   if (!labels!.x) {
-    labels!.x = config.fx ? toTitleCase(config.fx) : toTitleCase(config.x);
+    // Use the fx label for grouped bar charts
+    labels!.x = getLabel(config.fx ?? config.x);
   }
   if (!labels!.y) {
-    labels!.y = toTitleCase(
-      Array.isArray(config.y)
-        ? config.y?.filter((d) => d)?.join(", ")
-        : config.y
-    );
+    labels!.y = getLabel(config.y);
   }
   formatted.labels = labels;
   // Drop the reshaped table
