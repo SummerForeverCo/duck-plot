@@ -13,6 +13,7 @@ import {
   quoteColumns,
   standardColName,
   toTitleCase,
+  getLabel,
 } from "../src/query";
 
 function removeSpacesAndBreaks(str: string) {
@@ -463,12 +464,32 @@ describe("quoteColumns", () => {
 });
 
 describe("toTitleCase", () => {
-  it("should convert string to title case", () => {
-    expect(toTitleCase("some_title_case")).toBe("Some Title Case");
+  it("should not change single words (without spaces, dashes, or underscores)", () => {
+    expect(toTitleCase("DAU")).toBe("DAU");
+  });
+
+  it("should convert strings with implied spaces to title case", () => {
+    expect(toTitleCase("some_column_name")).toBe("Some Column Name");
+    expect(toTitleCase("someColumnName")).toBe("Some Column Name");
+    expect(toTitleCase("some-column-name")).toBe("Some Column Name");
+    expect(toTitleCase("some column name")).toBe("Some Column Name");
+    expect(toTitleCase("SOME COLUMN NAME")).toBe("Some Column Name");
   });
 
   it("should handle empty input gracefully", () => {
     expect(toTitleCase()).toBe("");
+  });
+});
+
+describe("getLabel", () => {
+  it("should return the title case of a single value", () => {
+    expect(getLabel("DAU")).toBe(toTitleCase("DAU"));
+  });
+  it("should first title case each column then join them", () => {
+    const columns = ["columnOne", "columnTwo"];
+    const expected = columns.map(toTitleCase).join(", ");
+    expect(getLabel(columns)).toBe(expected);
+    expect(getLabel(["AAPL", "GOOG"])).toBe("AAPL, GOOG");
   });
 });
 

@@ -212,14 +212,14 @@ export function getAggregateInfo(
   if (type === "barX") {
     if (x && x.length > 0 && aggregate !== false) {
       aggregateSelection = ` ${agg}(x::FLOAT) as x`;
-      labels.x = `${toTitleCase(agg)} of ${toTitleCase(x)}`;
+      labels.x = `${capitalize(agg)} of ${getLabel(x)}`;
     }
     groupBy = columns.filter((d) => d !== "x");
   } else {
     if (y && y.length > 0 && aggregate !== false) {
       // First aggregation (mean, sum, etc.)
       aggregateSelection = ` ${agg}(y::FLOAT) as y`;
-      labels.y = `${toTitleCase(agg)} of ${toTitleCase(y)}`;
+      labels.y = `${capitalize(agg)} of ${getLabel(y)}`;
     }
     groupBy = columns.filter((d) => d !== "y");
   }
@@ -358,11 +358,25 @@ export function toTitleCase(value?: string | unknown) {
   // Add space before uppercase letters (for camel case) and ensure the first character is not unnecessarily spaced
   result = result.replace(/([a-z])([A-Z])/g, "$1 $2").trim();
 
-  // Capitalize the first letter of each word
-  result = result
-    .toLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-  return result;
+  // Capitalize the first letter of each word (if more than one word)
+  return !result.includes(" ")
+    ? result
+    : result.toLowerCase().split(" ").map(capitalize).join(" ");
+}
+
+function capitalize(str: string | boolean) {
+  if (typeof str === "boolean") return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// Get a series/axis label - if there are multiple columns, we should title case
+// the defined columns and join them with a comma. If there is only one column,
+// it should be title cased
+export function getLabel(columnSpec: ColumnType | undefined): string {
+  return Array.isArray(columnSpec)
+    ? columnSpec
+        ?.filter((d) => d)
+        .map(toTitleCase) // title case each one before joining
+        ?.join(", ")
+    : toTitleCase(columnSpec);
 }
