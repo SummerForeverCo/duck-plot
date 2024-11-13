@@ -12,7 +12,8 @@ Imagine you have this table of athletes and medals won in a DuckDB database:
 
 <CSVPreview fileName="data/athletes.csv" :columns="['name', 'nationality', 'gold', 'silver', 'bronze']" />
 
-If you want to know the **number of medals by nationality**, you can use DuckPlot to transform and aggregate your data, and render your chart:
+If you want to know the **number of medals by nationality**, you can use
+DuckPlot to transform and aggregate your data as part of declaring and rendering your chart:
 
 :::duckplot
 

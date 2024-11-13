@@ -87,7 +87,4 @@ td {
   text-align: left;
   border: 1px solid #ddd;
 }
-th {
-  background-color: #f2f2f2;
-}
 </style>

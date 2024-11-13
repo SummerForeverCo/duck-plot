@@ -60,7 +60,7 @@ Based on [this
 example](https://observablehq.com/@observablehq/plot-grouped-bar-chart), a
 grouped bar chart leverages faceting in the horizontal (`fx`) direction. There
 are a few ways you can create a grouped bar chart, either by specifying multiple
-y columns, a series column, or both!
+y columns, a color column, or both!
 
 :::duckplot
 
@@ -81,7 +81,7 @@ duckPlot
 :::duckplot
 
 ```js
-// Specify a y column, a series column, and an fx column
+// Specify a y column, a color column, and an fx column
 duckPlot
   .query("select * from stocks where year(Date) = 2017 AND month(Date) = 1")
   .table("stocks")
@@ -97,7 +97,7 @@ duckPlot
 :::duckplot
 
 ```js
-// Specify multiple y columns, a series column, and an fx column
+// Specify multiple y columns, a color column, and an fx column
 duckPlot
   .query("select * from stocks where year(Date) = 2017 AND month(Date) = 1 ")
   .table("stocks")

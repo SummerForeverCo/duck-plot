@@ -8,7 +8,7 @@ outline: deep
 
 A central problem behind data visualization is the need to transform your data
 to a target structure. DuckPlot aims to solve this problem by allowing users to
-target the same visualizaiton with different data structures. Let's take a long
+target the same visualizaiton with different underlying data structures. Let's take a long
 and wide view of the same sales data ([souce](https://github.com/uwdata/mosaic/blob/main/data/stocks.csv)):
 
 <div style="display: flex; gap: 10px;">
@@ -69,7 +69,7 @@ Given a long data structure where the metric is also stored in the column,
 you can specify each Symbol-metric pair as the desired color.
 
 **Input data**
-<CSVPreview fileName="data/stocks_long.csv"  />
+<CSVPreview fileName="data/stocks_long.csv" :columns="['Symbol', 'Metric', 'Date', 'Value']" />
 
 :::duckplot
 
@@ -85,9 +85,9 @@ duckPlot
 
 :::
 
-## Multiple Y columns and series columns
+## Multiple Y columns and color columns
 
-Multiple y values will first be UNPIVOTED, and then the resulting `color` column will
+If you specify mulitple y values AND a color column, the y columns will first be UNPIVOTED, and then the resulting `color` column will
 be concatenated with the specified `color` columns.
 
 **Input data**
@@ -134,7 +134,7 @@ duckPlot
 For certain mark types (`barY`, `barX`, `areaY`, `line`), DuckPlot will
 automatically aggregate the data based on the data columns (e.g., `x`, `y`,
 `color`, `fx`, `fy`...). If there are multiple rows with the same `x`, `y`, and
-`series` values, DuckPlot will perform a `sum` aggregation.
+`color` values, DuckPlot will perform a `sum` aggregation.
 
 :::duckplot
 

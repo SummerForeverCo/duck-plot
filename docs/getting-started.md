@@ -55,25 +55,22 @@ const myPlot = new DuckPlot(
 
 To configure a plot, you need to specify the table and the columns you wish to
 visualize. You can use the following methods which correspond to each axis. See
-the sections on [Specifying columns](/specifying-columns), [Options](/options),
-and [Interactions]() for more details.
+the sections on [Configuring charts](/configuring-charts) for more details.
 
-```javascript
-myPlot
-  .table("tableName") // table in the database
-  .x("xColumn") // x-axis column
-  .y(["yColumn1", "yColumn2"]) // y-axis column(s) that will be unpivoted
-  .color("colorColumn") // color column (or a color name)
-  .mark("barY") // Observable Plot mark type
-  .options({
-    // Observable Plot options
-    width: 800,
-    height: 600,
-  })
-  .config({
-    percent: true, // for a percentage bar chart
-  });
+:::duckplot
+
+```js
+// Create an area chart of Amazon and Apple stock prices
+duckPlot
+  .table("stocks_wide") // table in the database
+  .x("Date")
+  .y(["AMZN", "AAPL"]) // multiple y columns
+  .mark("areaY") // mark type
+  .options({ x: { label: "Year" }, height: 250 }) // Observable Plot options
+  .config({ percent: true }); // compute as percentage (in DuckDB)
 ```
+
+:::
 
 ## Rendering a chart
 
