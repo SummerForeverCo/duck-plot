@@ -85,7 +85,7 @@ export function getUnpivotQuery(
   // created through multiple y columns
   return `${createStatment} ${selectStr}, ${rStr}${textStr}${fyStr} key AS series${
     fx && !x ? ", key AS x" : ""
-  } FROM "${tableName}"
+  } FROM ${tableName}
         UNPIVOT (value FOR key IN (${keysStr}));`;
 }
 
