@@ -41,7 +41,10 @@ export default defineConfig({
       {
         text: "Data",
         items: [
-          { text: "Data transformations", link: "/data-transformations" },
+          {
+            text: "Transformations",
+            link: "/data-transformations",
+          },
           { text: "Queries", link: "/queries" },
           { text: "Using raw data", link: "/raw-data" },
         ],
@@ -50,17 +53,10 @@ export default defineConfig({
         text: "Charts",
         items: [
           { text: "Configuring charts", link: "/configuring-charts" },
-          { text: "Color", link: "" },
-          { text: "Grouped bar charts", link: "" },
-          { text: "Percentage charts", link: "" },
-          { text: "Partial charts", link: "" },
+          { text: "Color", link: "/color" },
+          { text: "Specialized charts", link: "/specialized-charts" },
         ],
       },
-      {
-        text: "Marks",
-        items: [],
-      },
-
       {
         text: "Interactions",
         items: [
