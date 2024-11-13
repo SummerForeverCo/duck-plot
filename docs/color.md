@@ -4,7 +4,7 @@ outline: deep
 
 # Using color
 
-There are a few ways to use color in Observable Plot. You can use the `.color()`
+There are a few ways to use color in DuckPlot. You can use the `.color()`
 method to specify a column to use for color encoding. You can also use the
 `.color()` method to specify a color value directly.
 

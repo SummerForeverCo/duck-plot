@@ -28,12 +28,12 @@ correspond to each visual encoding (e.g., axis).
 
 Of note:
 
-- you can optionally pass in corresponding plot options for the axis
-- we're using `color` to handle fill or stroke (`line`, `rule`, and `tick` marks
-  use stoke, all others use fill)
+- you can optionally pass in corresponding plot options for each visual encoding
+- `color` is used to handle fill or stroke: `line`, `rule`, and `tick` marks
+  use stoke, all others use fill
 - All methods are **getter**/**setter** methods, meaning they can be used to
   both set and get the values. For example, you can use the `.x("colName")` method to set
-  the x-axis column and the `.x()` method without any parameters to get the
+  the x-axis column and the `.x()` method without any parameters to return the
   current axis and options.
 
 :::duckplot
@@ -90,9 +90,10 @@ duckPlot
 
 ## Options
 
-There are two ways to specify the options for the plot. You can pass in a second
+There are two ways to specify the options for a plot. You can pass in a second
 (optional) argument for each column specified (e.g., `.x()`, .`y()`, etc.) or
-you can call the `.options()` method to set the options for the entire plot.
+you can call the `.options()` method to set the options for the entire plot
+(equivalent to `Plot.plot({...options})`).
 
 :::duckplot
 

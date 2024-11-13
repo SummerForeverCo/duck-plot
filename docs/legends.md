@@ -23,7 +23,7 @@ interactiveLegend: false})`.
 :::duckplot
 
 ```js
-// Click on the legend to toggle visibility
+// Turn off the interactive legend
 duckPlot
   .table("stocks")
   .x("Date")
