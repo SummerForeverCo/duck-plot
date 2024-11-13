@@ -116,14 +116,58 @@ columns.
 
 :::duckplot
 
-```js-vue
+```js
 duckPlot
   .table("stocks_wide")
-  .query("select * from stocks_wide where year(Date) = 2017 AND month(Date) = 1")
+  .query(
+    "select * from stocks_wide where year(Date) = 2017 AND month(Date) = 1"
+  )
   .x(["AMZN", "AAPL"])
   .y("Date")
   .mark("barX");
+```
 
+:::
+
+## Aggregations
+
+For certain mark types (`barY`, `barX`, `areaY`, `line`), DuckPlot will
+automatically aggregate the data based on the data columns (e.g., `x`, `y`,
+`color`, `fx`, `fy`...). If there are multiple rows with the same `x`, `y`, and
+`series` values, DuckPlot will perform a `sum` aggregation.
+
+:::duckplot
+
+```js
+// Compute the total stock price per year for each stock (yes, a little weird!)
+duckPlot
+  .table("stocks")
+  .query("select *, year(Date)::VARCHAR as year from stocks")
+  .x("Symbol")
+  .fx("year")
+  .y("Close")
+  .color("Symbol")
+  .mark("barY");
+```
+
+:::
+
+You can also specify the aggregation type such as the `avg` for a more sensible
+plot:
+
+:::duckplot
+
+```js
+// Compute the total stock price per year for each stock (yes, a little weird!)
+duckPlot
+  .table("stocks")
+  .query("select *, year(Date)::VARCHAR as year from stocks")
+  .fx("year")
+  .x("Symbol")
+  .y("Close")
+  .color("Symbol")
+  .mark("barY")
+  .config({ aggregate: "avg" }); // makes more sense!
 ```
 
 :::

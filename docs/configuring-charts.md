@@ -51,7 +51,7 @@ duckPlot
 
 :::
 
-## Selecting a mark
+## Setting the mark type
 
 The `.mark()` method is used to specify the Observable Plot mark type. The `dot`
 mark type also accepts a `r` column option.
@@ -87,3 +87,85 @@ duckPlot
 ```
 
 :::
+
+## Options
+
+There are two ways to specify the options for the plot. You can pass in a second
+(optional) argument for each column specified (e.g., `.x()`, .`y()`, etc.) or
+you can call the `.options()` method to set the options for the entire plot.
+
+:::duckplot
+
+```js
+duckPlot
+  .query("select * from stocks where year(Date) = 2017")
+  .table("stocks")
+  .x("Date", { label: "Custom X Label" }) // Same as options.x
+  .y("Close")
+  .mark("barY", { stroke: "black", opacity: 0.5 }) // additional options for the mark
+  .color("Date")
+  .options({
+    height: 200,
+    width: 500,
+    y: {
+      domain: [0, 3500],
+      labelArrow: "none",
+      tickFormat: "2s",
+    },
+    x: { ticks: [] },
+    color: { legend: false },
+  });
+```
+
+:::
+
+## Additional configurations
+
+These options are a bit awkward, not fitting in anywhere else very cleanly.
+
+```javascript
+xLabelDisplay?: boolean; // Display axis labels, default true
+yLabelDisplay?: boolean; // Display axis labels, default true
+tip?: boolean; // Show tooltips, default true
+// For use in the tooltip
+tipLabels?: {
+  x?: string;
+  y?: string;
+  color?: string;
+};
+tipValues?: {
+  x?: (d: Indexable, i: number) => string;
+  y?: (d: Indexable, i: number) => string;
+  color?: (d: Indexable, i: number) => string;
+};
+autoMargin?: boolean; // Automatically adjust margins, default true
+aggregate?: "sum" | "avg" .... // DuckDB supported aggregation type
+interactiveLegend?: boolean; // Make legend interactive, default true
+percent?: boolean; // for percent stacked charts, default false
+
+```
+
+:::duckplot
+
+```js
+duckPlot
+  .table("stocks")
+  .x("Date")
+  .y("Open")
+  .color("Symbol")
+  .mark("areaY")
+  .config({
+    // Useful for hiding the label but keeping it in the tooltip
+    xLabelDisplay: false,
+    tipLabels: {
+      x: "This really long value will get truncated",
+    },
+    tipValues: {
+      y: (d) => d.y.toFixed(1),
+    },
+    autoMargin: false,
+    interactiveLegend: false,
+    percent: true,
+    // aggregate - not shown
+  });
+```
