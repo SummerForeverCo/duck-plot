@@ -22,7 +22,6 @@ export default defineConfig({
       ],
     },
   },
-  description: "DockPlot docs",
   markdown: {
     config: (md) => {
       plot(md);

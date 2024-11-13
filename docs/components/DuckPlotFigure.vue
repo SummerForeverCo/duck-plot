@@ -36,7 +36,7 @@ export const createDbClient = async (fileName) => {
   const conn = await db.connect();
 
   // Fetch the CSV file from the Vite server
-  const response = await fetch(`/data/${fileName}`);
+  const response = await fetch(`data/${fileName}`);
   const csvData = await response.text();
   await db.registerFileText(`data.csv`, csvData);
 
