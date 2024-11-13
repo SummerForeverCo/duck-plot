@@ -32,7 +32,7 @@ interactiveLegend: false})`.
 duckPlot
   .table("stocks")
   .x("Date")
-  .y("High")
+  .y(["High", "Low"])
   .color("Symbol")
   .mark("line")
   .config({
