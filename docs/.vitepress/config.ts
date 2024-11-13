@@ -5,7 +5,9 @@ import path from "node:path";
 import duckplot from "./markdown-it-duckplot.js";
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  base: "/duck-plot/",
   title: "DuckPlot",
+  description: "DuckPlot documentation",
   vite: {
     resolve: {
       alias: [
