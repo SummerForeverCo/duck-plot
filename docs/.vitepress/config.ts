@@ -11,7 +11,7 @@ export default defineConfig({
       alias: [
         {
           find: "@summerforeverco/duck-plot",
-          replacement: path.resolve("../dist/index.js"),
+          replacement: path.resolve(__dirname, "../../dist/index.es"),
         },
       ],
     },
