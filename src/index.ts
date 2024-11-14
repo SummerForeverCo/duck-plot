@@ -3,9 +3,12 @@ import { JSDOM } from "jsdom";
 import type { Markish, MarkOptions, PlotOptions } from "@observablehq/plot";
 
 import {
+  BasicColumnType,
   ChartData,
   ChartType,
+  ColumnType,
   Config,
+  IncomingColumType,
   MarkProperty,
   PlotProperty,
   QueryMap,
@@ -26,7 +29,7 @@ import "./legend.css";
 import { legendContinuous } from "./legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import equal from "fast-deep-equal";
-import { getUniqueId } from "./helpers";
+import { getUniqueId, processRawData } from "./helpers";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | null = null;
@@ -49,6 +52,7 @@ export class DuckPlot {
   private _document: Document;
   private _newDataProps: boolean = true;
   private _chartData: ChartData = [];
+  private _rawData: ChartData = [];
   private _filteredData: ChartData = [];
   private _config: Config = {};
   private _query: string = "";
@@ -102,21 +106,29 @@ export class DuckPlot {
   // Helper method for getting and setting x, y, color, and fy properties
   private handleProperty<T extends keyof PlotOptions>(
     prop: PlotProperty<T>,
-    column?: string | false | null,
+    column?: IncomingColumType,
     options?: PlotOptions[T],
     propertyName?: string
   ): PlotProperty<T> | this {
-    if (column !== undefined && !equal(column, prop.column)) {
+    // Because we store empty string for falsey values, we need to check them
+    const columnValue = column === false || column === null ? "" : column;
+
+    if (column !== undefined && !equal(columnValue, prop.column)) {
       // Special case handling that we don't need data if color is/was a color
       if (
-        !(propertyName === "color" && isColor(prop.column) && isColor(column))
+        !(
+          propertyName === "color" &&
+          isColor(prop.column) &&
+          typeof column === "string" &&
+          isColor(column)
+        )
       ) {
         this._newDataProps = true; // When changed, we need to requery the data
       }
     }
     if (column === false || column === null) {
       prop.column = "";
-      if (options !== undefined) prop.options = options;
+      prop.options = undefined;
     } else {
       if (column !== undefined) prop.column = column;
       if (options !== undefined) prop.options = options;
@@ -126,23 +138,29 @@ export class DuckPlot {
 
   // x column encoding
   x(): PlotProperty<"x">;
-  x(column: string, options?: PlotOptions["x"]): this;
-  x(column?: string, options?: PlotOptions["x"]): PlotProperty<"x"> | this {
+  x(column: IncomingColumType, options?: PlotOptions["x"]): this;
+  x(
+    column?: IncomingColumType,
+    options?: PlotOptions["x"]
+  ): PlotProperty<"x"> | this {
     return this.handleProperty(this._x, column, options);
   }
 
   // y column encoding
   y(): PlotProperty<"y">;
-  y(column: string, options?: PlotOptions["y"]): this;
-  y(column?: string, options?: PlotOptions["y"]): PlotProperty<"y"> | this {
+  y(column: IncomingColumType, options?: PlotOptions["y"]): this;
+  y(
+    column?: IncomingColumType,
+    options?: PlotOptions["y"]
+  ): PlotProperty<"y"> | this {
     return this.handleProperty(this._y, column, options);
   }
 
   // color column encoding
   color(): PlotProperty<"color">;
-  color(column: string, options?: PlotOptions["color"]): this;
+  color(column: IncomingColumType, options?: PlotOptions["color"]): this;
   color(
-    column?: string,
+    column?: IncomingColumType,
     options?: PlotOptions["color"]
   ): PlotProperty<"color"> | this {
     return this.handleProperty(this._color, column, options, "color");
@@ -151,30 +169,36 @@ export class DuckPlot {
   // fy column encoding
   // TODO: maybe remove the plotOptions here
   fy(): PlotProperty<"fy">;
-  fy(column: string, options?: PlotOptions["fy"]): this;
-  fy(column?: string, options?: PlotOptions["fy"]): PlotProperty<"fy"> | this {
+  fy(column: IncomingColumType, options?: PlotOptions["fy"]): this;
+  fy(
+    column?: IncomingColumType,
+    options?: PlotOptions["fy"]
+  ): PlotProperty<"fy"> | this {
     return this.handleProperty(this._fy, column, options);
   }
 
   // fy column encoding
   // TODO: maybe remove the plotOptions here
   fx(): PlotProperty<"fx">;
-  fx(column: string, options?: PlotOptions["fx"]): this;
-  fx(column?: string, options?: PlotOptions["fx"]): PlotProperty<"fx"> | this {
+  fx(column: IncomingColumType, options?: PlotOptions["fx"]): this;
+  fx(
+    column?: IncomingColumType,
+    options?: PlotOptions["fx"]
+  ): PlotProperty<"fx"> | this {
     return this.handleProperty(this._fx, column, options);
   }
 
   // r (radius) column encoding
-  r(): PlotProperty<"r">;
-  r(column: string, options?: PlotOptions["r"]): this;
-  r(column?: string, options?: PlotOptions["r"]): PlotProperty<"r"> | this {
-    return this.handleProperty(this._r, column, options);
+  r(): { column: string };
+  r(column: IncomingColumType): this;
+  r(column?: IncomingColumType): { column?: ColumnType } | this {
+    return this.handleProperty(this._r, column);
   }
 
   // Text encoding: note, there are no options for text
   text(): { column: string };
-  text(column: string): this;
-  text(column?: string): { column?: string } | this {
+  text(column: IncomingColumType): this;
+  text(column?: IncomingColumType): { column?: ColumnType } | this {
     return this.handleProperty(this._text, column);
   }
 
@@ -211,6 +235,13 @@ export class DuckPlot {
   config(config: Config): this;
   config(config?: Config): Config | this {
     if (config) {
+      // Reset the data if the aggregate or percent has changed
+      if (
+        this._config.aggregate !== config.aggregate ||
+        this._config.percent !== config.percent
+      ) {
+        this._newDataProps = true;
+      }
       this._config = config;
       return this;
     }
@@ -221,13 +252,49 @@ export class DuckPlot {
     return this._chartData || [];
   }
 
+  // If someone wants to set the data directly rather than working with duckdb
+  // TODO: should this just be how the data() method works when passed args...?
+  rawData(): ChartData;
+  rawData(data?: ChartData, types?: { [key: string]: BasicColumnType }): this;
+  rawData(
+    data?: ChartData,
+    types?: { [key: string]: BasicColumnType }
+  ): ChartData | this {
+    if (data && types) {
+      data.types = types;
+      this._newDataProps = true;
+      this._rawData = data;
+      return this;
+    }
+    return this._chartData; // TODO: does this make sense...?
+  }
+
   // TODO; private? Also, rename
   async prepareChartData(): Promise<ChartData> {
+    // If no new data properties, return the chartData
+    if (!this._newDataProps) return this._chartData;
+
+    // If there is raw data rather than a database, extract chart data from it
+    if (this._rawData && this._rawData.types) {
+      this._chartData = processRawData(this._rawData, {
+        x: this._x.column,
+        y: this._y.column,
+        color: this._color.column,
+        fy: this._fy.column,
+        fx: this._fx.column,
+        r: this._r.column,
+        text: this._text.column,
+      });
+      this._newDataProps = false;
+      this._visibleSeries = []; // reset visible series
+      return this._chartData;
+    }
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
     // TODO: this error isn't being thrown when I'd expect (e.g, if type is not set)
-    if (!this._mark) throw new Error("Type not set");
+    if (!this._mark) throw new Error("Mark type not set");
     this._newDataProps = false;
+    this._visibleSeries = []; // reset visible series
     const columns = {
       ...(this._x.column ? { x: this._x.column } : {}),
       ...(this._y.column ? { y: this._y.column } : {}),
@@ -249,15 +316,13 @@ export class DuckPlot {
       columns,
       this._mark.markType!,
       this._query,
-      this._config.aggregate
+      this._config.aggregate,
+      this._config.percent
     ));
-
     return this._chartData;
   }
   async getMarks(): Promise<Markish[]> {
-    const allData = this._newDataProps
-      ? await this.prepareChartData()
-      : this._chartData;
+    const allData = await this.prepareChartData();
 
     // Grab the types and labels from the data
     const { types, labels } = allData;
@@ -283,11 +348,17 @@ export class DuckPlot {
     const primaryMarkOptions = getMarkOptions(
       currentColumns,
       this._mark.markType,
+      types,
       {
-        color: isColor(this._color.column) ? this._color.column : undefined,
+        color: isColor(this._color.column)
+          ? String(this._color.column)
+          : undefined,
         tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
-        xLabel: plotOptions.x?.label ?? "",
-        yLabel: plotOptions.y?.label ?? "",
+        xLabel: this._config.tipLabels?.x ?? plotOptions.x?.label ?? "",
+        yLabel: this._config.tipLabels?.y ?? plotOptions.y?.label ?? "",
+        xValue: this._config.tipValues?.x,
+        yValue: this._config.tipValues?.y,
+        // TODO: suppport colorLabel, colorValue
         markOptions: this._mark.options,
       }
     );
@@ -295,7 +366,12 @@ export class DuckPlot {
     // Here, we want to add the primary mark if x and y are defined OR if an
     // aggregate has been specifid. Not a great rule, but works for now for
     // showing aggregate marks with only one dimension
+    const isValidTickChart =
+      (this._mark.markType === "tickX" && currentColumns.includes("x")) ||
+      (this._mark.markType === "tickY" && currentColumns.includes("y"));
+
     const primaryMark =
+      !isValidTickChart &&
       (!currentColumns.includes("x") || !currentColumns.includes("y")) &&
       !this._config.aggregate
         ? []
@@ -305,27 +381,29 @@ export class DuckPlot {
               primaryMarkOptions as MarkOptions
             ),
           ];
+
     // TODO: double check you don't actually use border color
-    // If a user supplies marks, don't add the common marks
-    const commonPlotMarks =
-      this._options.marks ?? getCommonMarks(currentColumns);
+    // TODO: Make frame/grid config options(?)
+    const commonPlotMarks = [
+      ...getCommonMarks(currentColumns),
+      ...(this._options.marks || []),
+    ];
+
     const fyMarks = getfyMarks(
       this._filteredData,
       currentColumns,
       plotOptions.fy
     );
     return [
-      ...(fyMarks || []),
       ...(commonPlotMarks || []),
       ...(primaryMark || []),
+      ...(fyMarks || []),
     ];
   }
 
   async getPlotOptions(): Promise<PlotOptions> {
-    //
-    const chartData = this._newDataProps
-      ? await this.prepareChartData()
-      : this._chartData;
+    const chartData = await this.prepareChartData();
+
     // Because users can specify options either in .options or with each column, we coalese them here
     let plotOptions = {
       ...this._options,
@@ -369,14 +447,15 @@ export class DuckPlot {
   ): Promise<SVGElement | HTMLElement | null> {
     if (!this._mark) return null;
     const marks = await this.getMarks(); // updates this._chartData and this._filteredData
-
     const currentColumns = this._chartData?.types
       ? Object.keys(this._chartData.types)
       : []; // TODO: remove this arg from topLevelPlotOptions
     const document = this._isServer ? this._jsdom!.window.document : undefined;
-    // TODO: custom sorts as inputs?
+    // Because the sort can be specified in the options, remove any colums who
+    // have a sort specified
+    const haveSorts = Object.keys(this._mark?.options?.sort ?? {});
     let sorts = getSorts(
-      currentColumns.filter((d) => d !== "fy"),
+      currentColumns.filter((d) => d !== "fy" && !haveSorts.includes(d)),
       this._chartData,
       this._color.options?.type === "categorical"
     );
@@ -458,9 +537,10 @@ export class DuckPlot {
       const div = this._document.createElement("div");
 
       if (legendType === "categorical") {
-        const categories = [
-          ...new Set(this._chartData.map((d) => `${d.series}`)),
-        ]; // stringify in case of numbers as categories
+        // stringify in case of numbers as categories
+        const categories = Array.from(plt.scale("color")?.domain ?? [])?.map(
+          (d) => `${d}`
+        );
 
         if (this._visibleSeries.length === 0) {
           this._visibleSeries = categories;

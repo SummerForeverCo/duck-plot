@@ -13,6 +13,7 @@ import {
   quoteColumns,
   standardColName,
   toTitleCase,
+  getLabel,
 } from "../src/query";
 
 function removeSpacesAndBreaks(str: string) {
@@ -95,7 +96,7 @@ describe("getUnpivotQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "y1" as y, value AS x, key AS series FROM "yourTableName"
+    const expectedQuery = `CREATE TABLE reshaped as SELECT "y1" as y, value AS x, key AS series FROM yourTableName
         UNPIVOT (value FOR key IN ("x1", "x2"));`;
     const result = getUnpivotQuery("barX", config, tableName, reshapedName);
     expect(removeSpacesAndBreaks(result)).toBe(
@@ -112,7 +113,7 @@ describe("getUnpivotQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "y1" as y, value AS x, concat_ws('-', "fy 1", "fy 2") as fy, key AS series FROM "yourTableName"
+    const expectedQuery = `CREATE TABLE reshaped as SELECT "y1" as y, value AS x, concat_ws('-', "fy 1", "fy 2") as fy, key AS series FROM yourTableName
         UNPIVOT (value FOR key IN ("x1", "x2"));`;
 
     expect(getUnpivotQuery("barX", config, tableName, reshapedName)).toBe(
@@ -130,7 +131,7 @@ describe("getUnpivotQuery", () => {
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
 
-    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as x, value AS y, concat_ws('-', "fy 1", "fy 2") as fy, key AS series FROM "yourTableName"
+    const expectedQuery = `CREATE TABLE reshaped as SELECT "x1" as x, value AS y, concat_ws('-', "fy 1", "fy 2") as fy, key AS series FROM yourTableName
         UNPIVOT (value FOR key IN ("y1", "y2"));`;
     const result = getUnpivotQuery("areaY", config, tableName, reshapedName);
     expect(removeSpacesAndBreaks(result)).toBe(
@@ -149,7 +150,7 @@ describe("getUnpivotWithSeriesQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT
+    const expectedQuery = `CREATE TABLE reshaped AS SELECT
             x,
             y,
             concat_ws('-', pivotCol, series) AS series
@@ -157,7 +158,7 @@ describe("getUnpivotWithSeriesQuery", () => {
             SELECT
                 "x1", "x2",
                 "y1" as y,
-                concat_ws('-', "s1", "s2") as series,
+                concat_ws('-', "s1", "s2") as series
             FROM
                 yourTableName
         ) p
@@ -184,7 +185,7 @@ describe("getUnpivotWithSeriesQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT
+    const expectedQuery = `CREATE TABLE reshaped AS SELECT
             x,
             y,
             concat_ws('-', pivotCol, series) AS series
@@ -192,7 +193,7 @@ describe("getUnpivotWithSeriesQuery", () => {
             SELECT
                 "x1" as x,
                 "y1", "y2",
-                concat_ws('-', "s1", "s2") as series,
+                concat_ws('-', "s1", "s2") as series
             FROM
                 yourTableName
         ) p
@@ -219,7 +220,7 @@ describe("getUnpivotWithSeriesQuery", () => {
     };
     const tableName = "yourTableName";
     const reshapedName = "reshaped";
-    const expectedQuery = `CREATE TABLE reshaped as SELECT
+    const expectedQuery = `CREATE TABLE reshaped AS SELECT
             x,
             y,
             concat_ws('-', pivotCol, series) AS series,
@@ -275,16 +276,165 @@ describe("arrayify", () => {
 });
 
 describe("getAggregateInfo", () => {
+  // Test for 'barX' aggregation when `x` is present
   it("barX: should sum X if x present", () => {
     const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
-    const expectedQueryString = `SELECT y,  sum(x::FLOAT) as x FROM reshaped GROUP BY y`;
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT y, sum(x::FLOAT) as x
+        FROM reshaped
+        GROUP BY y
+      )
+      SELECT y, x
+      FROM aggregated
+    `;
+
     expect(
-      getAggregateInfo("barX", config, columns, reshapedName, undefined, {
-        value: "",
-      }).queryString
-    ).toBe(expectedQueryString);
+      removeSpacesAndBreaks(
+        getAggregateInfo("barX", config, columns, reshapedName, undefined, {
+          value: "",
+        }).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test for 'barY' aggregation when `y` is present
+  it("barY: should sum Y if y present", () => {
+    const config = { x: ["x1"], y: ["y"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT x, sum(y::FLOAT) as y
+        FROM reshaped
+        GROUP BY x
+      )
+      SELECT x, y
+      FROM aggregated
+    `;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo("barY", config, columns, reshapedName, undefined, {
+          value: "",
+        }).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test with a mean aggregation (for `x`) and percentage flag false
+  it("barX: should calculate mean X without percentage", () => {
+    const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT y, avg(x::FLOAT) as x
+        FROM reshaped
+        GROUP BY y
+      )
+      SELECT y, x
+      FROM aggregated
+    `;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo(
+          "barX",
+          config,
+          columns,
+          reshapedName,
+          "avg",
+          {
+            value: "",
+          },
+          false
+        ).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test with a sum aggregation (for `x`) and percentage flag true
+  it("barX: should calculate percentage of X after sum aggregation", () => {
+    const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT y, sum(x::FLOAT) as x
+        FROM reshaped
+        GROUP BY y
+      )
+      SELECT y, (x / (SUM(x) OVER (PARTITION BY y))) * 100 as x
+      FROM aggregated
+    `;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo(
+          "barX",
+          config,
+          columns,
+          reshapedName,
+          "sum",
+          {
+            value: "",
+          },
+          true
+        ).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test with mean aggregation (for `y`) and percentage flag true
+  it("barY: should calculate percentage of Y after mean aggregation", () => {
+    const config = { x: ["x1"], y: ["y"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `
+      WITH aggregated AS (
+        SELECT x, avg(y::FLOAT) as y
+        FROM reshaped
+        GROUP BY x
+      )
+      SELECT x, (y / (SUM(y) OVER (PARTITION BY x))) * 100 as y
+      FROM aggregated
+    `;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo(
+          "barY",
+          config,
+          columns,
+          reshapedName,
+          "avg",
+          {
+            value: "",
+          },
+          true
+        ).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
+  });
+
+  // Test with no aggregation and default selection (for non-aggregated data)
+  it("should return non-aggregated data when aggregation is false", () => {
+    const config = { x: ["x1"], y: ["y1"], series: [], fy: [] };
+    const columns = ["x", "y"];
+    const reshapedName = "reshaped";
+    const expectedQueryString = `WITH aggregated AS (SELECT * FROM reshaped) 
+    SELECT y, x FROM aggregated`;
+
+    expect(
+      removeSpacesAndBreaks(
+        getAggregateInfo("barX", config, columns, reshapedName, false, {
+          value: "",
+        }).queryString
+      )
+    ).toBe(removeSpacesAndBreaks(expectedQueryString));
   });
 });
 
@@ -314,12 +464,32 @@ describe("quoteColumns", () => {
 });
 
 describe("toTitleCase", () => {
-  it("should convert string to title case", () => {
-    expect(toTitleCase("some_title_case")).toBe("Some Title Case");
+  it("should not change single words (without spaces, dashes, or underscores)", () => {
+    expect(toTitleCase("DAU")).toBe("DAU");
+  });
+
+  it("should convert strings with implied spaces to title case", () => {
+    expect(toTitleCase("some_column_name")).toBe("Some Column Name");
+    expect(toTitleCase("someColumnName")).toBe("Some Column Name");
+    expect(toTitleCase("some-column-name")).toBe("Some Column Name");
+    expect(toTitleCase("some column name")).toBe("Some Column Name");
+    expect(toTitleCase("SOME COLUMN NAME")).toBe("Some Column Name");
   });
 
   it("should handle empty input gracefully", () => {
     expect(toTitleCase()).toBe("");
+  });
+});
+
+describe("getLabel", () => {
+  it("should return the title case of a single value", () => {
+    expect(getLabel("DAU")).toBe(toTitleCase("DAU"));
+  });
+  it("should first title case each column then join them", () => {
+    const columns = ["columnOne", "columnTwo"];
+    const expected = columns.map(toTitleCase).join(", ");
+    expect(getLabel(columns)).toBe(expected);
+    expect(getLabel(["AAPL", "GOOG"])).toBe("AAPL, GOOG");
   });
 });
 

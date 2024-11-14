@@ -1,16 +1,16 @@
 import { renderPlot } from "../util/renderPlotClient.js";
 // This code is both displayed in the browser and executed
-
-const codeString = `duckplot
-  .table("income")
-  .x("month")
-  .y(["execution_income", "consensus_income"])
-  .mark("barY")
+const codeString = `// Implicitly aggregate the values by date
+duckplot
+  .table("stocks")
+  .x("Date")
+  .y(["High", "Low"])
+  .mark("line")
   .config({
-    aggregate: "avg",
-    interactiveLegend: false
+    // Aggregate values by date
+    aggregate: "avg"
   })
-  `;
+`;
 
 export const avgAggregate = (options) =>
-  renderPlot("income.csv", codeString, options);
+  renderPlot("stocks.csv", codeString, options);

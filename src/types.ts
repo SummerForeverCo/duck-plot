@@ -1,7 +1,15 @@
 import type { MarkOptions, PlotOptions } from "@observablehq/plot";
 
 // TODO: all plot chart types?
-export type ChartType = "dot" | "areaY" | "line" | "barX" | "barY" | "text";
+export type ChartType =
+  | "dot"
+  | "areaY"
+  | "line"
+  | "barX"
+  | "barY"
+  | "text"
+  | "tickX"
+  | "tickY";
 
 export type SqlSort = {
   column: string;
@@ -36,13 +44,15 @@ export type Indexable = {
   [key: string]: any;
 };
 export type Column = "x" | "y" | "series" | "fy" | "fx" | "r" | "text";
-export type ColumnConfig = Partial<Record<Column, string | string[]>>;
+export type ColumnConfig = Partial<Record<Column, ColumnType>>;
 export interface ChartData extends Array<Indexable> {
   types?: { [key: string]: BasicColumnType };
   labels?: { x?: string; y?: string; series?: string };
 }
 export type BasicColumnType = "string" | "number" | "date" | undefined;
-
+// TODO: maybe rename this...?
+export type ColumnType = string | string[];
+export type IncomingColumType = ColumnType | false | null;
 export interface ColumnSchema {
   column_name: string;
   column_type: string;
@@ -57,7 +67,7 @@ export interface TypesObject {
 
 // Define a generic type for property
 export type PlotProperty<T extends keyof PlotOptions> = {
-  column: string | undefined;
+  column: ColumnType;
   options?: PlotOptions[T];
 };
 
@@ -73,9 +83,21 @@ export type Config = {
   xLabelDisplay?: boolean;
   yLabelDisplay?: boolean;
   tip?: boolean; // Show tooltips
+  // For use in the tooltip
+  tipLabels?: {
+    x?: string;
+    y?: string;
+    color?: string;
+  };
+  tipValues?: {
+    x?: (d: Indexable, i: number) => string;
+    y?: (d: Indexable, i: number) => string;
+    color?: (d: Indexable, i: number) => string;
+  };
   autoMargin?: boolean; // Automatically adjust margins
   aggregate?: Aggregate;
   interactiveLegend?: boolean;
+  percent?: boolean; // for percent stacked charts, TODO document clearly
 };
 
 export type Aggregate =
