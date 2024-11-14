@@ -38,5 +38,5 @@ This demonstrates the major features of the library:
 - **Aggregates data** at the database layer with DuckDB before rendering
 - Automatically **adjusts the margins** and axis ticks labels for better
   readability
-- Creates **custom interactive legends** for categorical data
+- Creates **custom interactive legends** for both categorical and continuous data
 - Supports both **client and server** environments
