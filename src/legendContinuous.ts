@@ -4,7 +4,7 @@ import * as d3 from "d3";
 import { PlotOptions } from "@observablehq/plot";
 export function legendContinuous(
   options: PlotOptions,
-  onBrush: (domain: any[]) => void
+  onBrush: null | ((domain: any[]) => void)
 ): HTMLDivElement {
   // Create a div container
   const container = document.createElement("div");
@@ -14,41 +14,43 @@ export function legendContinuous(
   const plotLegend = Plot.legend(options) as HTMLDivElement & Plot.Plot;
   container.appendChild(plotLegend);
   // Create an SVG element for the brush, inside the same div
-  const width = options.width || 240;
-  const height = options.height || 50;
-  const svg = d3
-    .select(container)
-    .append("svg")
-    .attr("width", width)
-    .attr("height", height)
-    .style("position", "absolute") // Position it over the legend
-    .style("top", "0px")
-    .style("left", "0px");
-  console.log(options);
-  // Add a D3 brush on top of the legend
-  const brush = d3
-    .brushX()
-    .extent([
-      [0, 0],
-      [width, height],
-    ]) // Adjust extent to match the container dimensions
-    .on("brush end", brushed);
+  if (onBrush !== null) {
+    const width = options.width || 240;
+    const height = options.height || 50;
+    const svg = d3
+      .select(container)
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .style("position", "absolute") // Position it over the legend
+      .style("top", "0px")
+      .style("left", "0px");
 
-  svg.append("g").call(brush);
+    // Add a D3 brush on top of the legend
+    const brush = d3
+      .brushX()
+      .extent([
+        [0, 0],
+        [width, height],
+      ]) // Adjust extent to match the container dimensions
+      .on("brush end", brushed);
 
-  // Function to handle brush events
-  function brushed(event: d3.D3BrushEvent<unknown>) {
-    if (event.selection) {
-      // Gotta make a d3 linear scale
-      const scale = d3
-        .scaleLinear()
-        .domain(options?.color?.domain ?? [])
-        .range([0, width]).invert;
-      // const colorScale = plotLegend.scale.color;
-      const [x0, x1] = event.selection as number[];
-      onBrush([scale(x0), scale(x1)]);
-    } else {
-      onBrush([]);
+    svg.append("g").call(brush);
+
+    // Function to handle brush events
+    function brushed(event: d3.D3BrushEvent<unknown>) {
+      if (event.selection) {
+        // Gotta make a d3 linear scale
+        const scale = d3
+          .scaleLinear()
+          .domain(options?.color?.domain ?? [])
+          .range([0, width]).invert;
+        // const colorScale = plotLegend.scale.color;
+        const [x0, x1] = event.selection as number[];
+        if (onBrush) onBrush([scale(x0), scale(x1)]);
+      } else {
+        if (onBrush) onBrush([]);
+      }
     }
   }
   return container;

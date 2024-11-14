@@ -20,7 +20,6 @@
 .dp-categories {
   display: flex;
   flex-wrap: nowrap;
-  cursor: pointer;
   user-select: none;
   -webkit-user-select: none; /* Safari */
   -moz-user-select: none; /* Firefox */

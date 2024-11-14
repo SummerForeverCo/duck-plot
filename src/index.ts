@@ -29,7 +29,7 @@ import "./legend.css";
 import { legendContinuous } from "./legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import equal from "fast-deep-equal";
-import { getUniqueId, processRawData } from "./helpers";
+import { filterData, getUniqueId, processRawData } from "./helpers";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | null = null;
@@ -328,15 +328,11 @@ export class DuckPlot {
     const { types, labels } = allData;
 
     // Filter down to only the visible series (handled by the legend)
-    // TODO: extract to a fn
-    this._filteredData = this._chartData.filter(
-      (d) =>
-        this._seriesDomain.length === 0 ||
-        (d.series > this._seriesDomain[0] && d.series < this._seriesDomain[1])
-      // this._visibleSeries.length === 0 ||
-      // this._visibleSeries.includes(`${d.series}`)
+    this._filteredData = filterData(
+      this._chartData,
+      this._visibleSeries,
+      this._seriesDomain
     );
-    console.log(this._seriesDomain, this._chartData);
 
     // Reassign the named properties back to the filtered array
     this._filteredData.types = types;
@@ -563,6 +559,7 @@ export class DuckPlot {
           legendElements.forEach((element: SVGElement | HTMLElement) => {
             const elementId = `${element.textContent}`; // stringify in case of numbers as categories
             if (!elementId) return;
+            element.style.cursor = "pointer";
             element.addEventListener("click", (event) => {
               const mouseEvent = event as MouseEvent;
               // Shift-click: hide all others
@@ -597,10 +594,12 @@ export class DuckPlot {
             label: legendLabel,
             ...(document ? { document } : {}),
           },
-          (event) => {
-            this._seriesDomain = event;
-            this.render(false);
-          }
+          this._config.interactiveLegend === false
+            ? null
+            : (event) => {
+                this._seriesDomain = event;
+                this.render(false);
+              }
         );
       }
       div.appendChild(legend);
