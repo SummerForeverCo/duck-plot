@@ -520,7 +520,7 @@ export class DuckPlot {
         if (newLegend) {
           wrapper.innerHTML = "";
         } else {
-          // Otherwise just remove the plot: TODO: more careful selector
+          // Otherwise just remove the plot
           wrapper.removeChild(wrapper.lastChild!);
         }
       }
