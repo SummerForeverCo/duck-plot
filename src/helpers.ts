@@ -195,3 +195,19 @@ export function processRawData(
   chartDataArray.labels = chartDataLabels;
   return chartDataArray;
 }
+
+// Funciton to filter down a dataset based on either a continuous range or a
+// set of values for the series column
+export function filterData(
+  data: ChartData,
+  visibleSeries?: string[],
+  seriesDomain?: any[]
+): ChartData {
+  return visibleSeries && visibleSeries.length > 0
+    ? data.filter((d) => visibleSeries.includes(`${d.series}`))
+    : seriesDomain && seriesDomain.length === 2
+    ? data.filter(
+        (d) => d.series > seriesDomain[0] && d.series < seriesDomain[1]
+      )
+    : data;
+}

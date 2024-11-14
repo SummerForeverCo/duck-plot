@@ -29,7 +29,7 @@ import "./legend.css";
 import { legendContinuous } from "./legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import equal from "fast-deep-equal";
-import { getUniqueId, processRawData } from "./helpers";
+import { filterData, getUniqueId, processRawData } from "./helpers";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | null = null;
@@ -59,6 +59,7 @@ export class DuckPlot {
   private _description: string = ""; // TODO: add tests
   private _queries: QueryMap | undefined = undefined; // TODO: add tests
   private _visibleSeries: string[] = [];
+  private _seriesDomain: any[] = [];
   private _chartElement: HTMLElement | null = null;
   private _id: string;
 
@@ -327,10 +328,10 @@ export class DuckPlot {
     const { types, labels } = allData;
 
     // Filter down to only the visible series (handled by the legend)
-    this._filteredData = this._chartData.filter(
-      (d) =>
-        this._visibleSeries.length === 0 ||
-        this._visibleSeries.includes(`${d.series}`)
+    this._filteredData = filterData(
+      this._chartData,
+      this._visibleSeries,
+      this._seriesDomain
     );
 
     // Reassign the named properties back to the filtered array
@@ -437,7 +438,9 @@ export class DuckPlot {
   queries(): QueryMap | undefined {
     return this._queries;
   }
-  async render(): Promise<SVGElement | HTMLElement | null> {
+  async render(
+    newLegend: boolean = true
+  ): Promise<SVGElement | HTMLElement | null> {
     if (!this._mark) return null;
     const marks = await this.getMarks(); // updates this._chartData and this._filteredData
     const currentColumns = this._chartData?.types
@@ -513,13 +516,19 @@ export class DuckPlot {
       const existingWrapper = parentElement.querySelector(`#${this._id}`);
       if (existingWrapper) {
         wrapper = existingWrapper as HTMLElement | SVGElement;
-        wrapper.innerHTML = "";
+        // Clear the wrapper if we're updating the legend
+        if (newLegend) {
+          wrapper.innerHTML = "";
+        } else {
+          // Otherwise just remove the plot
+          wrapper.removeChild(wrapper.lastChild!);
+        }
       }
     } else {
       wrapper = this._document.createElement("div");
       wrapper.id = this._id;
     }
-    if (hasLegend) {
+    if (hasLegend && newLegend) {
       let legend: HTMLDivElement;
       const div = this._document.createElement("div");
 
@@ -550,6 +559,7 @@ export class DuckPlot {
           legendElements.forEach((element: SVGElement | HTMLElement) => {
             const elementId = `${element.textContent}`; // stringify in case of numbers as categories
             if (!elementId) return;
+            element.style.cursor = "pointer";
             element.addEventListener("click", (event) => {
               const mouseEvent = event as MouseEvent;
               // Shift-click: hide all others
@@ -578,11 +588,19 @@ export class DuckPlot {
           });
         }
       } else {
-        legend = legendContinuous({
-          color: { ...plt.scale("color") },
-          label: legendLabel,
-          ...(document ? { document } : {}),
-        });
+        legend = legendContinuous(
+          {
+            color: { ...plt.scale("color") },
+            label: legendLabel,
+            ...(document ? { document } : {}),
+          },
+          this._config.interactiveLegend === false
+            ? null
+            : (event) => {
+                this._seriesDomain = event;
+                this.render(false);
+              }
+        );
       }
       div.appendChild(legend);
       if (wrapper) wrapper?.appendChild(div);
