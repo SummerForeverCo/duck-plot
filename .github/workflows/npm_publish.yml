@@ -1,4 +1,3 @@
----
 name: Publish NPM
 on:
   workflow_dispatch:
@@ -22,6 +21,8 @@ jobs:
         run: npm run build
       - name: Run tests
         run: npm test
+      - name: Authenticate npm
+        run: npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
       - name: Publish
         run: |
           npm version ${{ inputs.packageVersion }} --no-git-tag-version
