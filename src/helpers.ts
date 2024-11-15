@@ -207,7 +207,7 @@ export function filterData(
     ? data.filter((d) => visibleSeries.includes(`${d.series}`))
     : seriesDomain && seriesDomain.length === 2
     ? data.filter(
-        (d) => d.series > seriesDomain[0] && d.series < seriesDomain[1]
+        (d) => d.series >= seriesDomain[0] && d.series <= seriesDomain[1]
       )
     : data;
 }
