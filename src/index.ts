@@ -1,7 +1,7 @@
 import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
 import type { Markish, MarkOptions, PlotOptions } from "@observablehq/plot";
-import { extent } from "d3-array";
+
 import {
   BasicColumnType,
   ChartData,
@@ -455,7 +455,6 @@ export class DuckPlot {
       this._chartData,
       this._color.options?.type === "categorical"
     );
-
     // Only display the facets for present data
     if (currentColumns.includes("fy")) {
       sorts.fy = getSorts(
@@ -591,9 +590,7 @@ export class DuckPlot {
       } else {
         legend = legendContinuous(
           {
-            color: {
-              ...plt.scale("color"),
-            },
+            color: { ...plt.scale("color") },
             label: legendLabel,
             ...(document ? { document } : {}),
           },
