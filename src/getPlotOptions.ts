@@ -199,12 +199,11 @@ export function getTopLevelPlotOptions(
   // Handle 3 options for color: note, color as a string is assigned in the mark
   const { color: colorConfig } = options;
   const { domain: sortsDomainRaw } = sorts.series || {};
-  // Create a custom domain if x OR y is missing (because a mark won't be on the
-  // chart, so we need to compute the domain)
+  // If a domain ins't provided, use the data to determine the domain for
+  // continuous series (e.g., numbers or dates). Note, this uses the full
+  // dataset (not any filtered data from brushing)
   const sortsDomain = sortsDomainRaw
     ? sortsDomainRaw
-    : currentColumns.includes("x") && currentColumns.includes("y")
-    ? undefined
     : data?.types?.series === "number" || data?.types?.series === "date"
     ? extent(
         [...data!, ...[data?.types?.series === "number" ? { series: 0 } : {}]],
