@@ -1,3 +1,4 @@
+import type { DuckPlot } from ".";
 import type {
   MarkOptions,
   PlotOptions,
@@ -127,10 +128,23 @@ export function getDataOrder(data: ChartData | undefined, column: string) {
 // Gets all data orders for the current columns
 // TODO: perhaps cast series to varchar in the data, but that's a biggish change
 export function getSorts(
-  currentColumns: string[] = [],
-  data?: ChartData,
-  categoricalSeries?: boolean
+  instance: DuckPlot,
+  columns?: string[],
+  inputData?: ChartData
 ) {
+  // Because the sort can be specified in the options, remove any colums who
+  // have a sort specified
+  const haveSorts = Object.keys(instance.mark()?.options?.sort ?? {});
+  const currentColumns = columns
+    ? columns
+    : instance.data().types
+    ? Object.keys(instance.data().types ?? {}).filter(
+        (d) => d !== "fy" && !haveSorts.includes(d)
+      )
+    : [];
+  const categoricalSeries = instance.color().options?.type === "categorical";
+
+  const data = inputData ?? instance.data();
   return currentColumns
     .filter(
       (column) =>

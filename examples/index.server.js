@@ -33,7 +33,6 @@ for (const [name, plot] of Object.entries(plots)) {
   try {
     // Wrap the plot function call and the rest of the operations in a try block
     const plt = await plot({ jsdom, font });
-
     // Clear the body content before generating a new plot
     jsdom.window.document.body.innerHTML = "";
 

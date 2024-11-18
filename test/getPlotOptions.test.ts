@@ -1,3 +1,4 @@
+import { DuckPlot } from "../src";
 import {
   getDataOrder,
   getMarkOptions,
@@ -7,7 +8,13 @@ import {
   truncateText,
 } from "../src/getPlotOptions";
 import type { ChartData } from "../src/types";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// Create a fake DuckPlot instance
+const fakeDuckPlot: Partial<DuckPlot> = {
+  mark: vi.fn().mockReturnValue({}),
+  color: vi.fn().mockReturnValue({}),
+};
 
 describe("getMarkOptions", () => {
   it("for a line chart with series, the *stroke* should be set to the series", () => {
@@ -76,20 +83,22 @@ describe("getDataOrder", () => {
   });
 });
 
+// Note, getSorts expects a DuckPlot instance, but it's ok to pass in a fake
+// arg. and still test the functionality by including columsn and data
 describe("getSorts", () => {
-  it("should return an empty object if currentColumns is empty", () => {
+  it("should return an empty object if currentColumns is an empty array", () => {
     const data = [
       { category: "A" },
       { category: "B" },
       { category: "A" },
       { category: "C" },
     ];
-    const result = getSorts([], data);
+    const result = getSorts(fakeDuckPlot as DuckPlot, [], data);
     expect(result).toEqual({});
   });
 
-  it("should return an empty object if data is undefined", () => {
-    const result = getSorts(["category"], undefined);
+  it("should return an empty object if data is an empty array", () => {
+    const result = getSorts(fakeDuckPlot as DuckPlot, ["category"], []);
     expect(result).toEqual({});
   });
 
@@ -100,7 +109,11 @@ describe("getSorts", () => {
       { x: "C", y: 1, series: "CategoryD" },
     ];
     data.types = { x: "string", y: "number", series: "string" };
-    const result = getSorts(["x", "y", "series"], data);
+    const result = getSorts(
+      fakeDuckPlot as DuckPlot,
+      ["x", "y", "series"],
+      data
+    );
     expect(result).toEqual({
       x: { domain: ["B", "A", "C"] },
       series: { domain: ["CategoryB", "CategoryA", "CategoryD"] },

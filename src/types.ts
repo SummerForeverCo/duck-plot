@@ -1,4 +1,5 @@
 import type { MarkOptions, PlotOptions } from "@observablehq/plot";
+import { DuckPlot } from ".";
 
 // TODO: all plot chart types?
 export type ChartType =
@@ -115,3 +116,4 @@ export type Aggregate =
 export type QueryMap = {
   [key: string]: string;
 };
+export type DuckPlotInstance = DuckPlot;

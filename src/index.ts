@@ -32,7 +32,7 @@ import equal from "fast-deep-equal";
 import { filterData, getUniqueId, processRawData } from "./helpers";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
-  private _ddb: AsyncDuckDB | null = null;
+  private _ddb: AsyncDuckDB | undefined | null = null;
   private _table: string | null = null;
   private _x: PlotProperty<"x"> = { ...emptyProp };
   private _y: PlotProperty<"y"> = { ...emptyProp };
@@ -64,7 +64,7 @@ export class DuckPlot {
   private _id: string;
 
   constructor(
-    ddb: AsyncDuckDB,
+    ddb?: AsyncDuckDB,
     { jsdom, font }: { jsdom?: JSDOM; font?: any } = {}
   ) {
     this._ddb = ddb;
@@ -73,7 +73,7 @@ export class DuckPlot {
     this._isServer = jsdom !== undefined;
     this._document = this._isServer
       ? this._jsdom!.window.document
-      : window.document;
+      : window?.document;
     this._id = getUniqueId();
   }
 
@@ -321,6 +321,9 @@ export class DuckPlot {
     ));
     return this._chartData;
   }
+  filteredData(): ChartData {
+    return this._filteredData;
+  }
   async getMarks(): Promise<Markish[]> {
     const allData = await this.prepareChartData();
 
@@ -447,21 +450,10 @@ export class DuckPlot {
       ? Object.keys(this._chartData.types)
       : []; // TODO: remove this arg from topLevelPlotOptions
     const document = this._isServer ? this._jsdom!.window.document : undefined;
-    // Because the sort can be specified in the options, remove any colums who
-    // have a sort specified
-    const haveSorts = Object.keys(this._mark?.options?.sort ?? {});
-    let sorts = getSorts(
-      currentColumns.filter((d) => d !== "fy" && !haveSorts.includes(d)),
-      this._chartData,
-      this._color.options?.type === "categorical"
-    );
+    let sorts = getSorts(this);
     // Only display the facets for present data
     if (currentColumns.includes("fy")) {
-      sorts.fy = getSorts(
-        ["fy"],
-        this._filteredData,
-        this._color.options?.type === "categorical"
-      );
+      sorts.fy = getSorts(this, ["fy"], this._filteredData);
     }
     const plotOptions = await this.getPlotOptions();
     // Note, displaying legends by default
