@@ -38,6 +38,11 @@ export function legendContinuous(
 
     let isProgrammatic = false; // Flag to track programmatic updates
 
+    const scale = d3
+      .scaleLinear()
+      .domain(options?.color?.domain ?? [])
+      .range([0, width]);
+
     function brushed(event: d3.D3BrushEvent<unknown>) {
       if (isProgrammatic) {
         isProgrammatic = false; // Reset the flag after programmatic change
@@ -45,10 +50,6 @@ export function legendContinuous(
       }
 
       if (event.selection) {
-        const scale = d3
-          .scaleLinear()
-          .domain(options?.color?.domain ?? [])
-          .range([0, width]);
         const [x0, x1] = event.selection as [number, number];
         if (onBrush) onBrush([scale.invert(x0), scale.invert(x1)]);
       } else {
@@ -57,10 +58,6 @@ export function legendContinuous(
     }
 
     if (initialSelection && initialSelection.length === 2) {
-      const scale = d3
-        .scaleLinear()
-        .domain(options?.color?.domain ?? [])
-        .range([0, width]);
       const [x0, x1] = initialSelection.map(scale) as [number, number];
 
       // Set the flag before programmatically moving the brush
