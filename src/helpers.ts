@@ -11,6 +11,7 @@ import {
   TypesObject,
 } from "./types";
 import { Database } from "duckdb-async";
+import { DuckPlot } from ".";
 
 export async function checkDistinct(
   duckDB: AsyncDuckDB | Database,
@@ -139,18 +140,8 @@ export function getUniqueId() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
 
-export function processRawData(
-  rawData: ChartData,
-  columnConfig: {
-    x?: ColumnType;
-    y?: ColumnType;
-    color?: ColumnType;
-    fy?: ColumnType;
-    fx?: ColumnType;
-    r?: ColumnType;
-    text?: ColumnType;
-  }
-): ChartData {
+export function processRawData(instance: DuckPlot): ChartData {
+  const rawData = instance.rawData();
   if (!rawData || !rawData.types) return [];
 
   // Helper function to determine if a column is a string and defined
@@ -160,13 +151,13 @@ export function processRawData(
   // Define column mappings for chartData, types, and labels
   // TODO: if we rename series to color this should get simpler
   const columnMappings = [
-    { key: "x", column: columnConfig.x },
-    { key: "y", column: columnConfig.y },
-    { key: "series", column: columnConfig.color },
-    { key: "fy", column: columnConfig.fy },
-    { key: "fx", column: columnConfig.fx },
-    { key: "r", column: columnConfig.r },
-    { key: "text", column: columnConfig.text },
+    { key: "x", column: instance.x().column },
+    { key: "y", column: instance.y().column },
+    { key: "series", column: instance.color().column },
+    { key: "fy", column: instance.fy().column },
+    { key: "fx", column: instance.fx().column },
+    { key: "r", column: instance.r().column },
+    { key: "text", column: instance.text().column },
   ];
 
   // Map over raw data to extract chart data based on defined columns

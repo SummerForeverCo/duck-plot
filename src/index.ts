@@ -275,25 +275,26 @@ export class DuckPlot {
       this._rawData = data;
       return this;
     }
-    return this._chartData; // TODO: does this make sense...?
+    return this._rawData;
   }
 
-  // TODO; private? Also, rename
+  // These may come in handy to trigger re-rendering. Also exposes newDataProps
+  // with a getter
+  get newDataProps(): boolean {
+    return this._newDataProps;
+  }
+  // Setter
+  set newDataProps(newValue: boolean) {
+    this._newDataProps = newValue;
+  }
+
   async prepareChartData(): Promise<ChartData> {
     // If no new data properties, return the chartData
     if (!this._newDataProps) return this._chartData;
 
     // If there is raw data rather than a database, extract chart data from it
     if (this._rawData && this._rawData.types) {
-      this._chartData = processRawData(this._rawData, {
-        x: this._x.column,
-        y: this._y.column,
-        color: this._color.column,
-        fy: this._fy.column,
-        fx: this._fx.column,
-        r: this._r.column,
-        text: this._text.column,
-      });
+      this._chartData = processRawData(this);
       this._newDataProps = false;
       this._visibleSeries = []; // reset visible series
       return this._chartData;
