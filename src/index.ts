@@ -287,6 +287,7 @@ export class DuckPlot {
       });
       this._newDataProps = false;
       this._visibleSeries = []; // reset visible series
+      this._seriesDomain = []; // reset domain
       return this._chartData;
     }
     if (!this._ddb || !this._table)
@@ -295,6 +296,7 @@ export class DuckPlot {
     if (!this._mark) throw new Error("Mark type not set");
     this._newDataProps = false;
     this._visibleSeries = []; // reset visible series
+    this._seriesDomain = []; // reset domain
     const columns = {
       ...(this._x.column ? { x: this._x.column } : {}),
       ...(this._y.column ? { y: this._y.column } : {}),
