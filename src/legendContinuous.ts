@@ -2,21 +2,30 @@
 import * as Plot from "@observablehq/plot";
 import * as d3 from "d3";
 import { PlotOptions } from "@observablehq/plot";
-export function legendContinuous(
-  options: PlotOptions,
-  onBrush: null | ((domain: any[]) => void)
-): HTMLDivElement {
+import type { DuckPlot } from ".";
+export async function legendContinuous(
+  instance: DuckPlot
+): Promise<HTMLDivElement> {
+  const color = instance.plotObject?.scale("color");
+  const document = instance.document;
+  const onBrush =
+    instance.config().interactiveLegend === false
+      ? null
+      : (event: number[]) => {
+          instance.seriesDomain = event;
+          instance.render(false);
+        };
+
   // Create a div container
   const container = document.createElement("div");
   container.style.position = "relative"; // Important for positioning elements correctly
   container.style.width = "300px";
-  // container.style.height = "100px";
-  const plotLegend = Plot.legend(options) as HTMLDivElement & Plot.Plot;
+  const plotLegend = Plot.legend({ color }) as HTMLDivElement & Plot.Plot;
   container.appendChild(plotLegend);
   // Create an SVG element for the brush, inside the same div
   if (onBrush !== null) {
-    const width = options.width || 240;
-    const height = options.height || 50;
+    const width = 240;
+    const height = 50;
     const svg = d3
       .select(container)
       .append("svg")
@@ -43,7 +52,7 @@ export function legendContinuous(
         // Gotta make a d3 linear scale
         const scale = d3
           .scaleLinear()
-          .domain(options?.color?.domain ?? [])
+          .domain(color?.domain ?? [])
           .range([0, width]).invert;
         // const colorScale = plotLegend.scale.color;
         const [x0, x1] = event.selection as number[];

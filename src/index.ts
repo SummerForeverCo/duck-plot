@@ -61,7 +61,7 @@ export class DuckPlot {
   private _description: string = ""; // TODO: add tests
   private _queries: QueryMap | undefined = undefined; // TODO: add tests
   private _visibleSeries: string[] = [];
-  private _seriesDomain: any[] = [];
+  private _seriesDomain: number[] = [];
   private _chartElement: HTMLElement | null = null;
   private _id: string;
   private _sorts: Record<string, { domain: string[] } | undefined> = {};
@@ -312,6 +312,13 @@ export class DuckPlot {
   set visibleSeries(newSeries: string[]) {
     this._visibleSeries = newSeries;
   }
+
+  get seriesDomain(): number[] {
+    return this._seriesDomain;
+  }
+  set seriesDomain(newDomain: number[]) {
+    this._seriesDomain = newDomain;
+  }
   get font(): any {
     return this._font;
   }
@@ -496,7 +503,7 @@ export class DuckPlot {
       const div = this._document.createElement("div");
 
       if (this._legendType === "categorical") {
-        // stringify in case of numbers as categories
+        // TODO move this into legendCategorical
         const categories = Array.from(
           this._plotObject.scale("color")?.domain ?? []
         )?.map((d) => `${d}`);
@@ -506,19 +513,7 @@ export class DuckPlot {
         }
         legend = await legendCategorical(this);
       } else {
-        legend = legendContinuous(
-          {
-            color: { ...this._plotObject.scale("color") },
-            label: plotOptions.color?.label,
-            ...(document ? { document } : {}),
-          },
-          this._config.interactiveLegend === false
-            ? null
-            : (event) => {
-                this._seriesDomain = event;
-                this.render(false);
-              }
-        );
+        legend = await legendContinuous(this);
       }
       div.appendChild(legend);
       if (wrapper) wrapper?.appendChild(div);
