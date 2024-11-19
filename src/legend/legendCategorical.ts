@@ -1,4 +1,4 @@
-import type { DuckPlot } from ".";
+import type { DuckPlot } from "..";
 
 export interface Category {
   name: string;

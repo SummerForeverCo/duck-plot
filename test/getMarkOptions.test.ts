@@ -3,7 +3,7 @@ import { DuckPlot } from "../src";
 import { JSDOM } from "jsdom";
 import { describe, expect, it, vi } from "vitest";
 
-import { getMarkOptions } from "../src/getMarkOptions";
+import { getMarkOptions } from "../src/options/getMarkOptions";
 const jsdom = new JSDOM(`
 <!DOCTYPE html>
 <head>

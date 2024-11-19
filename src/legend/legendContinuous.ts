@@ -2,7 +2,7 @@
 import * as Plot from "@observablehq/plot";
 import * as d3 from "d3";
 import { PlotOptions } from "@observablehq/plot";
-import type { DuckPlot } from ".";
+import type { DuckPlot } from "..";
 export async function legendContinuous(
   instance: DuckPlot
 ): Promise<HTMLDivElement> {

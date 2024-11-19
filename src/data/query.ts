@@ -6,7 +6,7 @@ import {
   Aggregate,
   QueryMap,
   ColumnType,
-} from "./types";
+} from "../types";
 
 // Quick helper
 const hasProperty = (prop?: ColumnType): boolean =>

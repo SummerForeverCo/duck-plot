@@ -1,6 +1,6 @@
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-import { quoteColumns } from "./query";
-import { runQuery } from "./runQuery";
+import { quoteColumns } from "./data/query";
+import { runQuery } from "./data/runQuery";
 import {
   BasicColumnType,
   ChartData,

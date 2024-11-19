@@ -1,5 +1,5 @@
 // TODO: add tests for this coalesing
-import type { DuckPlot } from ".";
+import type { DuckPlot } from "..";
 
 export async function derivePlotOptions(instance: DuckPlot) {
   const chartData = await instance.prepareChartData();

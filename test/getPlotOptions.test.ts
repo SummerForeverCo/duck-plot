@@ -5,7 +5,7 @@ import {
   getTickFormatter,
   getTopLevelPlotOptions,
   truncateText,
-} from "../src/getPlotOptions";
+} from "../src/options/getPlotOptions";
 import type { ChartData } from "../src/types";
 import { describe, expect, it, vi } from "vitest";
 // TODO: just use the real duckplot.....

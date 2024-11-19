@@ -8,7 +8,7 @@ import {
   DescribeSchema,
   Indexable,
   QueryMap,
-} from "./types";
+} from "../types";
 import {
   columnIsDefined,
   getAggregateInfo,
@@ -22,10 +22,10 @@ import {
   formatResults,
   checkDistinct,
   columnTypes,
-} from "./helpers";
+} from "../helpers";
 import { Database } from "duckdb-async";
-import type { DuckPlot } from ".";
-import { isColor } from "./getPlotOptions";
+import type { DuckPlot } from "..";
+import { isColor } from "../options/getPlotOptions";
 
 export function getUniqueName() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);

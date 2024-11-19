@@ -2,7 +2,7 @@ import { PlotOptions } from "@observablehq/plot";
 import type { DuckPlot } from ".";
 import { IncomingColumType, PlotProperty } from "./types";
 import equal from "fast-deep-equal";
-import { isColor } from "./getPlotOptions";
+import { isColor } from "./options/getPlotOptions";
 
 export function handleProperty<T extends keyof PlotOptions>(
   instance: DuckPlot,

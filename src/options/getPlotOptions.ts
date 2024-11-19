@@ -1,4 +1,4 @@
-import type { DuckPlot } from ".";
+import type { DuckPlot } from "..";
 import type {
   MarkOptions,
   PlotOptions,
@@ -14,8 +14,8 @@ import type {
   Config,
   Indexable,
   Sorts,
-} from "./types";
-import { borderOptions, defaultColors } from "./helpers";
+} from "../types";
+import { borderOptions, defaultColors } from "../helpers";
 // Extend the MarkOptions to include all the stack options
 interface AllMarkOptions extends MarkOptions, StackOptions {}
 

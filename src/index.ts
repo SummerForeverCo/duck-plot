@@ -14,7 +14,7 @@ import {
   QueryMap,
   Sorts,
 } from "./types";
-import { prepareChartData } from "./prepareChartData";
+import { prepareChartData } from "./data/prepareChartData";
 import {
   getCommonMarks,
   getfyMarks,
@@ -22,16 +22,16 @@ import {
   getSorts,
   getTopLevelPlotOptions,
   isColor,
-} from "./getPlotOptions";
+} from "./options/getPlotOptions";
 import { PlotFit } from "./plotFit";
-import { legendCategorical } from "./legendCategorical";
-import "./legend.css";
-import { legendContinuous } from "./legendContinuous";
+import { legendCategorical } from "./legend/legendCategorical";
+import "./legend/legend.css";
+import { legendContinuous } from "./legend/legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import equal from "fast-deep-equal";
 import { filterData, getUniqueId, processRawData } from "./helpers";
-import { derivePlotOptions } from "./derivePlotOptions";
-import { getMarkOptions } from "./getMarkOptions";
+import { derivePlotOptions } from "./options/derivePlotOptions";
+import { getMarkOptions } from "./options/getMarkOptions";
 import { handleProperty } from "./handleProperty";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
