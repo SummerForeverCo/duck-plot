@@ -288,6 +288,11 @@ export class DuckPlot {
     this._newDataProps = newValue;
   }
 
+  // Adding a getter to access the database
+  get ddb(): AsyncDuckDB | null | undefined {
+    return this._ddb;
+  }
+
   async prepareChartData(): Promise<ChartData> {
     // If no new data properties, return the chartData
     if (!this._newDataProps) return this._chartData;
@@ -301,34 +306,14 @@ export class DuckPlot {
     }
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
-    // TODO: this error isn't being thrown when I'd expect (e.g, if type is not set)
-    if (!this._mark) throw new Error("Mark type not set");
+    // TODO: this should work now work
+    if (!this._mark.markType) throw new Error("Mark type not set");
     this._newDataProps = false;
     this._visibleSeries = []; // reset visible series
-    const columns = {
-      ...(this._x.column ? { x: this._x.column } : {}),
-      ...(this._y.column ? { y: this._y.column } : {}),
-      ...(this._color.column && !isColor(this._color.column)
-        ? { series: this._color.column }
-        : {}), // TODO: naming....?
-      ...(this._fy.column ? { fy: this._fy.column } : {}),
-      ...(this._fx.column ? { fx: this._fx.column } : {}),
-      ...(this._r.column ? { r: this._r.column } : {}),
-      ...(this._text.column ? { text: this._text.column } : {}),
-    };
-    ({
-      data: this._chartData,
-      description: this._description,
-      queries: this._queries,
-    } = await prepareChartData(
-      this._ddb,
-      this._table,
-      columns,
-      this._mark.markType!,
-      this._query,
-      this._config.aggregate,
-      this._config.percent
-    ));
+    const { data, description, queries } = await prepareChartData(this);
+    this._chartData = data;
+    this._description = description;
+    this._queries = queries;
     return this._chartData;
   }
   filteredData(): ChartData {

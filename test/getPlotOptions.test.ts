@@ -209,7 +209,6 @@ describe("getTopLevelPlotOptions", () => {
     // Set domains
     fakeDuckPlot.options(sorts);
     const result = await getTopLevelPlotOptions(fakeDuckPlot);
-    console.log({ fy: result.fy });
     expect(result.fy).toEqual(
       expect.objectContaining({
         domain: ["a", "b", "c"],

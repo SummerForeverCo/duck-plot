@@ -24,6 +24,8 @@ import {
   columnTypes,
 } from "./helpers";
 import { Database } from "duckdb-async";
+import type { DuckPlot } from ".";
+import { isColor } from "./getPlotOptions";
 
 export function getUniqueName() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -31,16 +33,10 @@ export function getUniqueName() {
 
 // Query the local duckdb database and format the result based on the settings
 export async function prepareChartData(
-  ddb: AsyncDuckDB | Database,
-  tableName: string | undefined,
-  config: ColumnConfig,
-  type: ChartType,
-  preQuery?: string,
-  aggregate?: Aggregate,
-  percent?: boolean
+  instance: DuckPlot
 ): Promise<{ data: ChartData; description: string; queries?: QueryMap }> {
   let queries: QueryMap = {};
-  if (!ddb || !tableName)
+  if (!instance.ddb || !instance.table())
     return { data: [], description: "No database or table provided" };
   let description = {
     value: "",
@@ -51,19 +47,39 @@ export async function prepareChartData(
   let preQueryTableName = "";
   const reshapeTableName = getUniqueName();
 
+  // Identify the columns present in the config:
+  const columns = Object.fromEntries(
+    [
+      ["x", instance.x().column],
+      ["y", instance.y().column],
+      [
+        "series",
+        !isColor(instance.color().column) ? instance.color().column : false,
+      ],
+      ["fy", instance.fy().column],
+      ["fx", instance.fx().column],
+      ["r", instance.r().column],
+      ["text", instance.text().column],
+    ].filter(([key, value]) => value) // Remove `false` or `undefined` entries
+  );
+
   // If someone wants to run some arbitary sql first, store that in a temp table
+  const preQuery = instance.query();
   if (preQuery) {
     preQueryTableName = getUniqueName();
     const createStatement = `CREATE TABLE ${preQueryTableName} as ${preQuery}`;
     description.value += `The provided sql query was run.\n`;
     queries["preQuery"] = createStatement;
-    await runQuery(ddb, createStatement);
+    await runQuery(instance.ddb, createStatement);
   }
-  let transformTableFrom = preQuery ? preQueryTableName : tableName;
+  let transformTableFrom = preQuery ? preQueryTableName : instance.table();
 
   // Make sure that the columns are in the schema
-  const initialSchema = await runQuery(ddb, `DESCRIBE ${transformTableFrom}`);
-  const allColumns = Object.entries(config).flatMap(([key, col]) => col);
+  const initialSchema = await runQuery(
+    instance.ddb,
+    `DESCRIBE ${transformTableFrom}`
+  );
+  const allColumns = Object.entries(columns).flatMap(([key, col]) => col);
   const schemaCols = initialSchema.map((row: Indexable) => row.column_name);
 
   // Find the missing columns
@@ -76,35 +92,43 @@ export async function prepareChartData(
   }
   // First, reshape the data if necessary: this will create a NEW DUCKDB TABLE
   // that has generic column names (e.g., `x`, `y`, `series`, etc.)
+
   const tranformQuery = getTransformQuery(
-    type,
-    config,
+    instance.mark().markType,
+    columns,
     transformTableFrom,
     reshapeTableName,
     description
   );
   queries["transform"] = tranformQuery;
-  await runQuery(ddb, tranformQuery);
+  await runQuery(instance.ddb, tranformQuery);
 
   // Detect if the values are distincy across the other columns, for example if
   // the y values are distinct by x, series, and facets for a barY chart. Note,
   // the `r` and `label` columns are not considered for distinct-ness but are
   // passed through for usage
   let distinctCols = (
-    type === "barX" ? ["y", "series", "fy", "fx"] : ["x", "series", "fy", "fx"]
-  ).filter((d) => columnIsDefined(d as keyof ColumnConfig, config));
+    instance.mark().markType === "barX"
+      ? ["y", "series", "fy", "fx"]
+      : ["x", "series", "fy", "fx"]
+  ).filter((d) => columnIsDefined(d as keyof ColumnConfig, columns));
 
   // Catch for reshaped data where series gets added
-  const yValue = Array.isArray(config.y)
-    ? config.y.filter((d) => d)
-    : [config.y];
+  const yValue = Array.isArray(columns.y)
+    ? columns.y.filter((d: any) => d)
+    : [columns.y];
   if (yValue.length > 1 && !distinctCols.includes("series")) {
     distinctCols.push("series");
   }
   // Deteremine if we should aggregate
 
-  const isDistinct = await checkDistinct(ddb, reshapeTableName, distinctCols);
-  const allowsAggregation = allowAggregation(type) || aggregate;
+  const isDistinct = await checkDistinct(
+    instance.ddb,
+    reshapeTableName,
+    distinctCols
+  );
+  const allowsAggregation =
+    allowAggregation(instance.mark().markType) || instance.config().aggregate;
 
   // If there are no distinct columns (e.g., y axis is selected without x axis), we can't aggregate
   const shouldAggregate =
@@ -113,45 +137,45 @@ export async function prepareChartData(
     (distinctCols.includes("y") ||
       distinctCols.includes("x") ||
       distinctCols.includes("fx") ||
-      aggregate);
+      instance.config().aggregate);
   // TODO: do we need the distincCols includes check here...?
-  const transformedTypes = await columnTypes(ddb, reshapeTableName);
+  const transformedTypes = await columnTypes(instance.ddb, reshapeTableName);
   // TODO: more clear arguments in here
   const { labels: aggregateLabels, queryString: aggregateQuery } =
     getAggregateInfo(
-      type,
-      config,
+      instance.mark().markType,
+      columns,
       [...transformedTypes.keys()],
       reshapeTableName,
-      !shouldAggregate ? false : aggregate,
+      !shouldAggregate ? false : instance.config().aggregate,
       description,
-      percent
+      instance.config().percent
     );
   queryString = aggregateQuery;
   labels = aggregateLabels;
   let data;
   let schema: DescribeSchema;
   queries["final"] = queryString;
-  data = await runQuery(ddb, queryString);
-  schema = await runQuery(ddb, `DESCRIBE ${reshapeTableName}`);
+  data = await runQuery(instance.ddb, queryString);
+  schema = await runQuery(instance.ddb, `DESCRIBE ${reshapeTableName}`);
   // Format data as an array of objects
   let formatted: ChartData = formatResults(data, schema);
 
   if (!labels!.series) {
-    labels!.series = getLabel(config.series);
+    labels!.series = getLabel(columns.series);
   }
   if (!labels!.x) {
     // Use the fx label for grouped bar charts
-    labels!.x = getLabel(config.fx ?? config.x);
+    labels!.x = getLabel(columns.fx ?? columns.x);
   }
   if (!labels!.y) {
-    labels!.y = getLabel(config.y);
+    labels!.y = getLabel(columns.y);
   }
   formatted.labels = labels;
   // Drop the reshaped table
-  await runQuery(ddb, `drop table if exists "${reshapeTableName}"`);
+  await runQuery(instance.ddb, `drop table if exists "${reshapeTableName}"`);
   if (preQueryTableName)
-    await runQuery(ddb, `drop table if exists "${preQueryTableName}"`);
+    await runQuery(instance.ddb, `drop table if exists "${preQueryTableName}"`);
   return {
     data: formatted,
     description:
