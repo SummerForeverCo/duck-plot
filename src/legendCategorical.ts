@@ -1,18 +1,26 @@
+import type { DuckPlot } from ".";
+
 export interface Category {
   name: string;
   color: string;
 }
 
-export function legendCategorical(
-  document: Document,
-  categories: string[],
-  visibleCategories: string[],
-  colors: string[],
-  width: number,
-  height: number,
-  label?: string,
-  font?: any // for measuring text width on the server
-): HTMLDivElement {
+export async function legendCategorical(
+  instance: DuckPlot
+): Promise<HTMLDivElement> {
+  const document = instance.document;
+  const categories = Array.from(
+    instance.plotObject?.scale("color")?.domain ?? []
+  )?.map((d) => `${d}`);
+  const visibleCategories = instance.visibleSeries;
+  const colors = Array.from(instance.plotObject?.scale("color")?.range ?? []);
+  const options = await instance.derivePlotOptions();
+  const width = options.width || 500;
+  const height = options.height || 300;
+  const label = options.color?.label;
+
+  const font = instance.font;
+
   // Create a hidden container for measurement
   const hiddenContainer = document.createElement("div");
   hiddenContainer.style.position = "absolute";
@@ -35,6 +43,7 @@ export function legendCategorical(
   const categoriesDiv = document.createElement("div");
   categoriesDiv.className = "dp-categories";
 
+  // Stylize and add active class
   categories.forEach((category, i) => {
     const categoryDiv = document.createElement("div");
     categoryDiv.className = `dp-category${
@@ -56,6 +65,7 @@ export function legendCategorical(
     categoriesDiv.appendChild(categoryDiv);
   });
 
+  // Hold collapsed categories
   const collapsedCategoriesDiv = document.createElement("div");
   collapsedCategoriesDiv.className = "dp-collapsed-categories";
   collapsedCategoriesDiv.addEventListener("click", () =>
@@ -74,6 +84,42 @@ export function legendCategorical(
   updateLegendDisplay(container, font);
   hiddenContainer.remove();
   legend.appendChild(container);
+
+  // Apply click event
+  if (instance.config().interactiveLegend !== false) {
+    const legendElements = legend.querySelectorAll<HTMLElement>(".dp-category");
+
+    legendElements.forEach((element: SVGElement | HTMLElement) => {
+      const elementId = `${element.textContent}`; // stringify in case of numbers as categories
+      if (!elementId) return;
+      element.style.cursor = "pointer";
+      element.addEventListener("click", (event) => {
+        const mouseEvent = event as MouseEvent;
+        // Shift-click: hide all others
+        if (mouseEvent.shiftKey) {
+          // If this is the only visible element, reset all to visible
+          if (
+            instance.visibleSeries.length === 1 &&
+            instance.visibleSeries.includes(elementId)
+          ) {
+            instance.visibleSeries = categories;
+          } else {
+            instance.visibleSeries = [elementId]; // show only this one
+          }
+        } else {
+          // Regular click: toggle visibility of the clicked element
+          if (instance.visibleSeries.includes(elementId)) {
+            instance.visibleSeries = instance.visibleSeries.filter(
+              (id) => id !== elementId
+            ); // Hide the clicked element
+          } else {
+            instance.visibleSeries.push(elementId); // Show the clicked element
+          }
+        }
+        instance.render();
+      });
+    });
+  }
   return legend;
 }
 

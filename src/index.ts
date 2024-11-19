@@ -71,6 +71,8 @@ export class DuckPlot {
     | "categorical"
     | "continuous"
     | undefined;
+  private _plotObject: ((HTMLElement | SVGSVGElement) & Plot.Plot) | undefined =
+    undefined;
 
   constructor(
     ddb?: AsyncDuckDB | null, // Allow null so you can work on the server without a database
@@ -296,6 +298,24 @@ export class DuckPlot {
     return this._isServer;
   }
 
+  get document(): Document {
+    return this._document;
+  }
+  get plotObject(): ((HTMLElement | SVGSVGElement) & Plot.Plot) | undefined {
+    return this._plotObject;
+  }
+
+  // Expose the visible series so the legend can toggle it
+  get visibleSeries(): string[] {
+    return this._visibleSeries;
+  }
+  set visibleSeries(newSeries: string[]) {
+    this._visibleSeries = newSeries;
+  }
+  get font(): any {
+    return this._font;
+  }
+
   async prepareChartData(): Promise<ChartData> {
     // If no new data properties, return the chartData
     if (!this._newDataProps) return this._chartData;
@@ -444,11 +464,11 @@ export class DuckPlot {
       : this._config.autoMargin !== false;
 
     // Create the Plot
-    const plt = autoMargin
+    this._plotObject = autoMargin
       ? PlotFit(plotOptions, {}, this._font)
       : Plot.plot(plotOptions);
 
-    plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    this._plotObject.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     let wrapper: HTMLElement | SVGElement | null = null;
 
     // Find the parent of the existing chart element
@@ -477,63 +497,18 @@ export class DuckPlot {
 
       if (this._legendType === "categorical") {
         // stringify in case of numbers as categories
-        const categories = Array.from(plt.scale("color")?.domain ?? [])?.map(
-          (d) => `${d}`
-        );
+        const categories = Array.from(
+          this._plotObject.scale("color")?.domain ?? []
+        )?.map((d) => `${d}`);
 
         if (this._visibleSeries.length === 0) {
           this._visibleSeries = categories;
         }
-        // TODO: better argument order
-        legend = legendCategorical(
-          this._document,
-          categories,
-          this._visibleSeries,
-          Array.from(plt.scale("color")?.range ?? []),
-          plotOptions?.width || 500, // TODO: default width
-          plotOptions.height || 300,
-          plotOptions.color?.label ?? "",
-          this._font
-        );
-        if (this._config.interactiveLegend !== false) {
-          const legendElements =
-            legend.querySelectorAll<HTMLElement>(".dp-category");
-
-          legendElements.forEach((element: SVGElement | HTMLElement) => {
-            const elementId = `${element.textContent}`; // stringify in case of numbers as categories
-            if (!elementId) return;
-            element.style.cursor = "pointer";
-            element.addEventListener("click", (event) => {
-              const mouseEvent = event as MouseEvent;
-              // Shift-click: hide all others
-              if (mouseEvent.shiftKey) {
-                // If this is the only visible element, reset all to visible
-                if (
-                  this._visibleSeries.length === 1 &&
-                  this._visibleSeries.includes(elementId)
-                ) {
-                  this._visibleSeries = categories;
-                } else {
-                  this._visibleSeries = [elementId]; // show only this one
-                }
-              } else {
-                // Regular click: toggle visibility of the clicked element
-                if (this._visibleSeries.includes(elementId)) {
-                  this._visibleSeries = this._visibleSeries.filter(
-                    (id) => id !== elementId
-                  ); // Hide the clicked element
-                } else {
-                  this._visibleSeries.push(elementId); // Show the clicked element
-                }
-              }
-              this.render();
-            });
-          });
-        }
+        legend = await legendCategorical(this);
       } else {
         legend = legendContinuous(
           {
-            color: { ...plt.scale("color") },
+            color: { ...this._plotObject.scale("color") },
             label: plotOptions.color?.label,
             ...(document ? { document } : {}),
           },
@@ -549,7 +524,7 @@ export class DuckPlot {
       if (wrapper) wrapper?.appendChild(div);
     }
     if (wrapper) {
-      wrapper.appendChild(plt);
+      wrapper.appendChild(this._plotObject);
       this._chartElement = wrapper as HTMLElement; // track this for re-rendering via interactivity
     }
     return wrapper ?? null;
