@@ -32,6 +32,7 @@ import equal from "fast-deep-equal";
 import { filterData, getUniqueId, processRawData } from "./helpers";
 import { derivePlotOptions } from "./derivePlotOptions";
 import { getMarkOptions } from "./getMarkOptions";
+import { handleProperty } from "./handleProperty";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | undefined | null = null;
@@ -114,38 +115,6 @@ export class DuckPlot {
     }
     return this._query;
   }
-  // Helper method for getting and setting x, y, color, and fy properties
-  private handleProperty<T extends keyof PlotOptions>(
-    prop: PlotProperty<T>,
-    column?: IncomingColumType,
-    options?: PlotOptions[T],
-    propertyName?: string
-  ): PlotProperty<T> | this {
-    // Because we store empty string for falsey values, we need to check them
-    const columnValue = column === false || column === null ? "" : column;
-
-    if (column !== undefined && !equal(columnValue, prop.column)) {
-      // Special case handling that we don't need data if color is/was a color
-      if (
-        !(
-          propertyName === "color" &&
-          isColor(prop.column) &&
-          typeof column === "string" &&
-          isColor(column)
-        )
-      ) {
-        this._newDataProps = true; // When changed, we need to requery the data
-      }
-    }
-    if (column === false || column === null) {
-      prop.column = "";
-      prop.options = undefined;
-    } else {
-      if (column !== undefined) prop.column = column;
-      if (options !== undefined) prop.options = options;
-    }
-    return column === undefined ? prop : this;
-  }
 
   // x column encoding
   x(): PlotProperty<"x">;
@@ -153,8 +122,8 @@ export class DuckPlot {
   x(
     column?: IncomingColumType,
     options?: PlotOptions["x"]
-  ): PlotProperty<"x"> | this {
-    return this.handleProperty(this._x, column, options);
+  ): PlotProperty<"x"> | DuckPlot {
+    return handleProperty(this, this._x, column, options);
   }
 
   // y column encoding
@@ -163,8 +132,8 @@ export class DuckPlot {
   y(
     column?: IncomingColumType,
     options?: PlotOptions["y"]
-  ): PlotProperty<"y"> | this {
-    return this.handleProperty(this._y, column, options);
+  ): PlotProperty<"y"> | DuckPlot {
+    return handleProperty(this, this._y, column, options);
   }
 
   // color column encoding
@@ -173,8 +142,8 @@ export class DuckPlot {
   color(
     column?: IncomingColumType,
     options?: PlotOptions["color"]
-  ): PlotProperty<"color"> | this {
-    return this.handleProperty(this._color, column, options, "color");
+  ): PlotProperty<"color"> | DuckPlot {
+    return handleProperty(this, this._color, column, options, "color");
   }
 
   // fy column encoding
@@ -184,8 +153,8 @@ export class DuckPlot {
   fy(
     column?: IncomingColumType,
     options?: PlotOptions["fy"]
-  ): PlotProperty<"fy"> | this {
-    return this.handleProperty(this._fy, column, options);
+  ): PlotProperty<"fy"> | DuckPlot {
+    return handleProperty(this, this._fy, column, options);
   }
 
   // fy column encoding
@@ -195,22 +164,22 @@ export class DuckPlot {
   fx(
     column?: IncomingColumType,
     options?: PlotOptions["fx"]
-  ): PlotProperty<"fx"> | this {
-    return this.handleProperty(this._fx, column, options);
+  ): PlotProperty<"fx"> | DuckPlot {
+    return handleProperty(this, this._fx, column, options);
   }
 
   // r (radius) column encoding
   r(): { column: string };
   r(column: IncomingColumType): this;
-  r(column?: IncomingColumType): { column?: ColumnType } | this {
-    return this.handleProperty(this._r, column);
+  r(column?: IncomingColumType): { column?: ColumnType } | DuckPlot {
+    return handleProperty(this, this._r, column);
   }
 
   // Text encoding: note, there are no options for text
   text(): { column: string };
   text(column: IncomingColumType): this;
-  text(column?: IncomingColumType): { column?: ColumnType } | this {
-    return this.handleProperty(this._text, column);
+  text(column?: IncomingColumType): { column?: ColumnType } | DuckPlot {
+    return handleProperty(this, this._text, column);
   }
 
   mark(): MarkProperty;
