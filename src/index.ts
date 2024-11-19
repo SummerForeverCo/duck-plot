@@ -21,7 +21,6 @@ import {
   getLegendType,
   getSorts,
   getTopLevelPlotOptions,
-  isColor,
 } from "./options/getPlotOptions";
 import { PlotFit } from "./plotFit";
 import { legendCategorical } from "./legend/legendCategorical";
