@@ -202,3 +202,15 @@ export function filterData(
       )
     : data;
 }
+
+export const defaultColors = [
+  "rgba(255, 0, 184, 1)",
+  "rgba(0, 183, 255, 1)",
+  "rgba(255, 237, 0, 1)",
+  "rgba(0, 202, 99, 1)",
+  "rgba(255, 83, 0, 1)",
+];
+export const borderOptions = {
+  backgroundColor: "hsla( 0 0% 100%)",
+  borderColor: "rgb(228, 229, 231)",
+};

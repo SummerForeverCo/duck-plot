@@ -1,5 +1,3 @@
-import { defaultColors } from "./getPlotOptions";
-
 export interface Category {
   name: string;
   color: string;

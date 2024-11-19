@@ -19,7 +19,6 @@ import {
   getCommonMarks,
   getfyMarks,
   getLegendType,
-  getMarkOptions,
   getSorts,
   getTopLevelPlotOptions,
   isColor,
@@ -32,6 +31,7 @@ import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import equal from "fast-deep-equal";
 import { filterData, getUniqueId, processRawData } from "./helpers";
 import { derivePlotOptions } from "./derivePlotOptions";
+import { getMarkOptions } from "./getMarkOptions";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | undefined | null = null;
@@ -55,7 +55,7 @@ export class DuckPlot {
   private _newDataProps: boolean = true;
   private _chartData: ChartData = [];
   private _rawData: ChartData = [];
-  private _filteredData: ChartData = [];
+  private _filteredData: ChartData | undefined = undefined;
   private _config: Config = {};
   private _query: string = "";
   private _description: string = ""; // TODO: add tests
@@ -73,7 +73,7 @@ export class DuckPlot {
     | undefined;
 
   constructor(
-    ddb?: AsyncDuckDB,
+    ddb?: AsyncDuckDB | null, // Allow null so you can work on the server without a database
     { jsdom, font }: { jsdom?: JSDOM; font?: any } = {}
   ) {
     this._ddb = ddb;
@@ -292,6 +292,9 @@ export class DuckPlot {
   get ddb(): AsyncDuckDB | null | undefined {
     return this._ddb;
   }
+  get isServer(): boolean {
+    return this._isServer;
+  }
 
   async prepareChartData(): Promise<ChartData> {
     // If no new data properties, return the chartData
@@ -317,7 +320,7 @@ export class DuckPlot {
     return this._chartData;
   }
   filteredData(): ChartData {
-    return this._filteredData;
+    return this._filteredData ?? this._chartData; // Return chart data if no filtered data
   }
   sorts(): Sorts | undefined {
     return this._sorts;
@@ -341,24 +344,8 @@ export class DuckPlot {
     const plotOptions = await this.derivePlotOptions();
     const currentColumns = this._filteredData?.types
       ? Object.keys(this._filteredData.types)
-      : []; // TODO: remove this arg from topLevelPlotOptions
-    const primaryMarkOptions = getMarkOptions(
-      currentColumns,
-      this._mark.markType,
-      types,
-      {
-        color: isColor(this._color.column)
-          ? String(this._color.column)
-          : undefined,
-        tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
-        xLabel: this._config.tipLabels?.x ?? plotOptions.x?.label ?? "",
-        yLabel: this._config.tipLabels?.y ?? plotOptions.y?.label ?? "",
-        xValue: this._config.tipValues?.x,
-        yValue: this._config.tipValues?.y,
-        // TODO: suppport colorLabel, colorValue
-        markOptions: this._mark.options,
-      }
-    );
+      : [];
+    const primaryMarkOptions = await getMarkOptions(this);
 
     // Here, we want to add the primary mark if x and y are defined OR if an
     // aggregate has been specifid. Not a great rule, but works for now for
@@ -379,7 +366,6 @@ export class DuckPlot {
             ),
           ];
 
-    // TODO: double check you don't actually use border color
     // TODO: Make frame/grid config options(?)
     const commonPlotMarks = [
       ...getCommonMarks(currentColumns),

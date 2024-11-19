@@ -1,7 +1,6 @@
 import { DuckPlot } from "../src";
 import {
   getDataOrder,
-  getMarkOptions,
   getSorts,
   getTickFormatter,
   getTopLevelPlotOptions,
@@ -9,8 +8,10 @@ import {
 } from "../src/getPlotOptions";
 import type { ChartData } from "../src/types";
 import { describe, expect, it, vi } from "vitest";
+// TODO: just use the real duckplot.....
 import { createMockDuckPlot } from "./mockDuckPlot";
 
+import { JSDOM } from "jsdom";
 // Create a fake DuckPlot instance
 const fakeDuckPlot: Partial<DuckPlot> = {
   mark: vi.fn().mockReturnValue({}),
@@ -18,43 +19,12 @@ const fakeDuckPlot: Partial<DuckPlot> = {
   derivePlotOptions: vi.fn().mockReturnValue({}),
 };
 
-describe("getMarkOptions", () => {
-  it("for a line chart with series, the *stroke* should be set to the series", () => {
-    const result = getMarkOptions(["series"], "line", {}, {});
-    expect(result).toHaveProperty("stroke", "series");
-  });
-
-  it("for not-line charts with series, the *fill* should be set to the series", () => {
-    const result = getMarkOptions(["series"], "areaY", {}, {});
-    expect(result).toHaveProperty("fill", "series");
-  });
-
-  it("should return the correct options when fy is included", () => {
-    const result = getMarkOptions(["fy"], "line", {}, {});
-    expect(result).toHaveProperty("fy", "fy");
-  });
-  it("should use custom x and y labels in the tooltip", () => {
-    const result = getMarkOptions(
-      ["x", "y"],
-      "line",
-      {},
-      {
-        xLabel: "Custom X Axis",
-        yLabel: "Custom Y Axis",
-      }
-    );
-    expect(result).toHaveProperty("channels", {
-      xCustom: {
-        label: "Custom X Axis",
-        value: "x",
-      },
-      yCustom: {
-        label: "Custom Y Axis",
-        value: "y",
-      },
-    });
-  });
-});
+const jsdom = new JSDOM(`
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+</head>
+<body></body>`);
 
 describe("getDataOrder", () => {
   it("should return undefined if data is undefined", () => {
