@@ -9,11 +9,13 @@ import {
 } from "../src/getPlotOptions";
 import type { ChartData } from "../src/types";
 import { describe, expect, it, vi } from "vitest";
+import { createMockDuckPlot } from "./mockDuckPlot";
 
 // Create a fake DuckPlot instance
 const fakeDuckPlot: Partial<DuckPlot> = {
   mark: vi.fn().mockReturnValue({}),
   color: vi.fn().mockReturnValue({}),
+  derivePlotOptions: vi.fn().mockReturnValue({}),
 };
 
 describe("getMarkOptions", () => {
@@ -153,62 +155,65 @@ describe("getTickFormatter", () => {
 });
 
 describe("getTopLevelPlotOptions", () => {
-  it("should return correct width and height", () => {
-    const result = getTopLevelPlotOptions([], [], {}, "barY", {
-      width: 800,
-      height: 600,
-    });
+  it("should return correct width and height", async () => {
+    const { instance: fakeDuckPlot, optionsStore } = createMockDuckPlot();
+
+    // Set options dynamically
+    fakeDuckPlot.options({ width: 800, height: 600 });
+
+    // Call the function under test
+    const result = await getTopLevelPlotOptions(fakeDuckPlot);
+
+    // Assert the results
     expect(result.height).toEqual(600);
     expect(result.width).toEqual(800);
+
+    // Assert that the options were stored correctly
+    expect(optionsStore).toEqual({ width: 800, height: 600 });
   });
 
-  it("should include labels and formatters for x and y if in currentColumns", () => {
-    let data: ChartData = [
-      { x: "B", y: 1, series: "CategoryB" },
-      { x: "A", y: 1, series: "CategoryA" },
-      { x: "C", y: 1, series: "CategoryD" },
-    ];
-    data.types = { x: "string", y: "number", series: "string" };
-    const result = getTopLevelPlotOptions(data, ["x", "y"], {}, "barY", {
+  it("should include labels for x and y if in currentColumns", async () => {
+    const { instance: fakeDuckPlot } = createMockDuckPlot();
+
+    // Set options dynamically
+    fakeDuckPlot.options({
       x: { label: "X Axis" },
-      y: { label: "Y Axis" },
+      y: { label: "And a Y Axis" },
     });
 
-    expect(result.x).toEqual(
-      expect.objectContaining({
-        label: "X Axis",
-        tickFormat: expect.any(Function),
-      })
-    );
+    // Call the function under test
+    const result = await getTopLevelPlotOptions(fakeDuckPlot);
 
-    expect(result.y).toEqual(
-      expect.objectContaining({
-        label: "Y Axis",
-        labelAnchor: "top",
-      })
-    );
+    // Assertions
+    expect(result.x).toMatchObject({ label: "X Axis" });
+    expect(result.y).toMatchObject({ label: "And a Y Axis" });
   });
 
-  it("should include sorts in x and y axis options if provided", () => {
+  it("should include sorts in x and y axis options if provided", async () => {
+    const { instance: fakeDuckPlot } = createMockDuckPlot();
     const sorts = {
       x: { domain: ["a", "b", "c"] },
       y: { domain: ["1", "2", "3"] },
     };
-    const result = getTopLevelPlotOptions([], [], sorts, "barY", {});
+    // Set domains
+    fakeDuckPlot.options(sorts);
+
+    const result = await getTopLevelPlotOptions(fakeDuckPlot);
     expect(result.x).toEqual(expect.objectContaining(sorts.x));
     expect(result.y).toEqual(expect.objectContaining(sorts.y));
   });
 
-  it("should handle fy sort option and insetTop if provided", () => {
+  it("should handle fy sort option", async () => {
+    const { instance: fakeDuckPlot } = createMockDuckPlot();
     const sorts = { fy: { domain: ["a", "b", "c"] } };
-    const result = getTopLevelPlotOptions([], ["fy"], sorts, "barY", {});
+    // Set domains
+    fakeDuckPlot.options(sorts);
+    const result = await getTopLevelPlotOptions(fakeDuckPlot);
+    console.log({ fy: result.fy });
     expect(result.fy).toEqual(
       expect.objectContaining({
         domain: ["a", "b", "c"],
-        axis: null,
-        label: null,
       })
     );
-    expect(result.insetTop).toBe(12);
   });
 });

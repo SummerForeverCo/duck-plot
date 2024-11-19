@@ -12,6 +12,7 @@ import {
   MarkProperty,
   PlotProperty,
   QueryMap,
+  Sorts,
 } from "./types";
 import { prepareChartData } from "./prepareChartData";
 import {
@@ -30,6 +31,7 @@ import { legendContinuous } from "./legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import equal from "fast-deep-equal";
 import { filterData, getUniqueId, processRawData } from "./helpers";
+import { derivePlotOptions } from "./derivePlotOptions";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | undefined | null = null;
@@ -62,6 +64,13 @@ export class DuckPlot {
   private _seriesDomain: any[] = [];
   private _chartElement: HTMLElement | null = null;
   private _id: string;
+  private _sorts: Record<string, { domain: string[] } | undefined> = {};
+  private _hasLegend: boolean | undefined;
+  private _legendType:
+    | Plot.ScaleType
+    | "categorical"
+    | "continuous"
+    | undefined;
 
   constructor(
     ddb?: AsyncDuckDB,
@@ -324,6 +333,9 @@ export class DuckPlot {
   filteredData(): ChartData {
     return this._filteredData;
   }
+  sorts(): Sorts | undefined {
+    return this._sorts;
+  }
   async getMarks(): Promise<Markish[]> {
     const allData = await this.prepareChartData();
 
@@ -340,7 +352,7 @@ export class DuckPlot {
     // Reassign the named properties back to the filtered array
     this._filteredData.types = types;
     this._filteredData.labels = labels;
-    const plotOptions = await this.getPlotOptions();
+    const plotOptions = await this.derivePlotOptions();
     const currentColumns = this._filteredData?.types
       ? Object.keys(this._filteredData.types)
       : []; // TODO: remove this arg from topLevelPlotOptions
@@ -400,40 +412,9 @@ export class DuckPlot {
     ];
   }
 
-  async getPlotOptions(): Promise<PlotOptions> {
-    const chartData = await this.prepareChartData();
-
-    // Because users can specify options either in .options or with each column, we coalese them here
-    let plotOptions = {
-      ...this._options,
-      x: {
-        ...this._options.x,
-        ...this._x.options,
-      },
-      y: {
-        ...this._options.y,
-        ...this._y.options,
-      },
-      color: {
-        ...this._options.color,
-        ...this._color.options,
-      },
-      // TODO: figure out how we want to handle fx and fy (and their options).
-      // Probably not allow them to be passed in.
-      fy: {
-        ...this._options.fy,
-        ...this._fy.options,
-      },
-    };
-
-    // Fallback to computed labels if they are undefined
-    if (plotOptions.x.label === undefined)
-      plotOptions.x.label = chartData.labels?.x;
-    if (plotOptions.y.label === undefined)
-      plotOptions.y.label = chartData.labels?.y;
-    if (plotOptions.color.label === undefined)
-      plotOptions.color.label = chartData.labels?.series;
-    return plotOptions;
+  // Because users can specify options either in .options or with each column, we coalese them here
+  async derivePlotOptions(): Promise<PlotOptions> {
+    return await derivePlotOptions(this);
   }
   describe(): string {
     return this._description;
@@ -441,47 +422,43 @@ export class DuckPlot {
   queries(): QueryMap | undefined {
     return this._queries;
   }
+
+  // Set the sorts for the plot
+  private setSorts() {
+    this._sorts = getSorts(this) ?? {};
+    // Only display the facets for present data
+    if (Object.keys(this._chartData?.types ?? {}).includes("fy")) {
+      this._sorts = {
+        ...this._sorts,
+        fy: getSorts(this, ["fy"], this._filteredData).fy,
+      };
+    }
+  }
+  // Track the legend type and visibility
+  setLegend(plotOptions: Plot.PlotOptions) {
+    // Note, displaying legends by default
+    this._hasLegend =
+      this._chartData.types?.series !== undefined &&
+      plotOptions.color?.legend !== null &&
+      plotOptions.color?.legend !== false;
+    this._legendType =
+      plotOptions.color?.type ?? getLegendType(this._chartData);
+  }
+  getLegendSettings() {
+    return {
+      hasLegend: this._hasLegend,
+      legendType: this._legendType,
+    };
+  }
   async render(
     newLegend: boolean = true
   ): Promise<SVGElement | HTMLElement | null> {
     if (!this._mark) return null;
     const marks = await this.getMarks(); // updates this._chartData and this._filteredData
-    const currentColumns = this._chartData?.types
-      ? Object.keys(this._chartData.types)
-      : []; // TODO: remove this arg from topLevelPlotOptions
     const document = this._isServer ? this._jsdom!.window.document : undefined;
-    let sorts = getSorts(this);
-    // Only display the facets for present data
-    if (currentColumns.includes("fy")) {
-      sorts.fy = getSorts(this, ["fy"], this._filteredData);
-    }
-    const plotOptions = await this.getPlotOptions();
-    // Note, displaying legends by default
-    const legendDisplay = plotOptions.color?.legend ?? true;
-    const hasLegend =
-      this._chartData.types?.series !== undefined && legendDisplay;
-    const legendType =
-      plotOptions.color?.type ?? getLegendType(this._chartData, currentColumns);
-    // TODO: maybe rename series to color....?
-    const legendLabel = plotOptions.color?.label;
-
-    // Different legend height for continuous, leave space for categorical label
-    const legendHeight =
-      legendType === "continuous" ? 50 : legendLabel ? 44 : 28;
-    plotOptions.height = hasLegend
-      ? (plotOptions.height || 281) - legendHeight
-      : plotOptions.height || 281;
-
-    const topLevelPlotOptions = getTopLevelPlotOptions(
-      this._chartData,
-      currentColumns,
-      sorts,
-      this._mark.markType,
-      plotOptions,
-      this._config
-    );
-
-    const options = {
+    this.setSorts();
+    const topLevelPlotOptions = await getTopLevelPlotOptions(this);
+    const plotOptions = {
       ...topLevelPlotOptions,
       marks,
       ...(document ? { document } : {}),
@@ -494,9 +471,10 @@ export class DuckPlot {
       ? false
       : this._config.autoMargin !== false;
 
+    // Create the Plot
     const plt = autoMargin
-      ? PlotFit(options, {}, this._font)
-      : Plot.plot(options);
+      ? PlotFit(plotOptions, {}, this._font)
+      : Plot.plot(plotOptions);
 
     plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     let wrapper: HTMLElement | SVGElement | null = null;
@@ -520,11 +498,12 @@ export class DuckPlot {
       wrapper = this._document.createElement("div");
       wrapper.id = this._id;
     }
-    if (hasLegend && newLegend) {
+
+    if (this._hasLegend && newLegend) {
       let legend: HTMLDivElement;
       const div = this._document.createElement("div");
 
-      if (legendType === "categorical") {
+      if (this._legendType === "categorical") {
         // stringify in case of numbers as categories
         const categories = Array.from(plt.scale("color")?.domain ?? [])?.map(
           (d) => `${d}`
@@ -540,8 +519,8 @@ export class DuckPlot {
           this._visibleSeries,
           Array.from(plt.scale("color")?.range ?? []),
           plotOptions?.width || 500, // TODO: default width
-          plotOptions.height,
-          legendLabel ?? "",
+          plotOptions.height || 300,
+          plotOptions.color?.label ?? "",
           this._font
         );
         if (this._config.interactiveLegend !== false) {
@@ -583,7 +562,7 @@ export class DuckPlot {
         legend = legendContinuous(
           {
             color: { ...plt.scale("color") },
-            label: legendLabel,
+            label: plotOptions.color?.label,
             ...(document ? { document } : {}),
           },
           this._config.interactiveLegend === false

@@ -117,3 +117,11 @@ export type QueryMap = {
   [key: string]: string;
 };
 export type DuckPlotInstance = DuckPlot;
+
+export type Sorts = {
+  x?: { domain: string[] };
+  y?: { domain: string[] };
+  fx?: { domain: string[] };
+  fy?: { domain: string[] };
+  series?: { domain: string[] }; // TODO, color?
+};

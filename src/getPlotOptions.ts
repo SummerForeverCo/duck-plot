@@ -13,6 +13,7 @@ import type {
   ColumnType,
   Config,
   Indexable,
+  Sorts,
 } from "./types";
 // Extend the MarkOptions to include all the stack options
 interface AllMarkOptions extends MarkOptions, StackOptions {}
@@ -131,7 +132,7 @@ export function getSorts(
   instance: DuckPlot,
   columns?: string[],
   inputData?: ChartData
-) {
+): Sorts {
   // Because the sort can be specified in the options, remove any colums who
   // have a sort specified
   const haveSorts = Object.keys(instance.mark()?.options?.sort ?? {});
@@ -177,19 +178,19 @@ const defaultConfig = {
 };
 // Get the top level configurations for the plot object
 // TODO: better argument order or naming
-export function getTopLevelPlotOptions(
-  data: ChartData | undefined,
-  currentColumns: string[],
-  sorts: any,
-  type: ChartType,
-  userOptions: PlotOptions,
-  userConfig?: Config
-) {
-  const options = { ...defaultOptions, ...userOptions };
-  const config = { ...defaultConfig, ...userConfig };
+export async function getTopLevelPlotOptions(instance: DuckPlot) {
+  const options = {
+    ...defaultOptions,
+    ...(await instance.derivePlotOptions()),
+  };
+  const config = { ...defaultConfig, ...instance.config() };
+  const sorts = instance.sorts();
+  const data = instance.data();
+  const currentColumns = data?.types ? Object.keys(data.types ?? {}) : [];
+
   // Only compute a custom x/y domain if the other axes is missing
   // Make sure a minimum of 0 is included for x/y domains
-  const xDomain = sorts.x
+  const xDomain = sorts?.x
     ? sorts.x
     : currentColumns.includes("y")
     ? {}
@@ -199,7 +200,7 @@ export function getTopLevelPlotOptions(
           (d) => d.x
         ),
       };
-  const yDomain = sorts.y
+  const yDomain = sorts?.y
     ? sorts.y
     : currentColumns.includes("x")
     ? {}
@@ -212,7 +213,7 @@ export function getTopLevelPlotOptions(
 
   // Handle 3 options for color: note, color as a string is assigned in the mark
   const { color: colorConfig } = options;
-  const { domain: sortsDomainRaw } = sorts.series || {};
+  const { domain: sortsDomainRaw } = sorts?.series || {};
   // If a domain ins't provided, use the data to determine the domain for
   // continuous series (e.g., numbers or dates). Note, this uses the full
   // dataset (not any filtered data from brushing)
@@ -313,7 +314,7 @@ export function getTopLevelPlotOptions(
     color: { ...computedColor, ...options.color },
     ...(currentColumns.includes("fy")
       ? {
-          fy: { ...sorts.fy, axis: null, label: null, ...options.fy },
+          fy: { ...sorts?.fy, axis: null, label: null, ...options.fy },
           insetTop: options.insetTop || 12,
         }
       : {}),
@@ -361,10 +362,9 @@ export function getTickFormatter(
 
 // Gets the type of legend to handle rendering
 export function getLegendType(
-  data: any,
-  currentColumns: string[]
+  data: ChartData
 ): "categorical" | "continuous" | undefined {
-  if (!data.types || !currentColumns.includes("series")) return;
+  if (!data.types) return;
   return data.types.series === "string" ? "categorical" : "continuous";
 }
 
