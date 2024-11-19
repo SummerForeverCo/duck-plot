@@ -601,7 +601,8 @@ export class DuckPlot {
             : (event) => {
                 this._seriesDomain = event;
                 this.render(false);
-              }
+              },
+          this._seriesDomain
         );
       }
       div.appendChild(legend);
