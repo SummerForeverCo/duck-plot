@@ -20,7 +20,7 @@ import {
   getSorts,
   getTopLevelPlotOptions,
 } from "./options/getPlotOptions";
-import { PlotFit } from "./plotFit";
+import { PlotAutoMargin } from "./render/plotAutoMargin";
 import { legendCategorical } from "./legend/legendCategorical";
 import "./legend/legend.css";
 import { legendContinuous } from "./legend/legendContinuous";
@@ -29,6 +29,7 @@ import { getUniqueId, processRawData } from "./helpers";
 import { derivePlotOptions } from "./options/derivePlotOptions";
 import { handleProperty } from "./handleProperty";
 import { getAllMarkOptions } from "./options/getAllMarkOptions";
+import { render } from "./render/render";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | undefined | null = null;
@@ -264,6 +265,10 @@ export class DuckPlot {
     return this._plotObject;
   }
 
+  set plotObject(obj: ((HTMLElement | SVGSVGElement) & Plot.Plot) | undefined) {
+    this._plotObject = obj;
+  }
+
   // Expose the visible series so the legend can toggle it
   get visibleSeries(): string[] {
     return this._visibleSeries;
@@ -280,6 +285,18 @@ export class DuckPlot {
   }
   get font(): any {
     return this._font;
+  }
+  get jsdom(): any {
+    return this._jsdom;
+  }
+  get chartElement(): HTMLElement | null {
+    return this._chartElement;
+  }
+  set chartElement(element: HTMLElement | null) {
+    this._chartElement = element;
+  }
+  get id(): string {
+    return this._id;
   }
   data(): ChartData {
     return this._chartData || [];
@@ -335,7 +352,7 @@ export class DuckPlot {
   }
 
   // Set the sorts for the plot
-  private setSorts() {
+  setSorts() {
     this._sorts = getSorts(this) ?? {};
     // Only display the facets for present data
     if (Object.keys(this._chartData?.types ?? {}).includes("fy")) {
@@ -364,68 +381,6 @@ export class DuckPlot {
   async render(
     newLegend: boolean = true
   ): Promise<SVGElement | HTMLElement | null> {
-    if (!this._mark) return null;
-    const marks = await this.getAllMarkOptions(); // updates this._chartData and this._filteredData
-    const document = this._isServer ? this._jsdom!.window.document : undefined;
-    this.setSorts();
-    const topLevelPlotOptions = await getTopLevelPlotOptions(this);
-    const plotOptions = {
-      ...topLevelPlotOptions,
-      marks,
-      ...(document ? { document } : {}),
-    };
-
-    // Adjust margins UNLESS specified otherwise AND not on the server without a
-    // font
-    const serverWithoutFont = this._isServer && !this._font;
-    const autoMargin = serverWithoutFont
-      ? false
-      : this._config.autoMargin !== false;
-
-    // Create the Plot
-    this._plotObject = autoMargin
-      ? PlotFit(plotOptions, {}, this._font)
-      : Plot.plot(plotOptions);
-
-    this._plotObject.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-    let wrapper: HTMLElement | SVGElement | null = null;
-
-    // Find the parent of the existing chart element
-    const parentElement = this._chartElement?.parentElement;
-    // Replace existing content if there's a parent (for interactions)
-    if (parentElement) {
-      const existingWrapper = parentElement.querySelector(`#${this._id}`);
-      if (existingWrapper) {
-        wrapper = existingWrapper as HTMLElement | SVGElement;
-        // Clear the wrapper if we're updating the legend
-        if (newLegend) {
-          wrapper.innerHTML = "";
-        } else {
-          // Otherwise just remove the plot
-          wrapper.removeChild(wrapper.lastChild!);
-        }
-      }
-    } else {
-      wrapper = this._document.createElement("div");
-      wrapper.id = this._id;
-    }
-
-    if (this._hasLegend && newLegend) {
-      let legend: HTMLDivElement;
-      const div = this._document.createElement("div");
-
-      if (this._legendType === "categorical") {
-        legend = await legendCategorical(this);
-      } else {
-        legend = await legendContinuous(this);
-      }
-      div.appendChild(legend);
-      if (wrapper) wrapper?.appendChild(div);
-    }
-    if (wrapper) {
-      wrapper.appendChild(this._plotObject);
-      this._chartElement = wrapper as HTMLElement; // track this for re-rendering via interactivity
-    }
-    return wrapper ?? null;
+    return render(this, newLegend);
   }
 }
