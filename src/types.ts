@@ -73,7 +73,7 @@ export type PlotProperty<T extends keyof PlotOptions> = {
 };
 
 export type MarkProperty = {
-  markType: ChartType;
+  type?: ChartType;
   options?: MarkOptions;
 };
 

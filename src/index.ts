@@ -25,7 +25,6 @@ import { legendCategorical } from "./legend/legendCategorical";
 import "./legend/legend.css";
 import { legendContinuous } from "./legend/legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-import equal from "fast-deep-equal";
 import { getUniqueId, processRawData } from "./helpers";
 import { derivePlotOptions } from "./options/derivePlotOptions";
 import { handleProperty } from "./handleProperty";
@@ -42,7 +41,7 @@ export class DuckPlot {
   private _text: { column: string } = { column: "" };
   private _color: PlotProperty<"color"> = { ...emptyProp };
   private _mark: MarkProperty = {
-    markType: "line",
+    type: undefined,
     options: {},
   };
   private _options: PlotOptions = {};
@@ -86,6 +85,7 @@ export class DuckPlot {
     this._id = getUniqueId();
   }
 
+  // Set the table to query against
   table(): string;
   table(table: string): this;
   table(table?: string): string | this {
@@ -179,17 +179,18 @@ export class DuckPlot {
     return handleProperty(this, this._text, column);
   }
 
+  // Observable Plot Mark type and options
   mark(): MarkProperty;
-  mark(markType: ChartType, options?: MarkProperty["options"]): this;
+  mark(type: ChartType, options?: MarkProperty["options"]): this;
   mark(
-    markType?: ChartType,
+    type?: ChartType,
     options?: MarkProperty["options"]
   ): MarkProperty | this {
-    if (markType) {
-      if (this._mark.markType !== markType) {
+    if (type) {
+      if (this._mark.type !== type) {
         this._newDataProps = true; // when changed, we need to requery the data
       }
-      this._mark = { markType, ...(options ? { options } : {}) };
+      this._mark = { type, ...(options ? { options } : {}) };
       return this;
     }
     return this._mark!;
@@ -298,7 +299,7 @@ export class DuckPlot {
     if (!this._ddb || !this._table)
       throw new Error("Database and table not set");
     // TODO: this should work now work
-    if (!this._mark.markType) throw new Error("Mark type not set");
+    if (!this._mark.type) throw new Error("Mark type not set");
     this._newDataProps = false;
     this._visibleSeries = []; // reset visible series
     const { data, description, queries } = await prepareChartData(this);

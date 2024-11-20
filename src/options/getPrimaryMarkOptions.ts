@@ -14,7 +14,7 @@ export async function getPrimaryMarkOptions(instance: DuckPlot) {
   // Grab the types from the data
   const { types } = allData;
   const options = instance.options();
-  const type = instance.mark().markType;
+  const type = instance.mark().type;
   const currentColumns = Object.keys(instance.filteredData.types || {});
   const color = isColor(instance.color()?.column)
     ? instance.color()?.column
@@ -84,7 +84,9 @@ export async function getPrimaryMarkOptions(instance: DuckPlot) {
     ...(instance.mark().options ? { ...instance.mark().options } : {}),
     ...(currentColumns.includes("series")
       ? {
-          [type === "line" || type.startsWith("rule") || type.startsWith("tick")
+          [type === "line" ||
+          type?.startsWith("rule") ||
+          type?.startsWith("tick")
             ? "stroke"
             : "fill"]: `series`,
         }

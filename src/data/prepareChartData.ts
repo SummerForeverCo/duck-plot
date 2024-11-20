@@ -94,7 +94,7 @@ export async function prepareChartData(
   // that has generic column names (e.g., `x`, `y`, `series`, etc.)
 
   const tranformQuery = getTransformQuery(
-    instance.mark().markType,
+    instance.mark().type,
     columns,
     transformTableFrom,
     reshapeTableName,
@@ -108,7 +108,7 @@ export async function prepareChartData(
   // the `r` and `label` columns are not considered for distinct-ness but are
   // passed through for usage
   let distinctCols = (
-    instance.mark().markType === "barX"
+    instance.mark().type === "barX"
       ? ["y", "series", "fy", "fx"]
       : ["x", "series", "fy", "fx"]
   ).filter((d) => columnIsDefined(d as keyof ColumnConfig, columns));
@@ -128,7 +128,7 @@ export async function prepareChartData(
     distinctCols
   );
   const allowsAggregation =
-    allowAggregation(instance.mark().markType) || instance.config().aggregate;
+    allowAggregation(instance.mark().type) || instance.config().aggregate;
 
   // If there are no distinct columns (e.g., y axis is selected without x axis), we can't aggregate
   const shouldAggregate =
@@ -143,7 +143,7 @@ export async function prepareChartData(
   // TODO: more clear arguments in here
   const { labels: aggregateLabels, queryString: aggregateQuery } =
     getAggregateInfo(
-      instance.mark().markType,
+      instance.mark().type,
       columns,
       [...transformedTypes.keys()],
       reshapeTableName,

@@ -33,20 +33,22 @@ export async function getAllMarkOptions(instance: DuckPlot) {
   // aggregate has been specifid. Not a great rule, but works for now for
   // showing aggregate marks with only one dimension
   const isValidTickChart =
-    (instance.mark().markType === "tickX" && currentColumns.includes("x")) ||
-    (instance.mark().markType === "tickY" && currentColumns.includes("y"));
+    (instance.mark().type === "tickX" && currentColumns.includes("x")) ||
+    (instance.mark().type === "tickY" && currentColumns.includes("y"));
 
   const primaryMark =
     !isValidTickChart &&
     (!currentColumns.includes("x") || !currentColumns.includes("y")) &&
     !instance.config().aggregate
       ? []
-      : [
-          Plot[instance.mark().markType](
+      : instance.mark().type
+      ? [
+          Plot[instance.mark().type!](
             instance.filteredData,
             primaryMarkOptions as MarkOptions
           ),
-        ];
+        ]
+      : [];
 
   // TODO: Make frame/grid config options(?)
   const commonPlotMarks = [
