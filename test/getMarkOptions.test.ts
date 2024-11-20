@@ -3,7 +3,7 @@ import { DuckPlot } from "../src";
 import { JSDOM } from "jsdom";
 import { describe, expect, it, vi } from "vitest";
 
-import { getMarkOptions } from "../src/options/getMarkOptions";
+import { getPrimaryMarkOptions } from "../src/options/getPrimaryMarkOptions";
 const jsdom = new JSDOM(`
 <!DOCTYPE html>
 <head>
@@ -17,7 +17,7 @@ describe("getMarkOptions", () => {
       .color("a");
 
     // Set options dynamically
-    const result = await getMarkOptions(plot);
+    const result = await getPrimaryMarkOptions(plot);
     expect(result).toHaveProperty("stroke", "series");
   });
 
@@ -26,7 +26,7 @@ describe("getMarkOptions", () => {
       .rawData([{ a: 1 }], { a: "string" })
       .color("a")
       .mark("areaY");
-    const result = await getMarkOptions(plot);
+    const result = await getPrimaryMarkOptions(plot);
     expect(result).toHaveProperty("fill", "series");
   });
 
@@ -35,7 +35,7 @@ describe("getMarkOptions", () => {
       .rawData([{ a: 1 }], { a: "string" })
       .fy("a")
       .mark("areaY");
-    const result = await getMarkOptions(plot);
+    const result = await getPrimaryMarkOptions(plot);
     expect(result).toHaveProperty("fy", "fy");
   });
   it("should use custom x and y labels in the tooltip", async () => {
@@ -49,7 +49,7 @@ describe("getMarkOptions", () => {
       .rawData([{ a: 1 }], { a: "string" })
       .fy("a")
       .mark("areaY");
-    const result = await getMarkOptions(plot);
+    const result = await getPrimaryMarkOptions(plot);
 
     expect(result).toHaveProperty("channels", {
       xCustom: {

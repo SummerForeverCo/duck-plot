@@ -16,8 +16,6 @@ import {
 } from "./types";
 import { prepareChartData } from "./data/prepareChartData";
 import {
-  getCommonMarks,
-  getfyMarks,
   getLegendType,
   getSorts,
   getTopLevelPlotOptions,
@@ -28,10 +26,10 @@ import "./legend/legend.css";
 import { legendContinuous } from "./legend/legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import equal from "fast-deep-equal";
-import { filterData, getUniqueId, processRawData } from "./helpers";
+import { getUniqueId, processRawData } from "./helpers";
 import { derivePlotOptions } from "./options/derivePlotOptions";
-import { getMarkOptions } from "./options/getMarkOptions";
 import { handleProperty } from "./handleProperty";
+import { getAllMarkOptions } from "./options/getAllMarkOptions";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | undefined | null = null;
@@ -201,10 +199,7 @@ export class DuckPlot {
   options(opts: PlotOptions): this;
   options(opts?: PlotOptions): PlotOptions | this {
     if (opts) {
-      // TODO: this is probably an unnecessary check
-      if (!equal(opts, this._options)) {
-        this._options = opts;
-      }
+      this._options = opts;
       return this;
     }
     return this._options!;
@@ -227,10 +222,6 @@ export class DuckPlot {
     return this._config;
   }
 
-  data(): ChartData {
-    return this._chartData || [];
-  }
-
   // If someone wants to set the data directly rather than working with duckdb
   // TODO: should this just be how the data() method works when passed args...?
   rawData(): ChartData;
@@ -248,8 +239,7 @@ export class DuckPlot {
     return this._rawData;
   }
 
-  // These may come in handy to trigger re-rendering. Also exposes newDataProps
-  // with a getter
+  // Getter/setter methods for accesssing and setting values
   get newDataProps(): boolean {
     return this._newDataProps;
   }
@@ -290,6 +280,9 @@ export class DuckPlot {
   get font(): any {
     return this._font;
   }
+  data(): ChartData {
+    return this._chartData || [];
+  }
 
   async prepareChartData(): Promise<ChartData> {
     // If no new data properties, return the chartData
@@ -314,69 +307,19 @@ export class DuckPlot {
     this._queries = queries;
     return this._chartData;
   }
-  filteredData(): ChartData {
+  get filteredData(): ChartData {
     return this._filteredData ?? this._chartData; // Return chart data if no filtered data
   }
+
+  set filteredData(newValue: ChartData) {
+    this._filteredData = newValue;
+  }
+
   sorts(): Sorts | undefined {
     return this._sorts;
   }
-  async getMarks(): Promise<Markish[]> {
-    const allData = await this.prepareChartData();
-
-    // Grab the types and labels from the data
-    const { types, labels } = allData;
-
-    // Filter down to only the visible series (handled by the legend)
-    this._filteredData = filterData(
-      this._chartData,
-      this._visibleSeries,
-      this._seriesDomain
-    );
-
-    // Reassign the named properties back to the filtered array
-    this._filteredData.types = types;
-    this._filteredData.labels = labels;
-    const plotOptions = await this.derivePlotOptions();
-    const currentColumns = this._filteredData?.types
-      ? Object.keys(this._filteredData.types)
-      : [];
-    const primaryMarkOptions = await getMarkOptions(this);
-
-    // Here, we want to add the primary mark if x and y are defined OR if an
-    // aggregate has been specifid. Not a great rule, but works for now for
-    // showing aggregate marks with only one dimension
-    const isValidTickChart =
-      (this._mark.markType === "tickX" && currentColumns.includes("x")) ||
-      (this._mark.markType === "tickY" && currentColumns.includes("y"));
-
-    const primaryMark =
-      !isValidTickChart &&
-      (!currentColumns.includes("x") || !currentColumns.includes("y")) &&
-      !this._config.aggregate
-        ? []
-        : [
-            Plot[this._mark.markType](
-              this._filteredData,
-              primaryMarkOptions as MarkOptions
-            ),
-          ];
-
-    // TODO: Make frame/grid config options(?)
-    const commonPlotMarks = [
-      ...getCommonMarks(currentColumns),
-      ...(this._options.marks || []),
-    ];
-
-    const fyMarks = getfyMarks(
-      this._filteredData,
-      currentColumns,
-      plotOptions.fy
-    );
-    return [
-      ...(commonPlotMarks || []),
-      ...(primaryMark || []),
-      ...(fyMarks || []),
-    ];
+  async getAllMarkOptions(): Promise<Markish[]> {
+    return await getAllMarkOptions(this);
   }
 
   // Because users can specify options either in .options or with each column, we coalese them here
@@ -421,7 +364,7 @@ export class DuckPlot {
     newLegend: boolean = true
   ): Promise<SVGElement | HTMLElement | null> {
     if (!this._mark) return null;
-    const marks = await this.getMarks(); // updates this._chartData and this._filteredData
+    const marks = await this.getAllMarkOptions(); // updates this._chartData and this._filteredData
     const document = this._isServer ? this._jsdom!.window.document : undefined;
     this.setSorts();
     const topLevelPlotOptions = await getTopLevelPlotOptions(this);
