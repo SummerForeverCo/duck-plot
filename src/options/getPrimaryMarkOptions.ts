@@ -13,9 +13,8 @@ export async function getPrimaryMarkOptions(instance: DuckPlot) {
     yValue = instance.config().tipValues?.y;
   // Grab the types from the data
   const { types } = allData;
-  const options = instance.options();
   const type = instance.mark().type;
-  const currentColumns = Object.keys(instance.filteredData.types || {});
+  const currentColumns = Object.keys(instance.filteredData?.types || {});
   const color = isColor(instance.color()?.column)
     ? instance.color()?.column
     : defaultColors[0];

@@ -1,6 +1,6 @@
 import * as Plot from "@observablehq/plot";
 import { JSDOM } from "jsdom";
-import type { Markish, MarkOptions, PlotOptions } from "@observablehq/plot";
+import type { Markish, PlotOptions } from "@observablehq/plot";
 
 import {
   BasicColumnType,
@@ -15,15 +15,8 @@ import {
   Sorts,
 } from "./types";
 import { prepareChartData } from "./data/prepareChartData";
-import {
-  getLegendType,
-  getSorts,
-  getTopLevelPlotOptions,
-} from "./options/getPlotOptions";
-import { PlotAutoMargin } from "./render/plotAutoMargin";
-import { legendCategorical } from "./legend/legendCategorical";
+import { getLegendType, getSorts } from "./options/getPlotOptions";
 import "./legend/legend.css";
-import { legendContinuous } from "./legend/legendContinuous";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import { getUniqueId, processRawData } from "./helpers";
 import { derivePlotOptions } from "./options/derivePlotOptions";
@@ -54,14 +47,10 @@ export class DuckPlot {
   private _newDataProps: boolean = true;
   private _chartData: ChartData = [];
   private _rawData: ChartData = [];
-  private _filteredData: ChartData | undefined = undefined;
   private _config: Config = {};
   private _query: string = "";
   private _description: string = ""; // TODO: add tests
   private _queries: QueryMap | undefined = undefined; // TODO: add tests
-  private _visibleSeries: string[] = [];
-  private _seriesDomain: number[] = [];
-  private _chartElement: HTMLElement | null = null;
   private _id: string;
   private _sorts: Record<string, { domain: string[] } | undefined> = {};
   private _hasLegend: boolean | undefined;
@@ -70,8 +59,13 @@ export class DuckPlot {
     | "categorical"
     | "continuous"
     | undefined;
-  private _plotObject: ((HTMLElement | SVGSVGElement) & Plot.Plot) | undefined =
+  // Rather than provide getter/setters, just make these public
+  plotObject: ((HTMLElement | SVGSVGElement) & Plot.Plot) | undefined =
     undefined;
+  visibleSeries: string[] = [];
+  filteredData: ChartData | undefined = undefined;
+  chartElement: HTMLElement | null = null;
+  seriesDomain: number[] = [];
 
   constructor(
     ddb?: AsyncDuckDB | null, // Allow null so you can work on the server without a database
@@ -251,7 +245,6 @@ export class DuckPlot {
     this._newDataProps = newValue;
   }
 
-  // Adding a getter to access the database
   get ddb(): AsyncDuckDB | null | undefined {
     return this._ddb;
   }
@@ -262,39 +255,12 @@ export class DuckPlot {
   get document(): Document {
     return this._document;
   }
-  get plotObject(): ((HTMLElement | SVGSVGElement) & Plot.Plot) | undefined {
-    return this._plotObject;
-  }
 
-  set plotObject(obj: ((HTMLElement | SVGSVGElement) & Plot.Plot) | undefined) {
-    this._plotObject = obj;
-  }
-
-  // Expose the visible series so the legend can toggle it
-  get visibleSeries(): string[] {
-    return this._visibleSeries;
-  }
-  set visibleSeries(newSeries: string[]) {
-    this._visibleSeries = newSeries;
-  }
-
-  get seriesDomain(): number[] {
-    return this._seriesDomain;
-  }
-  set seriesDomain(newDomain: number[]) {
-    this._seriesDomain = newDomain;
-  }
   get font(): any {
     return this._font;
   }
   get jsdom(): any {
     return this._jsdom;
-  }
-  get chartElement(): HTMLElement | null {
-    return this._chartElement;
-  }
-  set chartElement(element: HTMLElement | null) {
-    this._chartElement = element;
   }
   get id(): string {
     return this._id;
@@ -311,7 +277,7 @@ export class DuckPlot {
     if (this._rawData && this._rawData.types) {
       this._chartData = processRawData(this);
       this._newDataProps = false;
-      this._visibleSeries = []; // reset visible series
+      this.visibleSeries = []; // reset visible series
       return this._chartData;
     }
     // TODO: move this error handling.... somewhere else
@@ -326,19 +292,12 @@ export class DuckPlot {
       throw new Error("Multiple y columns not supported for barX type");
     if (!this._x.column.length) throw new Error("Mark type not set");
     this._newDataProps = false;
-    this._visibleSeries = []; // reset visible series
+    this.visibleSeries = []; // reset visible series
     const { data, description, queries } = await prepareChartData(this);
     this._chartData = data;
     this._description = description;
     this._queries = queries;
     return this._chartData;
-  }
-  get filteredData(): ChartData {
-    return this._filteredData ?? this._chartData; // Return chart data if no filtered data
-  }
-
-  set filteredData(newValue: ChartData) {
-    this._filteredData = newValue;
   }
 
   sorts(): Sorts | undefined {
@@ -366,7 +325,7 @@ export class DuckPlot {
     if (Object.keys(this._chartData?.types ?? {}).includes("fy")) {
       this._sorts = {
         ...this._sorts,
-        fy: getSorts(this, ["fy"], this._filteredData).fy,
+        fy: getSorts(this, ["fy"], this.filteredData).fy,
       };
     }
   }
