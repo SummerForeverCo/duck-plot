@@ -2,7 +2,7 @@
 import type { DuckPlot } from "..";
 
 export async function derivePlotOptions(instance: DuckPlot) {
-  const chartData = await instance.prepareChartData();
+  const data = await instance.prepareData();
   const options = instance.options();
   let plotOptions = {
     ...options,
@@ -28,12 +28,10 @@ export async function derivePlotOptions(instance: DuckPlot) {
   };
 
   // Fallback to computed labels if they are undefined
-  if (plotOptions.x.label === undefined)
-    plotOptions.x.label = chartData.labels?.x;
-  if (plotOptions.y.label === undefined)
-    plotOptions.y.label = chartData.labels?.y;
+  if (plotOptions.x.label === undefined) plotOptions.x.label = data.labels?.x;
+  if (plotOptions.y.label === undefined) plotOptions.y.label = data.labels?.y;
   if (plotOptions.color.label === undefined)
-    plotOptions.color.label = chartData.labels?.series;
+    plotOptions.color.label = data.labels?.series;
 
   // Compute an adjusted height based on the legend type
   instance.setLegend(plotOptions);

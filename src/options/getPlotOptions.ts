@@ -8,7 +8,7 @@ import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
 import type {
   BasicColumnType,
-  ChartData,
+  Data,
   ChartType,
   ColumnType,
   Config,
@@ -20,7 +20,7 @@ import { borderOptions, defaultColors } from "../helpers";
 interface AllMarkOptions extends MarkOptions, StackOptions {}
 
 // Identify the data currently in the dataset
-export function getDataOrder(data: ChartData | undefined, column: string) {
+export function getDataOrder(data: Data | undefined, column: string) {
   if (!data) return;
   return { domain: [...new Set(data.map((d: any) => d[column]))] as string[] };
 }
@@ -30,7 +30,7 @@ export function getDataOrder(data: ChartData | undefined, column: string) {
 export function getSorts(
   instance: DuckPlot,
   columns?: string[],
-  inputData?: ChartData
+  inputData?: Data
 ): Sorts {
   // Because the sort can be specified in the options, remove any colums who
   // have a sort specified
@@ -261,7 +261,7 @@ export function getTickFormatter(
 
 // Gets the type of legend to handle rendering
 export function getLegendType(
-  data: ChartData
+  data: Data
 ): "categorical" | "continuous" | undefined {
   if (!data.types) return;
   return data.types.series === "string" ? "categorical" : "continuous";
@@ -291,7 +291,7 @@ export function getCommonMarks(currentColumns: string[], inputOptions?: any) {
 }
 
 export function getfyMarks(
-  data: ChartData,
+  data: Data,
   currentColumns: string[],
   options: PlotOptions["fy"]
 ) {

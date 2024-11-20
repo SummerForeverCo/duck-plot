@@ -1,5 +1,5 @@
 import {
-  ChartData,
+  Data,
   ColumnConfig,
   DescribeSchema,
   Indexable,
@@ -26,9 +26,9 @@ export function getUniqueName() {
 }
 
 // Query the local duckdb database and format the result based on the settings
-export async function prepareChartData(
+export async function prepareData(
   instance: DuckPlot
-): Promise<{ data: ChartData; description: string; queries?: QueryMap }> {
+): Promise<{ data: Data; description: string; queries?: QueryMap }> {
   let queries: QueryMap = {};
   if (!instance.ddb || !instance.table())
     return { data: [], description: "No database or table provided" };
@@ -37,7 +37,7 @@ export async function prepareChartData(
   };
 
   let queryString: string;
-  let labels: ChartData["labels"] = {};
+  let labels: Data["labels"] = {};
   let preQueryTableName = "";
   const reshapeTableName = getUniqueName();
 
@@ -153,7 +153,7 @@ export async function prepareChartData(
   data = await runQuery(instance.ddb, queryString);
   schema = await runQuery(instance.ddb, `DESCRIBE ${reshapeTableName}`);
   // Format data as an array of objects
-  let formatted: ChartData = formatResults(data, schema);
+  let formatted: Data = formatResults(data, schema);
 
   if (!labels!.series) {
     labels!.series = getLabel(columns.series);

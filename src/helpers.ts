@@ -3,7 +3,7 @@ import { quoteColumns } from "./data/query";
 import { runQuery } from "./data/runQuery";
 import {
   BasicColumnType,
-  ChartData,
+  Data,
   ChartType,
   ColumnType,
   DescribeSchema,
@@ -60,7 +60,7 @@ export function formatResults(
     (d) => (types[d.column_name] = getTypeCategory(d.column_type))
   );
   const selected = data;
-  let formatted: ChartData = [];
+  let formatted: Data = [];
   formatted =
     selected?.map((row: any) => {
       let obj: Indexable = {};
@@ -140,7 +140,7 @@ export function getUniqueId() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
 
-export function processRawData(instance: DuckPlot): ChartData {
+export function processRawData(instance: DuckPlot): Data {
   const rawData = instance.rawData();
   if (!rawData || !rawData.types) return [];
 
@@ -148,7 +148,7 @@ export function processRawData(instance: DuckPlot): ChartData {
   const isStringCol = (col?: ColumnType): boolean =>
     col !== "" && col !== undefined && typeof col === "string";
 
-  // Define column mappings for chartData, types, and labels
+  // Define column mappings for data, types, and labels
   // TODO: if we rename series to color this should get simpler
   const columnMappings = [
     { key: "x", column: instance.x().column },
@@ -161,7 +161,7 @@ export function processRawData(instance: DuckPlot): ChartData {
   ];
 
   // Map over raw data to extract chart data based on defined columns
-  const chartDataArray: ChartData = rawData.map((d) =>
+  const dataArray: Data = rawData.map((d) =>
     Object.fromEntries(
       columnMappings
         .filter(({ column }) => isStringCol(column))
@@ -170,30 +170,30 @@ export function processRawData(instance: DuckPlot): ChartData {
   );
 
   // Extract types based on the defined columns
-  const chartDataTypes = Object.fromEntries(
+  const dataTypes = Object.fromEntries(
     columnMappings
       .filter(({ column }) => isStringCol(column))
       .map(({ key, column }) => [key, rawData?.types?.[column as string]])
   );
 
   // Extract labels based on the defined columns
-  const chartDataLabels = Object.fromEntries(
+  const dataLabels = Object.fromEntries(
     columnMappings
       .filter(({ column }) => column)
       .map(({ key, column }) => [key, column])
   );
-  chartDataArray.types = chartDataTypes;
-  chartDataArray.labels = chartDataLabels;
-  return chartDataArray;
+  dataArray.types = dataTypes;
+  dataArray.labels = dataLabels;
+  return dataArray;
 }
 
 // Funciton to filter down a dataset based on either a continuous range or a
 // set of values for the series column
 export function filterData(
-  data: ChartData,
+  data: Data,
   visibleSeries?: string[],
   seriesDomain?: any[]
-): ChartData {
+): Data {
   return visibleSeries && visibleSeries.length > 0
     ? data.filter((d) => visibleSeries.includes(`${d.series}`))
     : seriesDomain && seriesDomain.length === 2

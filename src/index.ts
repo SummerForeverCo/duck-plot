@@ -4,7 +4,7 @@ import type { Markish, PlotOptions } from "@observablehq/plot";
 
 import {
   BasicColumnType,
-  ChartData,
+  Data,
   ChartType,
   ColumnType,
   Config,
@@ -14,7 +14,7 @@ import {
   QueryMap,
   Sorts,
 } from "./types";
-import { prepareChartData } from "./data/prepareChartData";
+import { prepareData } from "./data/prepareData";
 import { getLegendType, getSorts } from "./options/getPlotOptions";
 import "./legend/legend.css";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
@@ -35,18 +35,15 @@ export class DuckPlot {
   private _r: PlotProperty<"r"> = { ...emptyProp };
   private _text: { column: string } = { column: "" };
   private _color: PlotProperty<"color"> = { ...emptyProp };
-  private _mark: MarkProperty = {
-    type: undefined,
-    options: {},
-  };
+  private _mark: MarkProperty = {};
   private _options: PlotOptions = {};
   private _jsdom: JSDOM | undefined;
   private _font: any;
   private _isServer: boolean;
   private _document: Document;
   private _newDataProps: boolean = true;
-  private _chartData: ChartData = [];
-  private _rawData: ChartData = [];
+  private _data: Data = [];
+  private _rawData: Data = [];
   private _config: Config = {};
   private _query: string = "";
   private _description: string = ""; // TODO: add tests
@@ -63,7 +60,7 @@ export class DuckPlot {
   plotObject: ((HTMLElement | SVGSVGElement) & Plot.Plot) | undefined =
     undefined;
   visibleSeries: string[] = [];
-  filteredData: ChartData | undefined = undefined;
+  filteredData: Data | undefined = undefined;
   chartElement: HTMLElement | null = null;
   seriesDomain: number[] = [];
 
@@ -220,13 +217,12 @@ export class DuckPlot {
   }
 
   // If someone wants to set the data directly rather than working with duckdb
-  // TODO: should this just be how the data() method works when passed args...?
-  rawData(): ChartData;
-  rawData(data?: ChartData, types?: { [key: string]: BasicColumnType }): this;
+  rawData(): Data;
+  rawData(data?: Data, types?: { [key: string]: BasicColumnType }): this;
   rawData(
-    data?: ChartData,
+    data?: Data,
     types?: { [key: string]: BasicColumnType }
-  ): ChartData | this {
+  ): Data | this {
     if (data && types) {
       data.types = types;
       this._newDataProps = true;
@@ -240,7 +236,6 @@ export class DuckPlot {
   get newDataProps(): boolean {
     return this._newDataProps;
   }
-  // Setter
   set newDataProps(newValue: boolean) {
     this._newDataProps = newValue;
   }
@@ -265,20 +260,20 @@ export class DuckPlot {
   get id(): string {
     return this._id;
   }
-  data(): ChartData {
-    return this._chartData || [];
+  data(): Data {
+    return this._data || [];
   }
 
-  async prepareChartData(): Promise<ChartData> {
-    // If no new data properties, return the chartData
-    if (!this._newDataProps) return this._chartData;
+  async prepareData(): Promise<Data> {
+    // If no new data properties, return the data
+    if (!this._newDataProps) return this._data;
 
     // If there is raw data rather than a database, extract chart data from it
     if (this._rawData && this._rawData.types) {
-      this._chartData = processRawData(this);
+      this._data = processRawData(this);
       this._newDataProps = false;
       this.visibleSeries = []; // reset visible series
-      return this._chartData;
+      return this._data;
     }
     // TODO: move this error handling.... somewhere else
     if (!this._ddb) throw new Error("Database not set");
@@ -294,11 +289,11 @@ export class DuckPlot {
       throw new Error("Multiple y columns not supported for barX type");
     this._newDataProps = false;
     this.visibleSeries = []; // reset visible series
-    const { data, description, queries } = await prepareChartData(this);
-    this._chartData = data;
+    const { data, description, queries } = await prepareData(this);
+    this._data = data;
     this._description = description;
     this._queries = queries;
-    return this._chartData;
+    return this._data;
   }
 
   sorts(): Sorts | undefined {
@@ -323,7 +318,7 @@ export class DuckPlot {
   setSorts() {
     this._sorts = getSorts(this) ?? {};
     // Only display the facets for present data
-    if (Object.keys(this._chartData?.types ?? {}).includes("fy")) {
+    if (Object.keys(this._data?.types ?? {}).includes("fy")) {
       this._sorts = {
         ...this._sorts,
         fy: getSorts(this, ["fy"], this.filteredData).fy,
@@ -334,11 +329,10 @@ export class DuckPlot {
   setLegend(plotOptions: Plot.PlotOptions) {
     // Note, displaying legends by default
     this._hasLegend =
-      this._chartData.types?.series !== undefined &&
+      this._data.types?.series !== undefined &&
       plotOptions.color?.legend !== null &&
       plotOptions.color?.legend !== false;
-    this._legendType =
-      plotOptions.color?.type ?? getLegendType(this._chartData);
+    this._legendType = plotOptions.color?.type ?? getLegendType(this._data);
   }
   getLegendSettings() {
     return {

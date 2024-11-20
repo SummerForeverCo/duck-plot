@@ -6,7 +6,7 @@ import {
   getTopLevelPlotOptions,
   truncateText,
 } from "../src/options/getPlotOptions";
-import type { ChartData } from "../src/types";
+import type { Data } from "../src/types";
 import { describe, expect, it, vi } from "vitest";
 // TODO: just use the real duckplot.....
 import { createMockDuckPlot } from "./mockDuckPlot";
@@ -75,7 +75,7 @@ describe("getSorts", () => {
   });
 
   it("should return the correct sorts for string columns", () => {
-    let data: ChartData = [
+    let data: Data = [
       { x: "B", y: 1, series: "CategoryB" },
       { x: "A", y: 1, series: "CategoryA" },
       { x: "C", y: 1, series: "CategoryD" },

@@ -2,7 +2,7 @@ import {
   Column,
   ColumnConfig,
   ChartType,
-  ChartData,
+  Data,
   Aggregate,
   QueryMap,
   ColumnType,
@@ -199,14 +199,14 @@ export function getAggregateInfo(
   aggregate: Aggregate | undefined, // TODO: add tests
   description: { value: string },
   percent?: boolean
-): { queryString: string; labels: ChartData["labels"] } {
+): { queryString: string; labels: Data["labels"] } {
   // Ensure that the x and y values are arrays
   const y = arrayIfy(config.y);
   const x = arrayIfy(config.x);
   const agg = aggregate ?? "sum";
   let aggregateSelection;
   let groupBy: string[] = [];
-  let labels: ChartData["labels"] = {};
+  let labels: Data["labels"] = {};
 
   // Handling horizontal bar charts differently (aggregate on x-axis)
   if (type === "barX") {

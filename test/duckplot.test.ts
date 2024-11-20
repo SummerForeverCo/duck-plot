@@ -47,7 +47,7 @@ describe("DuckPlot", () => {
   describe("type()", () => {
     it("should set and get chart type", () => {
       plot.mark("line");
-      expect(plot.mark()).toEqual({ markType: "line" });
+      expect(plot.mark()).toEqual({ type: "line" });
       expect(plot["_newDataProps"]).toBe(true);
     });
   });
@@ -61,25 +61,23 @@ describe("DuckPlot", () => {
   });
 
   describe("prepareChartData()", () => {
-    it("should throw an error if data is not set", async () => {
-      await expect(plot.prepareChartData()).rejects.toThrow(
-        "Database and table not set"
-      );
+    it("should throw an error if table is not set", async () => {
+      await expect(plot.prepareData()).rejects.toThrow("Table not set");
     });
 
     it("should prepare chart data when data is set", async () => {
       plot.table("stocks").x("Date").y("Close").mark("line");
-      const data = await plot.prepareChartData();
+      const data = await plot.prepareData();
       expect(data).toBeDefined();
       expect(plot["_newDataProps"]).toBe(false);
     });
   });
 
   describe("render()", () => {
-    it("should throw an error if table is not set", async () => {
-      await expect(async () => {
-        await plot.render();
-      }).rejects.toThrow("Database and table not set");
+    it("should render an error message if the table isn't set", async () => {
+      const result = await plot.render();
+      const errorMessage = result.firstChild.textContent;
+      expect(errorMessage).toEqual("Error rendering plot: Table not set");
     });
 
     it("should render an SVG element when everything is set", async () => {

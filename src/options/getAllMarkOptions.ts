@@ -6,7 +6,7 @@ import { getPrimaryMarkOptions } from "./getPrimaryMarkOptions";
 import * as Plot from "@observablehq/plot";
 import { getCommonMarks, getfyMarks } from "./getPlotOptions";
 export async function getAllMarkOptions(instance: DuckPlot) {
-  const allData = await instance.prepareChartData();
+  const allData = await instance.prepareData();
 
   // Grab the types and labels from the data
   const { types, labels } = allData;

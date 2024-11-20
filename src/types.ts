@@ -47,7 +47,7 @@ export type Indexable = {
 };
 export type Column = "x" | "y" | "series" | "fy" | "fx" | "r" | "text";
 export type ColumnConfig = Partial<Record<Column, ColumnType>>;
-export interface ChartData extends Array<Indexable> {
+export interface Data extends Array<Indexable> {
   types?: { [key: string]: BasicColumnType };
   labels?: { x?: string; y?: string; series?: string };
 }

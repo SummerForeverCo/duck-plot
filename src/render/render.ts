@@ -9,7 +9,7 @@ export async function render(
   instance: DuckPlot,
   newLegend: boolean
 ): Promise<SVGElement | HTMLElement | null> {
-  const marks = await instance.getAllMarkOptions(); // updates this._chartData and this._filteredData
+  const marks = await instance.getAllMarkOptions(); // updates this._data and this._filteredData
   const document = instance.isServer
     ? instance.jsdom.window.document
     : undefined;

@@ -14,8 +14,8 @@ describe("getMarkOptions", () => {
   it("for a line chart with series, the *stroke* should be set to the series", async () => {
     const plot = new DuckPlot(null, { jsdom })
       .rawData([{ a: 1 }], { a: "string" })
-      .color("a");
-
+      .color("a")
+      .mark("line");
     // Set options dynamically
     const result = await getPrimaryMarkOptions(plot);
     expect(result).toHaveProperty("stroke", "series");
