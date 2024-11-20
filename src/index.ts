@@ -415,14 +415,6 @@ export class DuckPlot {
       const div = this._document.createElement("div");
 
       if (this._legendType === "categorical") {
-        // TODO move this into legendCategorical
-        const categories = Array.from(
-          this._plotObject.scale("color")?.domain ?? []
-        )?.map((d) => `${d}`);
-
-        if (this._visibleSeries.length === 0) {
-          this._visibleSeries = categories;
-        }
         legend = await legendCategorical(this);
       } else {
         legend = await legendContinuous(this);

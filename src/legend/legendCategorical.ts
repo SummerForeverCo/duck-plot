@@ -12,6 +12,12 @@ export async function legendCategorical(
   const categories = Array.from(
     instance.plotObject?.scale("color")?.domain ?? []
   )?.map((d) => `${d}`);
+
+  // Set the visible series to all categories if it's empty
+  if (instance.visibleSeries.length === 0) {
+    instance.visibleSeries = categories;
+  }
+
   const visibleCategories = instance.visibleSeries;
   const colors = Array.from(instance.plotObject?.scale("color")?.range ?? []);
   const options = await instance.derivePlotOptions();
