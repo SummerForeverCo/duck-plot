@@ -10,7 +10,8 @@ export type ChartType =
   | "barY"
   | "text"
   | "tickX"
-  | "tickY";
+  | "tickY"
+  | undefined;
 
 export type SqlSort = {
   column: string;

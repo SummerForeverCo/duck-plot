@@ -8,6 +8,7 @@ export * from "./colorScheme.js";
 export * from "./colorSchemeContinuous.js";
 export * from "./configOptions.js";
 export * from "./dot.js";
+export * from "./error.js";
 export * from "./fy.js";
 export * from "./groupedBarMultiY.js";
 export * from "./groupedBarMultiYReorder.js";

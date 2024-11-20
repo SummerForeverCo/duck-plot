@@ -1,10 +1,6 @@
-import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import {
-  Aggregate,
   ChartData,
-  ChartType,
   ColumnConfig,
-  ColumnType,
   DescribeSchema,
   Indexable,
   QueryMap,
@@ -14,7 +10,6 @@ import {
   getAggregateInfo,
   getLabel,
   getTransformQuery,
-  toTitleCase,
 } from "./query";
 import { runQuery } from "./runQuery";
 import {
@@ -23,7 +18,6 @@ import {
   checkDistinct,
   columnTypes,
 } from "../helpers";
-import { Database } from "duckdb-async";
 import type { DuckPlot } from "..";
 import { isColor } from "../options/getPlotOptions";
 

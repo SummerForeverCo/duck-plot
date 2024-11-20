@@ -30,6 +30,7 @@ import { derivePlotOptions } from "./options/derivePlotOptions";
 import { handleProperty } from "./handleProperty";
 import { getAllMarkOptions } from "./options/getAllMarkOptions";
 import { render } from "./render/render";
+import { renderError } from "./render/renderError";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | undefined | null = null;
@@ -313,10 +314,17 @@ export class DuckPlot {
       this._visibleSeries = []; // reset visible series
       return this._chartData;
     }
-    if (!this._ddb || !this._table)
-      throw new Error("Database and table not set");
-    // TODO: this should work now work
+    // TODO: move this error handling.... somewhere else
+    if (!this._ddb) throw new Error("Database not set");
+    if (!this._table) throw new Error("Table not set");
     if (!this._mark.type) throw new Error("Mark type not set");
+    const multipleX =
+      Array.isArray(this._x.column) && this._x.column.length > 1;
+    const multipleY =
+      Array.isArray(this._y.column) && this._y.column.length > 1;
+    if (multipleX && this._mark.type === "barX")
+      throw new Error("Multiple y columns not supported for barX type");
+    if (!this._x.column.length) throw new Error("Mark type not set");
     this._newDataProps = false;
     this._visibleSeries = []; // reset visible series
     const { data, description, queries } = await prepareChartData(this);
@@ -381,6 +389,10 @@ export class DuckPlot {
   async render(
     newLegend: boolean = true
   ): Promise<SVGElement | HTMLElement | null> {
-    return render(this, newLegend);
+    try {
+      return await render(this, newLegend);
+    } catch (error) {
+      return await renderError(this, error);
+    }
   }
 }
