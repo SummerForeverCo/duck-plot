@@ -288,9 +288,10 @@ export class DuckPlot {
       Array.isArray(this._x.column) && this._x.column.length > 1;
     const multipleY =
       Array.isArray(this._y.column) && this._y.column.length > 1;
-    if (multipleX && this._mark.type === "barX")
+    if (multipleX && this._mark.type !== "barX")
+      throw new Error("Multiple x columns only supported for barX type");
+    if (multipleY && this._mark.type === "barX")
       throw new Error("Multiple y columns not supported for barX type");
-    if (!this._x.column.length) throw new Error("Mark type not set");
     this._newDataProps = false;
     this.visibleSeries = []; // reset visible series
     const { data, description, queries } = await prepareChartData(this);
