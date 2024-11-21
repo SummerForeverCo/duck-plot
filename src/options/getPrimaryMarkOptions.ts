@@ -4,15 +4,14 @@ import { isColor } from "./getPlotOptions";
 import { borderOptions, defaultColors } from "../helpers";
 
 // Get options for a specific mark (e.g., the line or area marks)
-export async function getPrimaryMarkOptions(instance: DuckPlot) {
-  const allData = await instance.prepareData(); // TODO: maybe can just call data()?
-  const plotOptions = await instance.derivePlotOptions(); // TODO: maybe there's a way to just grab these
+export function getPrimaryMarkOptions(instance: DuckPlot) {
+  const plotOptions = instance.derivePlotOptions();
   const xLabel = instance.config().tipLabels?.x ?? plotOptions.x?.label ?? "",
     yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "",
     xValue = instance.config().tipValues?.x,
     yValue = instance.config().tipValues?.y;
   // Grab the types from the data
-  const { types } = allData;
+  const { types } = instance.data();
   const type = instance.mark().type;
   const data = instance.filteredData ?? instance.data();
   const currentColumns = Object.keys(data.types || {});

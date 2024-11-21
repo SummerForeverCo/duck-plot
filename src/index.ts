@@ -1,5 +1,16 @@
 import * as Plot from "@observablehq/plot";
-import { JSDOM } from "jsdom";
+import { prepareData } from "./data/prepareData";
+import { getLegendType, getSorts } from "./options/getPlotOptions";
+import { checkForConfigErrors, getUniqueId, processRawData } from "./helpers";
+import { derivePlotOptions } from "./options/derivePlotOptions";
+import { handleProperty } from "./handleProperty";
+import { getAllMarkOptions } from "./options/getAllMarkOptions";
+import { render } from "./render/render";
+import { renderError } from "./render/renderError";
+import "./legend/legend.css";
+import type { Database } from "duckdb-async";
+import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
+import type { JSDOM } from "jsdom";
 import type { Markish, PlotOptions } from "@observablehq/plot";
 
 import {
@@ -14,19 +25,9 @@ import {
   QueryMap,
   Sorts,
 } from "./types";
-import { prepareData } from "./data/prepareData";
-import { getLegendType, getSorts } from "./options/getPlotOptions";
-import "./legend/legend.css";
-import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-import { checkForConfigErrors, getUniqueId, processRawData } from "./helpers";
-import { derivePlotOptions } from "./options/derivePlotOptions";
-import { handleProperty } from "./handleProperty";
-import { getAllMarkOptions } from "./options/getAllMarkOptions";
-import { render } from "./render/render";
-import { renderError } from "./render/renderError";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
-  private _ddb: AsyncDuckDB | undefined | null = null;
+  private _ddb: AsyncDuckDB | Database | undefined | null = null;
   private _table: string | null = null;
   private _x: PlotProperty<"x"> = { ...emptyProp };
   private _y: PlotProperty<"y"> = { ...emptyProp };
@@ -65,7 +66,7 @@ export class DuckPlot {
   seriesDomain: number[] = [];
 
   constructor(
-    ddb?: AsyncDuckDB | null, // Allow null so you can work on the server without a database
+    ddb?: AsyncDuckDB | Database | null, // Allow null so you can work on the server without a database
     { jsdom, font }: { jsdom?: JSDOM; font?: any } = {}
   ) {
     this._ddb = ddb;
@@ -260,14 +261,17 @@ export class DuckPlot {
     return this._data;
   }
 
-  // Get the plot options for all of the marks
-  async getAllMarkOptions(): Promise<Markish[]> {
-    return await getAllMarkOptions(this);
+  // Because users can specify options either in .options or with each column,
+  // we coalese them here
+  derivePlotOptions(): PlotOptions {
+    return derivePlotOptions(this);
   }
 
-  // Because users can specify options either in .options or with each column, we coalese them here
-  async derivePlotOptions(): Promise<PlotOptions> {
-    return await derivePlotOptions(this);
+  // Note, the options below find default lables in the data - make sure to call
+  // prepareData first (as is done in the render() method) to get them
+  // Get the plot options for all of the marks
+  getAllMarkOptions(): Markish[] {
+    return getAllMarkOptions(this);
   }
 
   // Set the sorts for the plot
@@ -292,7 +296,7 @@ export class DuckPlot {
     this._legendType = plotOptions.color?.type ?? getLegendType(this._data);
   }
 
-  // Render the plot
+  // Render the plot (calls prepareData)
   async render(
     newLegend: boolean = true
   ): Promise<SVGElement | HTMLElement | null> {
@@ -310,7 +314,7 @@ export class DuckPlot {
   set newDataProps(newValue: boolean) {
     this._newDataProps = newValue;
   }
-  get ddb(): AsyncDuckDB | null | undefined {
+  get ddb(): AsyncDuckDB | Database | null | undefined {
     return this._ddb;
   }
   get isServer(): boolean {

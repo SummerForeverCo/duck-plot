@@ -3,21 +3,16 @@ import {
   getDataOrder,
   getSorts,
   getTickFormatter,
-  getTopLevelPlotOptions,
+  getPlotOptions,
   truncateText,
 } from "../src/options/getPlotOptions";
 import type { Data } from "../src/types";
-import { describe, expect, it, vi } from "vitest";
-// TODO: just use the real duckplot.....
-import { createMockDuckPlot } from "./mockDuckPlot";
+import { beforeEach, describe, expect, it } from "vitest";
+const fakeFont = {
+  getAdvanceWidth: () => 10,
+};
 
 import { JSDOM } from "jsdom";
-// Create a fake DuckPlot instance
-const fakeDuckPlot: Partial<DuckPlot> = {
-  mark: vi.fn().mockReturnValue({}),
-  color: vi.fn().mockReturnValue({}),
-  derivePlotOptions: vi.fn().mockReturnValue({}),
-};
 
 const jsdom = new JSDOM(`
 <!DOCTYPE html>
@@ -58,34 +53,43 @@ describe("getDataOrder", () => {
 // Note, getSorts expects a DuckPlot instance, but it's ok to pass in a fake
 // arg. and still test the functionality by including columsn and data
 describe("getSorts", () => {
-  it("should return an empty object if currentColumns is an empty array", () => {
+  let plot: any;
+  let jsdom: JSDOM;
+
+  beforeEach(async () => {
+    jsdom = new JSDOM();
+    plot = new DuckPlot(null, { jsdom, font: fakeFont });
+  });
+  it("should return an empty object if currentColumns is an empty array", async () => {
     const data = [
       { category: "A" },
       { category: "B" },
       { category: "A" },
       { category: "C" },
     ];
-    const result = getSorts(fakeDuckPlot as DuckPlot, [], data);
+    plot.rawData(data, { category: "string" });
+
+    await plot.prepareData();
+
+    const result = getSorts(plot, [], data);
     expect(result).toEqual({});
   });
 
   it("should return an empty object if data is an empty array", () => {
-    const result = getSorts(fakeDuckPlot as DuckPlot, ["category"], []);
+    const result = getSorts(plot, ["category"], []);
     expect(result).toEqual({});
   });
 
-  it("should return the correct sorts for string columns", () => {
+  it("should return the correct sorts for string columns", async () => {
     let data: Data = [
       { x: "B", y: 1, series: "CategoryB" },
       { x: "A", y: 1, series: "CategoryA" },
       { x: "C", y: 1, series: "CategoryD" },
     ];
-    data.types = { x: "string", y: "number", series: "string" };
-    const result = getSorts(
-      fakeDuckPlot as DuckPlot,
-      ["x", "y", "series"],
-      data
-    );
+    const types = { x: "string", y: "number", series: "string" };
+    plot.rawData(data, types).x("x").y("y").color("series");
+    await plot.prepareData();
+    const result = getSorts(plot, ["x", "y", "series"]);
     expect(result).toEqual({
       x: { domain: ["B", "A", "C"] },
       series: { domain: ["CategoryB", "CategoryA", "CategoryD"] },
@@ -125,60 +129,61 @@ describe("getTickFormatter", () => {
 });
 
 describe("getTopLevelPlotOptions", () => {
-  it("should return correct width and height", async () => {
-    const { instance: fakeDuckPlot, optionsStore } = createMockDuckPlot();
-
+  let plot: any;
+  let jsdom: JSDOM;
+  beforeEach(async () => {
+    jsdom = new JSDOM();
+    plot = new DuckPlot(null, { jsdom, font: fakeFont });
+  });
+  it("should return correct width and height", () => {
     // Set options dynamically
-    fakeDuckPlot.options({ width: 800, height: 600 });
+    plot.options({ width: 800, height: 600 });
 
     // Call the function under test
-    const result = await getTopLevelPlotOptions(fakeDuckPlot);
+    const result = getPlotOptions(plot);
 
     // Assert the results
     expect(result.height).toEqual(600);
     expect(result.width).toEqual(800);
-
-    // Assert that the options were stored correctly
-    expect(optionsStore).toEqual({ width: 800, height: 600 });
   });
 
-  it("should include labels for x and y if in currentColumns", async () => {
-    const { instance: fakeDuckPlot } = createMockDuckPlot();
-
+  it("should include labels for x and y", async () => {
     // Set options dynamically
-    fakeDuckPlot.options({
+    plot.options({
       x: { label: "X Axis" },
       y: { label: "And a Y Axis" },
     });
 
     // Call the function under test
-    const result = await getTopLevelPlotOptions(fakeDuckPlot);
+    const result = getPlotOptions(plot);
 
     // Assertions
     expect(result.x).toMatchObject({ label: "X Axis" });
     expect(result.y).toMatchObject({ label: "And a Y Axis" });
   });
 
-  it("should include sorts in x and y axis options if provided", async () => {
-    const { instance: fakeDuckPlot } = createMockDuckPlot();
+  it("should include sorts in x and y axis options if provided", () => {
     const sorts = {
       x: { domain: ["a", "b", "c"] },
       y: { domain: ["1", "2", "3"] },
     };
     // Set domains
-    fakeDuckPlot.options(sorts);
+    plot.rawData([], {}).options(sorts);
 
-    const result = await getTopLevelPlotOptions(fakeDuckPlot);
+    const result = getPlotOptions(plot);
     expect(result.x).toEqual(expect.objectContaining(sorts.x));
     expect(result.y).toEqual(expect.objectContaining(sorts.y));
   });
 
-  it("should handle fy sort option", async () => {
-    const { instance: fakeDuckPlot } = createMockDuckPlot();
+  it("should handle fy sort option", () => {
     const sorts = { fy: { domain: ["a", "b", "c"] } };
     // Set domains
-    fakeDuckPlot.options(sorts);
-    const result = await getTopLevelPlotOptions(fakeDuckPlot);
+    plot
+      .rawData([{ fy: "a" }], { fy: "string" })
+      .fy("fy")
+      .options(sorts);
+
+    const result = getPlotOptions(plot);
     expect(result.fy).toEqual(
       expect.objectContaining({
         domain: ["a", "b", "c"],

@@ -9,12 +9,12 @@ export async function render(
   instance: DuckPlot,
   newLegend: boolean
 ): Promise<SVGElement | HTMLElement | null> {
-  const marks = await instance.getAllMarkOptions();
+  const marks = instance.getAllMarkOptions();
   const document = instance.isServer
     ? instance.jsdom.window.document
     : undefined;
   instance.setSorts();
-  const topLevelPlotOptions = await getPlotOptions(instance);
+  const topLevelPlotOptions = getPlotOptions(instance);
   const plotOptions = {
     ...topLevelPlotOptions,
     marks,

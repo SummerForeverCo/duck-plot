@@ -1,11 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { JSDOM } from "jsdom";
-// @ts-expect-error: TypeScript cannot find the types but it works
-import { DuckPlot } from "../dist/index.es";
+import { DuckPlot } from "../src";
 import { createDbServer } from "../examples/util/createDbServer";
 import { Database } from "duckdb-async";
 
-// Not testing the font measurment here: visual inspection via npm run dev-server
+// Not testing the font measurment here
 const fakeFont = {
   getAdvanceWidth: () => 10,
 };

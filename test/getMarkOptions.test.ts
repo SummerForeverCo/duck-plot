@@ -2,7 +2,7 @@ import { DuckPlot } from "../src";
 
 import { JSDOM } from "jsdom";
 import { describe, expect, it, vi } from "vitest";
-
+import { createDbServer } from "../examples/util/createDbServer.js";
 import { getPrimaryMarkOptions } from "../src/options/getPrimaryMarkOptions";
 const jsdom = new JSDOM(`
 <!DOCTYPE html>
@@ -12,33 +12,40 @@ const jsdom = new JSDOM(`
 <body></body>`);
 describe("getMarkOptions", () => {
   it("for a line chart with series, the *stroke* should be set to the series", async () => {
-    const plot = new DuckPlot(null, { jsdom })
-      .rawData([{ a: 1 }], { a: "string" })
-      .color("a")
+    const db = await createDbServer("stocks.csv");
+    const plot = new DuckPlot(db, { jsdom })
+      .table("stocks")
+      .color("Symbol")
       .mark("line");
-    // Set options dynamically
-    const result = await getPrimaryMarkOptions(plot);
+    await plot.prepareData();
+    const result = getPrimaryMarkOptions(plot);
     expect(result).toHaveProperty("stroke", "series");
   });
 
   it("for not-line charts with series, the *fill* should be set to the series", async () => {
-    const plot = new DuckPlot(null, { jsdom })
-      .rawData([{ a: 1 }], { a: "string" })
-      .color("a")
+    const db = await createDbServer("stocks.csv");
+    const plot = new DuckPlot(db, { jsdom })
+      .table("stocks")
+      .color("Symbol")
       .mark("areaY");
-    const result = await getPrimaryMarkOptions(plot);
+    await plot.prepareData();
+    const result = getPrimaryMarkOptions(plot);
     expect(result).toHaveProperty("fill", "series");
   });
 
   it("should return the correct options when fy is included", async () => {
-    const plot = new DuckPlot(null, { jsdom })
-      .rawData([{ a: 1 }], { a: "string" })
-      .fy("a")
+    const db = await createDbServer("stocks.csv");
+    const plot = new DuckPlot(db, { jsdom })
+      .table("stocks")
+      .color("Symbol")
+      .fy("Symbol")
       .mark("areaY");
-    const result = await getPrimaryMarkOptions(plot);
+    await plot.prepareData();
+
+    const result = getPrimaryMarkOptions(plot);
     expect(result).toHaveProperty("fy", "fy");
   });
-  it("should use custom x and y labels in the tooltip", async () => {
+  it("should use custom x and y labels in the tooltip", () => {
     const plot = new DuckPlot(null, { jsdom })
       .x("a", { label: "Custom X Axis" })
       .options({
@@ -49,7 +56,7 @@ describe("getMarkOptions", () => {
       .rawData([{ a: 1 }], { a: "string" })
       .fy("a")
       .mark("areaY");
-    const result = await getPrimaryMarkOptions(plot);
+    const result = getPrimaryMarkOptions(plot);
 
     expect(result).toHaveProperty("channels", {
       xCustom: {

@@ -5,7 +5,7 @@ import { derivePlotOptions } from "./derivePlotOptions";
 import { getPrimaryMarkOptions } from "./getPrimaryMarkOptions";
 import * as Plot from "@observablehq/plot";
 import { getCommonMarks, getfyMarks } from "./getPlotOptions";
-export async function getAllMarkOptions(instance: DuckPlot) {
+export function getAllMarkOptions(instance: DuckPlot) {
   // Grab the types and labels from the data
   const { types, labels } = instance.data();
 
@@ -21,11 +21,11 @@ export async function getAllMarkOptions(instance: DuckPlot) {
   filteredData.labels = labels;
   instance.filteredData = filteredData;
 
-  const plotOptions = await derivePlotOptions(instance);
+  const plotOptions = derivePlotOptions(instance);
   const currentColumns = instance.filteredData?.types
     ? Object.keys(instance.filteredData?.types)
     : [];
-  const primaryMarkOptions = await getPrimaryMarkOptions(instance);
+  const primaryMarkOptions = getPrimaryMarkOptions(instance);
 
   // Add the primary mark if x and y are defined OR if an aggregate has been
   // specified. Not a great rule, but works for showing aggregate marks with

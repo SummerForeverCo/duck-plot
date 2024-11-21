@@ -76,10 +76,10 @@ const defaultConfig = {
   tip: true,
 };
 // Get the top level configurations for the plot object
-export async function getPlotOptions(instance: DuckPlot) {
+export function getPlotOptions(instance: DuckPlot) {
   const options = {
     ...defaultOptions,
-    ...(await instance.derivePlotOptions()),
+    ...instance.derivePlotOptions(),
   };
   const config = { ...defaultConfig, ...instance.config() };
   const sorts = instance.sorts;

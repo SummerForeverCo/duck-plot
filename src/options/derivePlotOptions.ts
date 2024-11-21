@@ -1,8 +1,8 @@
 // TODO: add tests for this coalesing
 import type { DuckPlot } from "..";
 
-export async function derivePlotOptions(instance: DuckPlot) {
-  const data = await instance.prepareData();
+export function derivePlotOptions(instance: DuckPlot) {
+  const data = instance.data();
   const options = instance.options();
   let plotOptions = {
     ...options,
