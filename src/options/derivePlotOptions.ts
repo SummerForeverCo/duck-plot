@@ -18,13 +18,18 @@ export async function derivePlotOptions(instance: DuckPlot) {
       ...options.color,
       ...instance.color().options,
     },
-    // TODO: figure out how we want to handle fx and fy (and their options).
-    // Probably not allow them to be passed in.
+    fx: {
+      ...options.fx,
+      ...instance.fx().options,
+    },
     fy: {
       ...options.fy,
       ...instance.fy().options,
     },
-    // TODO(?): add text and r options here to enable either way to be passed in
+    r: {
+      ...options.r,
+      ...instance.r().options,
+    },
   };
 
   // Fallback to computed labels if they are undefined

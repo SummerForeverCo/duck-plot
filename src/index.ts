@@ -157,10 +157,13 @@ export class DuckPlot {
   }
 
   // r (radius) column encoding
-  r(): { column: string };
-  r(column: IncomingColumType): this;
-  r(column?: IncomingColumType): { column?: ColumnType } | DuckPlot {
-    return handleProperty(this, this._r, column);
+  r(): PlotProperty<"r">;
+  r(column: IncomingColumType, options?: PlotOptions["r"]): this;
+  r(
+    column?: IncomingColumType,
+    options?: PlotOptions["r"]
+  ): PlotProperty<"r"> | DuckPlot {
+    return handleProperty(this, this._r, column, options);
   }
 
   // Text encoding: note, there are no options for text

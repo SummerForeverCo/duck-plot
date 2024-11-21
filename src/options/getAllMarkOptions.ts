@@ -27,26 +27,34 @@ export async function getAllMarkOptions(instance: DuckPlot) {
     : [];
   const primaryMarkOptions = await getPrimaryMarkOptions(instance);
 
-  // Here, we want to add the primary mark if x and y are defined OR if an
-  // aggregate has been specifid. Not a great rule, but works for now for
-  // showing aggregate marks with only one dimension
+  // Add the primary mark if x and y are defined OR if an aggregate has been
+  // specified. Not a great rule, but works for showing aggregate marks with
+  // only one dimension
+
+  // Tick Chart can only have x or y
   const isValidTickChart =
     (instance.mark().type === "tickX" && currentColumns.includes("x")) ||
     (instance.mark().type === "tickY" && currentColumns.includes("y"));
 
-  const primaryMark =
-    !isValidTickChart &&
-    (!currentColumns.includes("x") || !currentColumns.includes("y")) &&
-    !instance.config().aggregate
-      ? []
-      : instance.mark().type
-      ? [
-          Plot[instance.mark().type!](
-            instance.filteredData,
-            primaryMarkOptions as MarkOptions
-          ),
-        ]
-      : [];
+  const hasX = currentColumns.includes("x");
+  const hasY = currentColumns.includes("y");
+  const hasAggregate =
+    instance.config().aggregate !== undefined &&
+    instance.config().aggregate !== false;
+  const hasColumnsOrAggregate =
+    (hasX && hasY) || ((hasX || hasY) && hasAggregate);
+
+  const showPrimaryMark =
+    (isValidTickChart || hasColumnsOrAggregate) && instance.mark().type;
+
+  const primaryMark = showPrimaryMark
+    ? [
+        Plot[instance.mark().type!](
+          instance.filteredData,
+          primaryMarkOptions as MarkOptions
+        ),
+      ]
+    : [];
 
   // TODO: Make frame/grid config options(?)
   const commonPlotMarks = [

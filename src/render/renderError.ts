@@ -13,4 +13,3 @@ export async function renderError(instance: DuckPlot, error: any) {
 
   return errorElement;
 }
-// Create a fallback element with the error message
