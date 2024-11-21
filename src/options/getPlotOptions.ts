@@ -1,3 +1,4 @@
+import type { DuckPlot } from "..";
 import type {
   MarkOptions,
   PlotOptions,
@@ -7,119 +8,19 @@ import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
 import type {
   BasicColumnType,
-  ChartData,
+  Data,
   ChartType,
   ColumnType,
   Config,
   Indexable,
-} from "./types";
+  Sorts,
+} from "../types";
+import { borderOptions, defaultColors } from "../helpers";
 // Extend the MarkOptions to include all the stack options
 interface AllMarkOptions extends MarkOptions, StackOptions {}
-export const defaultColors = [
-  "rgba(255, 0, 184, 1)",
-  "rgba(0, 183, 255, 1)",
-  "rgba(255, 237, 0, 1)",
-  "rgba(0, 202, 99, 1)",
-  "rgba(255, 83, 0, 1)",
-];
-const borderOptions = {
-  backgroundColor: "hsla( 0 0% 100%)",
-  borderColor: "rgb(228, 229, 231)",
-};
-// Get options for a specific mark (e.g., the line or area marks)
-export function getMarkOptions(
-  currentColumns: string[] = [],
-  type: ChartType,
-  colTypes:
-    | {
-        [key: string]: BasicColumnType;
-      }
-    | undefined,
-  options: {
-    color?: string;
-    xLabel?: string;
-    yLabel?: string;
-    tip?: boolean;
-    xValue?: (d: Indexable, i: number) => string;
-    yValue?: (d: Indexable, i: number) => string;
-    markOptions?: AllMarkOptions;
-  }
-) {
-  const color = options.color || defaultColors[0];
-  const stroke = currentColumns.includes("series") ? "series" : color;
-  const fill = currentColumns.includes("series") ? "series" : color;
-  const fx = currentColumns.includes("fx") ? "fx" : undefined;
-  const tip =
-    options.tip !== false
-      ? {
-          tip: {
-            stroke: borderOptions.borderColor,
-            format: {
-              xCustom: true,
-              yCustom: true,
-              x: false,
-              y: false,
-              color: true,
-              fy: false,
-              fx: false,
-              z: false, // Hide the auto generated "series" for area charts
-            },
-          },
-        }
-      : {};
-  const ellipsis = "…";
-  function truncateLabel(label: string | undefined, length: number = 25) {
-    if (!label || label.length < length) return label;
-    return label.slice(0, length) + ellipsis;
-  }
-
-  const sort =
-    options.markOptions?.sort ?? (colTypes?.x !== "string" && type !== "barX")
-      ? { sort: (d: any) => d.x }
-      : {};
-
-  return {
-    // Create custom labels for x and y (important if the labels are custom but hidden!)
-    channels: {
-      xCustom: {
-        label: truncateLabel(options.xLabel),
-        // TODO: good for grouped bar charts, not good for other fx
-        value:
-          typeof options.xValue === "function"
-            ? options.xValue
-            : currentColumns.includes("fx")
-            ? "fx"
-            : "x",
-      },
-      yCustom: {
-        label: truncateLabel(options.yLabel),
-        value: typeof options.yValue === "function" ? options.yValue : "y",
-      },
-    },
-    ...tip,
-    ...(type === "line" ? { stroke } : { fill }),
-    ...(currentColumns.includes("x") ? { x: `x` } : {}),
-    ...(sort ? sort : {}),
-    ...(currentColumns.includes("fy") ? { fy: "fy" } : {}),
-    ...(type === "dot" && currentColumns.includes("r") ? { r: "r" } : {}),
-    ...(type === "text" && currentColumns.includes("text")
-      ? { text: "text" }
-      : {}),
-    ...(fx ? { fx: `fx` } : {}),
-    ...(currentColumns.includes("y") ? { y: `y` } : {}),
-    ...(options.markOptions ? { ...options.markOptions } : {}),
-    ...(currentColumns.includes("series")
-      ? {
-          [type === "line" || type.startsWith("rule") || type.startsWith("tick")
-            ? "stroke"
-            : "fill"]: `series`,
-        }
-      : {}),
-  } satisfies MarkOptions;
-}
 
 // Identify the data currently in the dataset
-export function getDataOrder(data: ChartData | undefined, column: string) {
+export function getDataOrder(data: Data | undefined, column: string) {
   if (!data) return;
   return { domain: [...new Set(data.map((d: any) => d[column]))] as string[] };
 }
@@ -127,10 +28,23 @@ export function getDataOrder(data: ChartData | undefined, column: string) {
 // Gets all data orders for the current columns
 // TODO: perhaps cast series to varchar in the data, but that's a biggish change
 export function getSorts(
-  currentColumns: string[] = [],
-  data?: ChartData,
-  categoricalSeries?: boolean
-) {
+  instance: DuckPlot,
+  columns?: string[],
+  inputData?: Data
+): Sorts {
+  // Because the sort can be specified in the options, remove any colums who
+  // have a sort specified
+  const haveSorts = Object.keys(instance.mark()?.options?.sort ?? {});
+  const currentColumns = columns
+    ? columns
+    : instance.data().types
+    ? Object.keys(instance.data().types ?? {}).filter(
+        (d) => d !== "fy" && !haveSorts.includes(d)
+      )
+    : [];
+  const categoricalSeries = instance.color().options?.type === "categorical";
+
+  const data = inputData ?? instance.data();
   return currentColumns
     .filter(
       (column) =>
@@ -162,20 +76,19 @@ const defaultConfig = {
   tip: true,
 };
 // Get the top level configurations for the plot object
-// TODO: better argument order or naming
-export function getTopLevelPlotOptions(
-  data: ChartData | undefined,
-  currentColumns: string[],
-  sorts: any,
-  type: ChartType,
-  userOptions: PlotOptions,
-  userConfig?: Config
-) {
-  const options = { ...defaultOptions, ...userOptions };
-  const config = { ...defaultConfig, ...userConfig };
+export function getPlotOptions(instance: DuckPlot) {
+  const options = {
+    ...defaultOptions,
+    ...instance.derivePlotOptions(),
+  };
+  const config = { ...defaultConfig, ...instance.config() };
+  const sorts = instance.sorts;
+  const data = instance.data();
+  const currentColumns = data?.types ? Object.keys(data.types ?? {}) : [];
+
   // Only compute a custom x/y domain if the other axes is missing
   // Make sure a minimum of 0 is included for x/y domains
-  const xDomain = sorts.x
+  const xDomain = sorts?.x
     ? sorts.x
     : currentColumns.includes("y")
     ? {}
@@ -185,7 +98,7 @@ export function getTopLevelPlotOptions(
           (d) => d.x
         ),
       };
-  const yDomain = sorts.y
+  const yDomain = sorts?.y
     ? sorts.y
     : currentColumns.includes("x")
     ? {}
@@ -198,7 +111,7 @@ export function getTopLevelPlotOptions(
 
   // Handle 3 options for color: note, color as a string is assigned in the mark
   const { color: colorConfig } = options;
-  const { domain: sortsDomainRaw } = sorts.series || {};
+  const { domain: sortsDomainRaw } = sorts?.series || {};
   // If a domain ins't provided, use the data to determine the domain for
   // continuous series (e.g., numbers or dates). Note, this uses the full
   // dataset (not any filtered data from brushing)
@@ -299,7 +212,7 @@ export function getTopLevelPlotOptions(
     color: { ...computedColor, ...options.color },
     ...(currentColumns.includes("fy")
       ? {
-          fy: { ...sorts.fy, axis: null, label: null, ...options.fy },
+          fy: { ...sorts?.fy, axis: null, label: null, ...options.fy },
           insetTop: options.insetTop || 12,
         }
       : {}),
@@ -347,10 +260,9 @@ export function getTickFormatter(
 
 // Gets the type of legend to handle rendering
 export function getLegendType(
-  data: any,
-  currentColumns: string[]
+  data: Data
 ): "categorical" | "continuous" | undefined {
-  if (!data.types || !currentColumns.includes("series")) return;
+  if (!data.types) return;
   return data.types.series === "string" ? "categorical" : "continuous";
 }
 
@@ -378,7 +290,7 @@ export function getCommonMarks(currentColumns: string[], inputOptions?: any) {
 }
 
 export function getfyMarks(
-  data: ChartData,
+  data: Data,
   currentColumns: string[],
   options: PlotOptions["fy"]
 ) {

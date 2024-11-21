@@ -1,9 +1,9 @@
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-import { quoteColumns } from "./query";
-import { runQuery } from "./runQuery";
+import { quoteColumns } from "./data/query";
+import { runQuery } from "./data/runQuery";
 import {
   BasicColumnType,
-  ChartData,
+  Data,
   ChartType,
   ColumnType,
   DescribeSchema,
@@ -11,6 +11,7 @@ import {
   TypesObject,
 } from "./types";
 import { Database } from "duckdb-async";
+import { DuckPlot } from ".";
 
 export async function checkDistinct(
   duckDB: AsyncDuckDB | Database,
@@ -59,7 +60,7 @@ export function formatResults(
     (d) => (types[d.column_name] = getTypeCategory(d.column_type))
   );
   const selected = data;
-  let formatted: ChartData = [];
+  let formatted: Data = [];
   formatted =
     selected?.map((row: any) => {
       let obj: Indexable = {};
@@ -139,38 +140,28 @@ export function getUniqueId() {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
 
-export function processRawData(
-  rawData: ChartData,
-  columnConfig: {
-    x?: ColumnType;
-    y?: ColumnType;
-    color?: ColumnType;
-    fy?: ColumnType;
-    fx?: ColumnType;
-    r?: ColumnType;
-    text?: ColumnType;
-  }
-): ChartData {
+export function processRawData(instance: DuckPlot): Data {
+  const rawData = instance.rawData();
   if (!rawData || !rawData.types) return [];
 
   // Helper function to determine if a column is a string and defined
   const isStringCol = (col?: ColumnType): boolean =>
     col !== "" && col !== undefined && typeof col === "string";
 
-  // Define column mappings for chartData, types, and labels
+  // Define column mappings for data, types, and labels
   // TODO: if we rename series to color this should get simpler
   const columnMappings = [
-    { key: "x", column: columnConfig.x },
-    { key: "y", column: columnConfig.y },
-    { key: "series", column: columnConfig.color },
-    { key: "fy", column: columnConfig.fy },
-    { key: "fx", column: columnConfig.fx },
-    { key: "r", column: columnConfig.r },
-    { key: "text", column: columnConfig.text },
+    { key: "x", column: instance.x().column },
+    { key: "y", column: instance.y().column },
+    { key: "series", column: instance.color().column },
+    { key: "fy", column: instance.fy().column },
+    { key: "fx", column: instance.fx().column },
+    { key: "r", column: instance.r().column },
+    { key: "text", column: instance.text().column },
   ];
 
   // Map over raw data to extract chart data based on defined columns
-  const chartDataArray: ChartData = rawData.map((d) =>
+  const dataArray: Data = rawData.map((d) =>
     Object.fromEntries(
       columnMappings
         .filter(({ column }) => isStringCol(column))
@@ -179,30 +170,30 @@ export function processRawData(
   );
 
   // Extract types based on the defined columns
-  const chartDataTypes = Object.fromEntries(
+  const dataTypes = Object.fromEntries(
     columnMappings
       .filter(({ column }) => isStringCol(column))
       .map(({ key, column }) => [key, rawData?.types?.[column as string]])
   );
 
   // Extract labels based on the defined columns
-  const chartDataLabels = Object.fromEntries(
+  const dataLabels = Object.fromEntries(
     columnMappings
       .filter(({ column }) => column)
       .map(({ key, column }) => [key, column])
   );
-  chartDataArray.types = chartDataTypes;
-  chartDataArray.labels = chartDataLabels;
-  return chartDataArray;
+  dataArray.types = dataTypes;
+  dataArray.labels = dataLabels;
+  return dataArray;
 }
 
 // Funciton to filter down a dataset based on either a continuous range or a
 // set of values for the series column
 export function filterData(
-  data: ChartData,
+  data: Data,
   visibleSeries?: string[],
   seriesDomain?: any[]
-): ChartData {
+): Data {
   return visibleSeries && visibleSeries.length > 0
     ? data.filter((d) => visibleSeries.includes(`${d.series}`))
     : seriesDomain && seriesDomain.length === 2
@@ -211,3 +202,29 @@ export function filterData(
       )
     : data;
 }
+
+export const defaultColors = [
+  "rgba(255, 0, 184, 1)",
+  "rgba(0, 183, 255, 1)",
+  "rgba(255, 237, 0, 1)",
+  "rgba(0, 202, 99, 1)",
+  "rgba(255, 83, 0, 1)",
+];
+export const borderOptions = {
+  backgroundColor: "hsla( 0 0% 100%)",
+  borderColor: "rgb(228, 229, 231)",
+};
+
+export const checkForConfigErrors = (instance: DuckPlot) => {
+  if (!instance.ddb) throw new Error("Database not set");
+  if (!instance.table()) throw new Error("Table not set");
+  if (!instance.mark().type) throw new Error("Mark type not set");
+  const multipleX =
+    Array.isArray(instance.x().column) && instance.x().column.length > 1;
+  const multipleY =
+    Array.isArray(instance.y().column) && instance.y().column.length > 1;
+  if (multipleX && instance.mark().type !== "barX")
+    throw new Error("Multiple x columns only supported for barX type");
+  if (multipleY && instance.mark().type === "barX")
+    throw new Error("Multiple y columns not supported for barX type");
+};

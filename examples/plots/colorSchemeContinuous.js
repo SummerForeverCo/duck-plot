@@ -8,6 +8,7 @@ duckplot
   .color("Open")
   .mark("dot")
   .options({
+    width: 600,
     color: {
         scheme: "blues"
     }

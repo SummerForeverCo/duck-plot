@@ -14,7 +14,7 @@ import {
   standardColName,
   toTitleCase,
   getLabel,
-} from "../src/query";
+} from "../src/data/query";
 
 function removeSpacesAndBreaks(str: string) {
   return str.replace(/\s+/g, "");

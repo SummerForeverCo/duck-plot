@@ -1,7 +1,7 @@
 import * as Plot from "@observablehq/plot";
 import type { PlotOptions } from "@observablehq/plot";
 
-export type PlotFitOptions = {
+export type AutoMarginOptions = {
   rotateX?: boolean;
   hideWarnings?: boolean;
   hideOverlapping?: boolean;
@@ -15,10 +15,10 @@ const xNodeSelector =
   '[aria-label="x-axis tick label"] text, [aria-label="fx-axis tick label"] text, [aria-label="fx-axis tick label"] g text';
 
 const yNodeRightSelector = yNodeSelector.replaceAll("end", "start");
-export function PlotFit(
+export function PlotAutoMargin(
   // TODO: probably swap the name of options and config for consistency
   config: PlotOptions,
-  options?: PlotFitOptions,
+  options?: AutoMarginOptions,
   font?: any
 ): (SVGSVGElement | HTMLElement) & Plot.Plot {
   const getWidth = function (element: HTMLElement | SVGElement): number {
@@ -55,7 +55,7 @@ export function PlotFit(
   };
 
   // Default options
-  const defaultOptions: PlotFitOptions = {
+  const defaultOptions: AutoMarginOptions = {
     hideWarnings: true,
     rotateX: true,
     hideOverlapping: true,

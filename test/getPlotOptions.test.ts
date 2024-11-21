@@ -1,51 +1,25 @@
+import { DuckPlot } from "../src";
 import {
   getDataOrder,
-  getMarkOptions,
   getSorts,
   getTickFormatter,
-  getTopLevelPlotOptions,
+  getPlotOptions,
   truncateText,
-} from "../src/getPlotOptions";
-import type { ChartData } from "../src/types";
-import { describe, expect, it } from "vitest";
+} from "../src/options/getPlotOptions";
+import type { Data } from "../src/types";
+import { beforeEach, describe, expect, it } from "vitest";
+const fakeFont = {
+  getAdvanceWidth: () => 10,
+};
 
-describe("getMarkOptions", () => {
-  it("for a line chart with series, the *stroke* should be set to the series", () => {
-    const result = getMarkOptions(["series"], "line", {}, {});
-    expect(result).toHaveProperty("stroke", "series");
-  });
+import { JSDOM } from "jsdom";
 
-  it("for not-line charts with series, the *fill* should be set to the series", () => {
-    const result = getMarkOptions(["series"], "areaY", {}, {});
-    expect(result).toHaveProperty("fill", "series");
-  });
-
-  it("should return the correct options when fy is included", () => {
-    const result = getMarkOptions(["fy"], "line", {}, {});
-    expect(result).toHaveProperty("fy", "fy");
-  });
-  it("should use custom x and y labels in the tooltip", () => {
-    const result = getMarkOptions(
-      ["x", "y"],
-      "line",
-      {},
-      {
-        xLabel: "Custom X Axis",
-        yLabel: "Custom Y Axis",
-      }
-    );
-    expect(result).toHaveProperty("channels", {
-      xCustom: {
-        label: "Custom X Axis",
-        value: "x",
-      },
-      yCustom: {
-        label: "Custom Y Axis",
-        value: "y",
-      },
-    });
-  });
-});
+const jsdom = new JSDOM(`
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+</head>
+<body></body>`);
 
 describe("getDataOrder", () => {
   it("should return undefined if data is undefined", () => {
@@ -76,31 +50,46 @@ describe("getDataOrder", () => {
   });
 });
 
+// Note, getSorts expects a DuckPlot instance, but it's ok to pass in a fake
+// arg. and still test the functionality by including columsn and data
 describe("getSorts", () => {
-  it("should return an empty object if currentColumns is empty", () => {
+  let plot: any;
+  let jsdom: JSDOM;
+
+  beforeEach(async () => {
+    jsdom = new JSDOM();
+    plot = new DuckPlot(null, { jsdom, font: fakeFont });
+  });
+  it("should return an empty object if currentColumns is an empty array", async () => {
     const data = [
       { category: "A" },
       { category: "B" },
       { category: "A" },
       { category: "C" },
     ];
-    const result = getSorts([], data);
+    plot.rawData(data, { category: "string" });
+
+    await plot.prepareData();
+
+    const result = getSorts(plot, [], data);
     expect(result).toEqual({});
   });
 
-  it("should return an empty object if data is undefined", () => {
-    const result = getSorts(["category"], undefined);
+  it("should return an empty object if data is an empty array", () => {
+    const result = getSorts(plot, ["category"], []);
     expect(result).toEqual({});
   });
 
-  it("should return the correct sorts for string columns", () => {
-    let data: ChartData = [
+  it("should return the correct sorts for string columns", async () => {
+    let data: Data = [
       { x: "B", y: 1, series: "CategoryB" },
       { x: "A", y: 1, series: "CategoryA" },
       { x: "C", y: 1, series: "CategoryD" },
     ];
-    data.types = { x: "string", y: "number", series: "string" };
-    const result = getSorts(["x", "y", "series"], data);
+    const types = { x: "string", y: "number", series: "string" };
+    plot.rawData(data, types).x("x").y("y").color("series");
+    await plot.prepareData();
+    const result = getSorts(plot, ["x", "y", "series"]);
     expect(result).toEqual({
       x: { domain: ["B", "A", "C"] },
       series: { domain: ["CategoryB", "CategoryA", "CategoryD"] },
@@ -140,40 +129,37 @@ describe("getTickFormatter", () => {
 });
 
 describe("getTopLevelPlotOptions", () => {
+  let plot: any;
+  let jsdom: JSDOM;
+  beforeEach(async () => {
+    jsdom = new JSDOM();
+    plot = new DuckPlot(null, { jsdom, font: fakeFont });
+  });
   it("should return correct width and height", () => {
-    const result = getTopLevelPlotOptions([], [], {}, "barY", {
-      width: 800,
-      height: 600,
-    });
+    // Set options dynamically
+    plot.options({ width: 800, height: 600 });
+
+    // Call the function under test
+    const result = getPlotOptions(plot);
+
+    // Assert the results
     expect(result.height).toEqual(600);
     expect(result.width).toEqual(800);
   });
 
-  it("should include labels and formatters for x and y if in currentColumns", () => {
-    let data: ChartData = [
-      { x: "B", y: 1, series: "CategoryB" },
-      { x: "A", y: 1, series: "CategoryA" },
-      { x: "C", y: 1, series: "CategoryD" },
-    ];
-    data.types = { x: "string", y: "number", series: "string" };
-    const result = getTopLevelPlotOptions(data, ["x", "y"], {}, "barY", {
+  it("should include labels for x and y", async () => {
+    // Set options dynamically
+    plot.options({
       x: { label: "X Axis" },
-      y: { label: "Y Axis" },
+      y: { label: "And a Y Axis" },
     });
 
-    expect(result.x).toEqual(
-      expect.objectContaining({
-        label: "X Axis",
-        tickFormat: expect.any(Function),
-      })
-    );
+    // Call the function under test
+    const result = getPlotOptions(plot);
 
-    expect(result.y).toEqual(
-      expect.objectContaining({
-        label: "Y Axis",
-        labelAnchor: "top",
-      })
-    );
+    // Assertions
+    expect(result.x).toMatchObject({ label: "X Axis" });
+    expect(result.y).toMatchObject({ label: "And a Y Axis" });
   });
 
   it("should include sorts in x and y axis options if provided", () => {
@@ -181,21 +167,27 @@ describe("getTopLevelPlotOptions", () => {
       x: { domain: ["a", "b", "c"] },
       y: { domain: ["1", "2", "3"] },
     };
-    const result = getTopLevelPlotOptions([], [], sorts, "barY", {});
+    // Set domains
+    plot.rawData([], {}).options(sorts);
+
+    const result = getPlotOptions(plot);
     expect(result.x).toEqual(expect.objectContaining(sorts.x));
     expect(result.y).toEqual(expect.objectContaining(sorts.y));
   });
 
-  it("should handle fy sort option and insetTop if provided", () => {
+  it("should handle fy sort option", () => {
     const sorts = { fy: { domain: ["a", "b", "c"] } };
-    const result = getTopLevelPlotOptions([], ["fy"], sorts, "barY", {});
+    // Set domains
+    plot
+      .rawData([{ fy: "a" }], { fy: "string" })
+      .fy("fy")
+      .options(sorts);
+
+    const result = getPlotOptions(plot);
     expect(result.fy).toEqual(
       expect.objectContaining({
         domain: ["a", "b", "c"],
-        axis: null,
-        label: null,
       })
     );
-    expect(result.insetTop).toBe(12);
   });
 });

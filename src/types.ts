@@ -1,4 +1,5 @@
 import type { MarkOptions, PlotOptions } from "@observablehq/plot";
+import { DuckPlot } from ".";
 
 // TODO: all plot chart types?
 export type ChartType =
@@ -9,7 +10,8 @@ export type ChartType =
   | "barY"
   | "text"
   | "tickX"
-  | "tickY";
+  | "tickY"
+  | undefined;
 
 export type SqlSort = {
   column: string;
@@ -45,7 +47,7 @@ export type Indexable = {
 };
 export type Column = "x" | "y" | "series" | "fy" | "fx" | "r" | "text";
 export type ColumnConfig = Partial<Record<Column, ColumnType>>;
-export interface ChartData extends Array<Indexable> {
+export interface Data extends Array<Indexable> {
   types?: { [key: string]: BasicColumnType };
   labels?: { x?: string; y?: string; series?: string };
 }
@@ -72,7 +74,7 @@ export type PlotProperty<T extends keyof PlotOptions> = {
 };
 
 export type MarkProperty = {
-  markType: ChartType;
+  type?: ChartType;
   options?: MarkOptions;
 };
 
@@ -114,4 +116,13 @@ export type Aggregate =
 
 export type QueryMap = {
   [key: string]: string;
+};
+export type DuckPlotInstance = DuckPlot;
+
+export type Sorts = {
+  x?: { domain: string[] };
+  y?: { domain: string[] };
+  fx?: { domain: string[] };
+  fy?: { domain: string[] };
+  series?: { domain: string[] }; // TODO, color?
 };

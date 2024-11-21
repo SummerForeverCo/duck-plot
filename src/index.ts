@@ -1,10 +1,21 @@
 import * as Plot from "@observablehq/plot";
-import { JSDOM } from "jsdom";
-import type { Markish, MarkOptions, PlotOptions } from "@observablehq/plot";
+import { prepareData } from "./data/prepareData";
+import { getLegendType, getSorts } from "./options/getPlotOptions";
+import { checkForConfigErrors, getUniqueId, processRawData } from "./helpers";
+import { derivePlotOptions } from "./options/derivePlotOptions";
+import { handleProperty } from "./handleProperty";
+import { getAllMarkOptions } from "./options/getAllMarkOptions";
+import { render } from "./render/render";
+import { renderError } from "./render/renderError";
+import "./legend/legend.css";
+import type { Database } from "duckdb-async";
+import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
+import type { JSDOM } from "jsdom";
+import type { Markish, PlotOptions } from "@observablehq/plot";
 
 import {
   BasicColumnType,
-  ChartData,
+  Data,
   ChartType,
   ColumnType,
   Config,
@@ -12,27 +23,11 @@ import {
   MarkProperty,
   PlotProperty,
   QueryMap,
+  Sorts,
 } from "./types";
-import { prepareChartData } from "./prepareChartData";
-import {
-  getCommonMarks,
-  getfyMarks,
-  getLegendType,
-  getMarkOptions,
-  getSorts,
-  getTopLevelPlotOptions,
-  isColor,
-} from "./getPlotOptions";
-import { PlotFit } from "./plotFit";
-import { legendCategorical } from "./legendCategorical";
-import "./legend.css";
-import { legendContinuous } from "./legendContinuous";
-import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-import equal from "fast-deep-equal";
-import { filterData, getUniqueId, processRawData } from "./helpers";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
-  private _ddb: AsyncDuckDB | null = null;
+  private _ddb: AsyncDuckDB | Database | undefined | null = null;
   private _table: string | null = null;
   private _x: PlotProperty<"x"> = { ...emptyProp };
   private _y: PlotProperty<"y"> = { ...emptyProp };
@@ -41,30 +36,37 @@ export class DuckPlot {
   private _r: PlotProperty<"r"> = { ...emptyProp };
   private _text: { column: string } = { column: "" };
   private _color: PlotProperty<"color"> = { ...emptyProp };
-  private _mark: MarkProperty = {
-    markType: "line",
-    options: {},
-  };
+  private _mark: MarkProperty = {};
   private _options: PlotOptions = {};
   private _jsdom: JSDOM | undefined;
   private _font: any;
   private _isServer: boolean;
   private _document: Document;
   private _newDataProps: boolean = true;
-  private _chartData: ChartData = [];
-  private _rawData: ChartData = [];
-  private _filteredData: ChartData = [];
+  private _data: Data = [];
+  private _rawData: Data = [];
   private _config: Config = {};
   private _query: string = "";
   private _description: string = ""; // TODO: add tests
   private _queries: QueryMap | undefined = undefined; // TODO: add tests
-  private _visibleSeries: string[] = [];
-  private _seriesDomain: any[] = [];
-  private _chartElement: HTMLElement | null = null;
   private _id: string;
+  private _sorts: Record<string, { domain: string[] } | undefined> = {};
+  private _hasLegend: boolean | undefined;
+  private _legendType:
+    | Plot.ScaleType
+    | "categorical"
+    | "continuous"
+    | undefined;
+  // Rather than provide getter/setters, just make these public
+  plotObject: ((HTMLElement | SVGSVGElement) & Plot.Plot) | undefined =
+    undefined;
+  visibleSeries: string[] = [];
+  filteredData: Data | undefined = undefined;
+  chartElement: HTMLElement | null = null;
+  seriesDomain: number[] = [];
 
   constructor(
-    ddb: AsyncDuckDB,
+    ddb?: AsyncDuckDB | Database | null, // Allow null so you can work on the server without a database
     { jsdom, font }: { jsdom?: JSDOM; font?: any } = {}
   ) {
     this._ddb = ddb;
@@ -73,10 +75,11 @@ export class DuckPlot {
     this._isServer = jsdom !== undefined;
     this._document = this._isServer
       ? this._jsdom!.window.document
-      : window.document;
+      : window?.document;
     this._id = getUniqueId();
   }
 
+  // Set the table to query against
   table(): string;
   table(table: string): this;
   table(table?: string): string | this {
@@ -103,38 +106,6 @@ export class DuckPlot {
     }
     return this._query;
   }
-  // Helper method for getting and setting x, y, color, and fy properties
-  private handleProperty<T extends keyof PlotOptions>(
-    prop: PlotProperty<T>,
-    column?: IncomingColumType,
-    options?: PlotOptions[T],
-    propertyName?: string
-  ): PlotProperty<T> | this {
-    // Because we store empty string for falsey values, we need to check them
-    const columnValue = column === false || column === null ? "" : column;
-
-    if (column !== undefined && !equal(columnValue, prop.column)) {
-      // Special case handling that we don't need data if color is/was a color
-      if (
-        !(
-          propertyName === "color" &&
-          isColor(prop.column) &&
-          typeof column === "string" &&
-          isColor(column)
-        )
-      ) {
-        this._newDataProps = true; // When changed, we need to requery the data
-      }
-    }
-    if (column === false || column === null) {
-      prop.column = "";
-      prop.options = undefined;
-    } else {
-      if (column !== undefined) prop.column = column;
-      if (options !== undefined) prop.options = options;
-    }
-    return column === undefined ? prop : this;
-  }
 
   // x column encoding
   x(): PlotProperty<"x">;
@@ -142,8 +113,8 @@ export class DuckPlot {
   x(
     column?: IncomingColumType,
     options?: PlotOptions["x"]
-  ): PlotProperty<"x"> | this {
-    return this.handleProperty(this._x, column, options);
+  ): PlotProperty<"x"> | DuckPlot {
+    return handleProperty(this, this._x, column, options);
   }
 
   // y column encoding
@@ -152,8 +123,8 @@ export class DuckPlot {
   y(
     column?: IncomingColumType,
     options?: PlotOptions["y"]
-  ): PlotProperty<"y"> | this {
-    return this.handleProperty(this._y, column, options);
+  ): PlotProperty<"y"> | DuckPlot {
+    return handleProperty(this, this._y, column, options);
   }
 
   // color column encoding
@@ -162,75 +133,76 @@ export class DuckPlot {
   color(
     column?: IncomingColumType,
     options?: PlotOptions["color"]
-  ): PlotProperty<"color"> | this {
-    return this.handleProperty(this._color, column, options, "color");
+  ): PlotProperty<"color"> | DuckPlot {
+    return handleProperty(this, this._color, column, options, "color");
   }
 
   // fy column encoding
-  // TODO: maybe remove the plotOptions here
   fy(): PlotProperty<"fy">;
   fy(column: IncomingColumType, options?: PlotOptions["fy"]): this;
   fy(
     column?: IncomingColumType,
     options?: PlotOptions["fy"]
-  ): PlotProperty<"fy"> | this {
-    return this.handleProperty(this._fy, column, options);
+  ): PlotProperty<"fy"> | DuckPlot {
+    return handleProperty(this, this._fy, column, options);
   }
 
-  // fy column encoding
-  // TODO: maybe remove the plotOptions here
+  // fx column encoding
   fx(): PlotProperty<"fx">;
   fx(column: IncomingColumType, options?: PlotOptions["fx"]): this;
   fx(
     column?: IncomingColumType,
     options?: PlotOptions["fx"]
-  ): PlotProperty<"fx"> | this {
-    return this.handleProperty(this._fx, column, options);
+  ): PlotProperty<"fx"> | DuckPlot {
+    return handleProperty(this, this._fx, column, options);
   }
 
   // r (radius) column encoding
-  r(): { column: string };
-  r(column: IncomingColumType): this;
-  r(column?: IncomingColumType): { column?: ColumnType } | this {
-    return this.handleProperty(this._r, column);
+  r(): PlotProperty<"r">;
+  r(column: IncomingColumType, options?: PlotOptions["r"]): this;
+  r(
+    column?: IncomingColumType,
+    options?: PlotOptions["r"]
+  ): PlotProperty<"r"> | DuckPlot {
+    return handleProperty(this, this._r, column, options);
   }
 
   // Text encoding: note, there are no options for text
   text(): { column: string };
   text(column: IncomingColumType): this;
-  text(column?: IncomingColumType): { column?: ColumnType } | this {
-    return this.handleProperty(this._text, column);
+  text(column?: IncomingColumType): { column?: ColumnType } | DuckPlot {
+    return handleProperty(this, this._text, column);
   }
 
+  // Observable Plot Mark type and options
   mark(): MarkProperty;
-  mark(markType: ChartType, options?: MarkProperty["options"]): this;
+  mark(type: ChartType, options?: MarkProperty["options"]): this;
   mark(
-    markType?: ChartType,
+    type?: ChartType,
     options?: MarkProperty["options"]
   ): MarkProperty | this {
-    if (markType) {
-      if (this._mark.markType !== markType) {
+    if (type) {
+      if (this._mark.type !== type) {
         this._newDataProps = true; // when changed, we need to requery the data
       }
-      this._mark = { markType, ...(options ? { options } : {}) };
+      this._mark = { type, ...(options ? { options } : {}) };
       return this;
     }
     return this._mark!;
   }
 
+  // Observable Plot options (e.g., passed to Plot.plot({options}))
   options(): PlotOptions;
   options(opts: PlotOptions): this;
   options(opts?: PlotOptions): PlotOptions | this {
     if (opts) {
-      // TODO: this is probably an unnecessary check
-      if (!equal(opts, this._options)) {
-        this._options = opts;
-      }
+      this._options = opts;
       return this;
     }
     return this._options!;
   }
 
+  // DuckPlot specific config options
   config(): Config;
   config(config: Config): this;
   config(config?: Config): Config | this {
@@ -248,191 +220,123 @@ export class DuckPlot {
     return this._config;
   }
 
-  data(): ChartData {
-    return this._chartData || [];
-  }
-
   // If someone wants to set the data directly rather than working with duckdb
-  // TODO: should this just be how the data() method works when passed args...?
-  rawData(): ChartData;
-  rawData(data?: ChartData, types?: { [key: string]: BasicColumnType }): this;
+  rawData(): Data;
+  rawData(data?: Data, types?: { [key: string]: BasicColumnType }): this;
   rawData(
-    data?: ChartData,
+    data?: Data,
     types?: { [key: string]: BasicColumnType }
-  ): ChartData | this {
+  ): Data | this {
     if (data && types) {
       data.types = types;
       this._newDataProps = true;
       this._rawData = data;
       return this;
     }
-    return this._chartData; // TODO: does this make sense...?
+    return this._rawData;
   }
 
-  // TODO; private? Also, rename
-  async prepareChartData(): Promise<ChartData> {
-    // If no new data properties, return the chartData
-    if (!this._newDataProps) return this._chartData;
+  // Prepare data for rendering
+  async prepareData(): Promise<Data> {
+    // If no new data properties, return the data
+    if (!this._newDataProps) return this._data;
 
     // If there is raw data rather than a database, extract chart data from it
     if (this._rawData && this._rawData.types) {
-      this._chartData = processRawData(this._rawData, {
-        x: this._x.column,
-        y: this._y.column,
-        color: this._color.column,
-        fy: this._fy.column,
-        fx: this._fx.column,
-        r: this._r.column,
-        text: this._text.column,
-      });
+      this._data = processRawData(this);
       this._newDataProps = false;
-      this._visibleSeries = []; // reset visible series
-      this._seriesDomain = []; // reset domain
-      return this._chartData;
+      this.visibleSeries = []; // reset visible series
+      this.seriesDomain = []; // reset domain
+      return this._data;
     }
-    if (!this._ddb || !this._table)
-      throw new Error("Database and table not set");
-    // TODO: this error isn't being thrown when I'd expect (e.g, if type is not set)
-    if (!this._mark) throw new Error("Mark type not set");
+
+    checkForConfigErrors(this); // Will throw any errors
     this._newDataProps = false;
-    this._visibleSeries = []; // reset visible series
-    this._seriesDomain = []; // reset domain
-    const columns = {
-      ...(this._x.column ? { x: this._x.column } : {}),
-      ...(this._y.column ? { y: this._y.column } : {}),
-      ...(this._color.column && !isColor(this._color.column)
-        ? { series: this._color.column }
-        : {}), // TODO: naming....?
-      ...(this._fy.column ? { fy: this._fy.column } : {}),
-      ...(this._fx.column ? { fx: this._fx.column } : {}),
-      ...(this._r.column ? { r: this._r.column } : {}),
-      ...(this._text.column ? { text: this._text.column } : {}),
-    };
-    ({
-      data: this._chartData,
-      description: this._description,
-      queries: this._queries,
-    } = await prepareChartData(
-      this._ddb,
-      this._table,
-      columns,
-      this._mark.markType!,
-      this._query,
-      this._config.aggregate,
-      this._config.percent
-    ));
-    return this._chartData;
-  }
-  async getMarks(): Promise<Markish[]> {
-    const allData = await this.prepareChartData();
-
-    // Grab the types and labels from the data
-    const { types, labels } = allData;
-
-    // Filter down to only the visible series (handled by the legend)
-    this._filteredData = filterData(
-      this._chartData,
-      this._visibleSeries,
-      this._seriesDomain
-    );
-
-    // Reassign the named properties back to the filtered array
-    this._filteredData.types = types;
-    this._filteredData.labels = labels;
-    const plotOptions = await this.getPlotOptions();
-    const currentColumns = this._filteredData?.types
-      ? Object.keys(this._filteredData.types)
-      : []; // TODO: remove this arg from topLevelPlotOptions
-    const primaryMarkOptions = getMarkOptions(
-      currentColumns,
-      this._mark.markType,
-      types,
-      {
-        color: isColor(this._color.column)
-          ? String(this._color.column)
-          : undefined,
-        tip: this._isServer ? false : this._config?.tip, // don't allow tip on the server
-        xLabel: this._config.tipLabels?.x ?? plotOptions.x?.label ?? "",
-        yLabel: this._config.tipLabels?.y ?? plotOptions.y?.label ?? "",
-        xValue: this._config.tipValues?.x,
-        yValue: this._config.tipValues?.y,
-        // TODO: suppport colorLabel, colorValue
-        markOptions: this._mark.options,
-      }
-    );
-
-    // Here, we want to add the primary mark if x and y are defined OR if an
-    // aggregate has been specifid. Not a great rule, but works for now for
-    // showing aggregate marks with only one dimension
-    const isValidTickChart =
-      (this._mark.markType === "tickX" && currentColumns.includes("x")) ||
-      (this._mark.markType === "tickY" && currentColumns.includes("y"));
-
-    const primaryMark =
-      !isValidTickChart &&
-      (!currentColumns.includes("x") || !currentColumns.includes("y")) &&
-      !this._config.aggregate
-        ? []
-        : [
-            Plot[this._mark.markType](
-              this._filteredData,
-              primaryMarkOptions as MarkOptions
-            ),
-          ];
-
-    // TODO: double check you don't actually use border color
-    // TODO: Make frame/grid config options(?)
-    const commonPlotMarks = [
-      ...getCommonMarks(currentColumns),
-      ...(this._options.marks || []),
-    ];
-
-    const fyMarks = getfyMarks(
-      this._filteredData,
-      currentColumns,
-      plotOptions.fy
-    );
-    return [
-      ...(commonPlotMarks || []),
-      ...(primaryMark || []),
-      ...(fyMarks || []),
-    ];
+    this.visibleSeries = []; // reset visible series
+    this.seriesDomain = []; // reset domain
+    const { data, description, queries } = await prepareData(this);
+    this._data = data;
+    this._description = description;
+    this._queries = queries;
+    return this._data;
   }
 
-  async getPlotOptions(): Promise<PlotOptions> {
-    const chartData = await this.prepareChartData();
+  // Because users can specify options either in .options or with each column,
+  // we coalese them here
+  derivePlotOptions(): PlotOptions {
+    return derivePlotOptions(this);
+  }
 
-    // Because users can specify options either in .options or with each column, we coalese them here
-    let plotOptions = {
-      ...this._options,
-      x: {
-        ...this._options.x,
-        ...this._x.options,
-      },
-      y: {
-        ...this._options.y,
-        ...this._y.options,
-      },
-      color: {
-        ...this._options.color,
-        ...this._color.options,
-      },
-      // TODO: figure out how we want to handle fx and fy (and their options).
-      // Probably not allow them to be passed in.
-      fy: {
-        ...this._options.fy,
-        ...this._fy.options,
-      },
-    };
+  // Note, the options below find default lables in the data - make sure to call
+  // prepareData first (as is done in the render() method) to get them
+  // Get the plot options for all of the marks
+  getAllMarkOptions(): Markish[] {
+    return getAllMarkOptions(this);
+  }
 
-    // Fallback to computed labels if they are undefined
-    if (plotOptions.x.label === undefined)
-      plotOptions.x.label = chartData.labels?.x;
-    if (plotOptions.y.label === undefined)
-      plotOptions.y.label = chartData.labels?.y;
-    if (plotOptions.color.label === undefined)
-      plotOptions.color.label = chartData.labels?.series;
-    return plotOptions;
+  // Set the sorts for the plot
+  setSorts() {
+    this._sorts = getSorts(this) ?? {};
+    // Only display the facets for present data
+    if (Object.keys(this._data?.types ?? {}).includes("fy")) {
+      this._sorts = {
+        ...this._sorts,
+        fy: getSorts(this, ["fy"], this.filteredData).fy,
+      };
+    }
+  }
+
+  // Track the legend type and visibility
+  setLegend(plotOptions: Plot.PlotOptions) {
+    // Note, displaying legends by default
+    this._hasLegend =
+      this._data.types?.series !== undefined &&
+      plotOptions.color?.legend !== null &&
+      plotOptions.color?.legend !== false;
+    this._legendType = plotOptions.color?.type ?? getLegendType(this._data);
+  }
+
+  // Render the plot (calls prepareData)
+  async render(
+    newLegend: boolean = true
+  ): Promise<SVGElement | HTMLElement | null> {
+    try {
+      await this.prepareData();
+      return await render(this, newLegend);
+    } catch (error) {
+      return await renderError(this, error);
+    }
+  }
+  // Getter/setter methods for accesssing and setting values
+  get newDataProps(): boolean {
+    return this._newDataProps;
+  }
+  set newDataProps(newValue: boolean) {
+    this._newDataProps = newValue;
+  }
+  get ddb(): AsyncDuckDB | Database | null | undefined {
+    return this._ddb;
+  }
+  get isServer(): boolean {
+    return this._isServer;
+  }
+  get document(): Document {
+    return this._document;
+  }
+  get font(): any {
+    return this._font;
+  }
+  get jsdom(): any {
+    return this._jsdom;
+  }
+  get id(): string {
+    return this._id;
+  }
+  get sorts(): Sorts {
+    return this._sorts;
+  }
+  data(): Data {
+    return this._data || [];
   }
   describe(): string {
     return this._description;
@@ -440,178 +344,10 @@ export class DuckPlot {
   queries(): QueryMap | undefined {
     return this._queries;
   }
-  async render(
-    newLegend: boolean = true
-  ): Promise<SVGElement | HTMLElement | null> {
-    if (!this._mark) return null;
-    const marks = await this.getMarks(); // updates this._chartData and this._filteredData
-    const currentColumns = this._chartData?.types
-      ? Object.keys(this._chartData.types)
-      : []; // TODO: remove this arg from topLevelPlotOptions
-    const document = this._isServer ? this._jsdom!.window.document : undefined;
-    // Because the sort can be specified in the options, remove any colums who
-    // have a sort specified
-    const haveSorts = Object.keys(this._mark?.options?.sort ?? {});
-    let sorts = getSorts(
-      currentColumns.filter((d) => d !== "fy" && !haveSorts.includes(d)),
-      this._chartData,
-      this._color.options?.type === "categorical"
-    );
-    // Only display the facets for present data
-    if (currentColumns.includes("fy")) {
-      sorts.fy = getSorts(
-        ["fy"],
-        this._filteredData,
-        this._color.options?.type === "categorical"
-      );
-    }
-    const plotOptions = await this.getPlotOptions();
-    // Note, displaying legends by default
-    const legendDisplay = plotOptions.color?.legend ?? true;
-    const hasLegend =
-      this._chartData.types?.series !== undefined && legendDisplay;
-    const legendType =
-      plotOptions.color?.type ?? getLegendType(this._chartData, currentColumns);
-    // TODO: maybe rename series to color....?
-    const legendLabel = plotOptions.color?.label;
-
-    // Different legend height for continuous, leave space for categorical label
-    const legendHeight =
-      legendType === "continuous" ? 50 : legendLabel ? 44 : 28;
-    plotOptions.height = hasLegend
-      ? (plotOptions.height || 281) - legendHeight
-      : plotOptions.height || 281;
-
-    const topLevelPlotOptions = getTopLevelPlotOptions(
-      this._chartData,
-      currentColumns,
-      sorts,
-      this._mark.markType,
-      plotOptions,
-      this._config
-    );
-
-    const options = {
-      ...topLevelPlotOptions,
-      marks,
-      ...(document ? { document } : {}),
-    };
-
-    // Adjust margins UNLESS specified otherwise AND not on the server without a
-    // font
-    const serverWithoutFont = this._isServer && !this._font;
-    const autoMargin = serverWithoutFont
-      ? false
-      : this._config.autoMargin !== false;
-
-    const plt = autoMargin
-      ? PlotFit(options, {}, this._font)
-      : Plot.plot(options);
-
-    plt.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-    let wrapper: HTMLElement | SVGElement | null = null;
-
-    // Find the parent of the existing chart element
-    const parentElement = this._chartElement?.parentElement;
-    // Replace existing content if there's a parent (for interactions)
-    if (parentElement) {
-      const existingWrapper = parentElement.querySelector(`#${this._id}`);
-      if (existingWrapper) {
-        wrapper = existingWrapper as HTMLElement | SVGElement;
-        // Clear the wrapper if we're updating the legend
-        if (newLegend) {
-          wrapper.innerHTML = "";
-        } else {
-          // Otherwise just remove the plot
-          wrapper.removeChild(wrapper.lastChild!);
-        }
-      }
-    } else {
-      wrapper = this._document.createElement("div");
-      wrapper.id = this._id;
-    }
-    if (hasLegend && newLegend) {
-      let legend: HTMLDivElement;
-      const div = this._document.createElement("div");
-
-      if (legendType === "categorical") {
-        // stringify in case of numbers as categories
-        const categories = Array.from(plt.scale("color")?.domain ?? [])?.map(
-          (d) => `${d}`
-        );
-
-        if (this._visibleSeries.length === 0) {
-          this._visibleSeries = categories;
-        }
-        // TODO: better argument order
-        legend = legendCategorical(
-          this._document,
-          categories,
-          this._visibleSeries,
-          Array.from(plt.scale("color")?.range ?? []),
-          plotOptions?.width || 500, // TODO: default width
-          plotOptions.height,
-          legendLabel ?? "",
-          this._font
-        );
-        if (this._config.interactiveLegend !== false) {
-          const legendElements =
-            legend.querySelectorAll<HTMLElement>(".dp-category");
-
-          legendElements.forEach((element: SVGElement | HTMLElement) => {
-            const elementId = `${element.textContent}`; // stringify in case of numbers as categories
-            if (!elementId) return;
-            element.style.cursor = "pointer";
-            element.addEventListener("click", (event) => {
-              const mouseEvent = event as MouseEvent;
-              // Shift-click: hide all others
-              if (mouseEvent.shiftKey) {
-                // If this is the only visible element, reset all to visible
-                if (
-                  this._visibleSeries.length === 1 &&
-                  this._visibleSeries.includes(elementId)
-                ) {
-                  this._visibleSeries = categories;
-                } else {
-                  this._visibleSeries = [elementId]; // show only this one
-                }
-              } else {
-                // Regular click: toggle visibility of the clicked element
-                if (this._visibleSeries.includes(elementId)) {
-                  this._visibleSeries = this._visibleSeries.filter(
-                    (id) => id !== elementId
-                  ); // Hide the clicked element
-                } else {
-                  this._visibleSeries.push(elementId); // Show the clicked element
-                }
-              }
-              this.render();
-            });
-          });
-        }
-      } else {
-        legend = legendContinuous(
-          {
-            color: { ...plt.scale("color") },
-            label: legendLabel,
-            ...(document ? { document } : {}),
-          },
-          this._config.interactiveLegend === false
-            ? null
-            : (event) => {
-                this._seriesDomain = event;
-                this.render(false);
-              },
-          this._seriesDomain
-        );
-      }
-      div.appendChild(legend);
-      if (wrapper) wrapper?.appendChild(div);
-    }
-    if (wrapper) {
-      wrapper.appendChild(plt);
-      this._chartElement = wrapper as HTMLElement; // track this for re-rendering via interactivity
-    }
-    return wrapper ?? null;
+  get hasLegend(): boolean | undefined {
+    return this._hasLegend;
+  }
+  get legendType(): Plot.ScaleType | "categorical" | "continuous" | undefined {
+    return this._legendType;
   }
 }
