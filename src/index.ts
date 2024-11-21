@@ -273,6 +273,7 @@ export class DuckPlot {
       this._data = processRawData(this);
       this._newDataProps = false;
       this.visibleSeries = []; // reset visible series
+      this.seriesDomain = []; // reset domain
       return this._data;
     }
     // TODO: move this error handling.... somewhere else
@@ -289,6 +290,7 @@ export class DuckPlot {
       throw new Error("Multiple y columns not supported for barX type");
     this._newDataProps = false;
     this.visibleSeries = []; // reset visible series
+    this.seriesDomain = []; // reset domain
     const { data, description, queries } = await prepareData(this);
     this._data = data;
     this._description = description;
