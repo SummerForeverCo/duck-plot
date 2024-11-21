@@ -76,8 +76,7 @@ const defaultConfig = {
   tip: true,
 };
 // Get the top level configurations for the plot object
-// TODO: better argument order or naming
-export async function getTopLevelPlotOptions(instance: DuckPlot) {
+export async function getPlotOptions(instance: DuckPlot) {
   const options = {
     ...defaultOptions,
     ...(await instance.derivePlotOptions()),

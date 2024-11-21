@@ -294,6 +294,7 @@ export class DuckPlot {
     newLegend: boolean = true
   ): Promise<SVGElement | HTMLElement | null> {
     try {
+      await this.prepareData();
       return await render(this, newLegend);
     } catch (error) {
       return await renderError(this, error);

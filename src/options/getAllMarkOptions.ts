@@ -6,10 +6,8 @@ import { getPrimaryMarkOptions } from "./getPrimaryMarkOptions";
 import * as Plot from "@observablehq/plot";
 import { getCommonMarks, getfyMarks } from "./getPlotOptions";
 export async function getAllMarkOptions(instance: DuckPlot) {
-  const allData = await instance.prepareData();
-
   // Grab the types and labels from the data
-  const { types, labels } = allData;
+  const { types, labels } = instance.data();
 
   // Filter down to only the visible series (handled by the legend)
   const filteredData = filterData(

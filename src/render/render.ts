@@ -1,6 +1,6 @@
 import * as Plot from "@observablehq/plot";
 import type { DuckPlot } from "..";
-import { getTopLevelPlotOptions } from "../options/getPlotOptions";
+import { getPlotOptions } from "../options/getPlotOptions";
 import { PlotAutoMargin } from "./plotAutoMargin";
 import { legendCategorical } from "../legend/legendCategorical";
 import { legendContinuous } from "../legend/legendContinuous";
@@ -9,20 +9,19 @@ export async function render(
   instance: DuckPlot,
   newLegend: boolean
 ): Promise<SVGElement | HTMLElement | null> {
-  const marks = await instance.getAllMarkOptions(); // updates this._data and this._filteredData
+  const marks = await instance.getAllMarkOptions();
   const document = instance.isServer
     ? instance.jsdom.window.document
     : undefined;
   instance.setSorts();
-  const topLevelPlotOptions = await getTopLevelPlotOptions(instance);
+  const topLevelPlotOptions = await getPlotOptions(instance);
   const plotOptions = {
     ...topLevelPlotOptions,
     marks,
     ...(document ? { document } : {}),
   };
 
-  // Adjust margins UNLESS specified otherwise AND not on the server without a
-  // font
+  // Adjust margins UNLESS specified otherwise or missing font on the server
   const serverWithoutFont = instance.isServer && !instance.font;
   const autoMargin = serverWithoutFont
     ? false
@@ -33,7 +32,6 @@ export async function render(
     ? PlotAutoMargin(plotOptions, {}, instance.font)
     : Plot.plot(plotOptions);
 
-  // TODO does this work...?
   instance.plotObject.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   let wrapper: HTMLElement | SVGElement | null = null;
 
