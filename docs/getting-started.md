@@ -31,9 +31,6 @@ chart
 chart.render(); // render the plot
 ```
 
-> [!CAUTION]
-> Installation (⚠️ NPM not actually ready yet)
-
 ## Installation and loading
 
 Install DuckPlot via npm:
