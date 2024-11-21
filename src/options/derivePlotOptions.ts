@@ -35,12 +35,15 @@ export async function derivePlotOptions(instance: DuckPlot) {
 
   // Compute an adjusted height based on the legend type
   instance.setLegend(plotOptions);
-  const { legendType, hasLegend } = instance.getLegendSettings();
   // Different legend height for continuous, leave space for categorical label
   // TODO: handle other continuous scale types?
   const legendHeight =
-    legendType === "continuous" ? 50 : plotOptions.color?.label ? 44 : 28;
-  plotOptions.height = hasLegend
+    instance.legendType === "continuous"
+      ? 50
+      : plotOptions.color?.label
+      ? 44
+      : 28;
+  plotOptions.height = instance.hasLegend
     ? (plotOptions.height || 281) - legendHeight
     : plotOptions.height || 281;
   return plotOptions;

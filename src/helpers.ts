@@ -214,3 +214,17 @@ export const borderOptions = {
   backgroundColor: "hsla( 0 0% 100%)",
   borderColor: "rgb(228, 229, 231)",
 };
+
+export const checkForConfigErrors = (instance: DuckPlot) => {
+  if (!instance.ddb) throw new Error("Database not set");
+  if (!instance.table()) throw new Error("Table not set");
+  if (!instance.mark().type) throw new Error("Mark type not set");
+  const multipleX =
+    Array.isArray(instance.x().column) && instance.x().column.length > 1;
+  const multipleY =
+    Array.isArray(instance.y().column) && instance.y().column.length > 1;
+  if (multipleX && instance.mark().type !== "barX")
+    throw new Error("Multiple x columns only supported for barX type");
+  if (multipleY && instance.mark().type === "barX")
+    throw new Error("Multiple y columns not supported for barX type");
+};

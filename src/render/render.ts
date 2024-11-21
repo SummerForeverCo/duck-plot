@@ -57,12 +57,11 @@ export async function render(
     wrapper.id = instance.id;
   }
 
-  const { hasLegend, legendType } = instance.getLegendSettings();
-  if (hasLegend && newLegend) {
+  if (instance.hasLegend && newLegend) {
     let legend: HTMLDivElement;
     const div = instance.document.createElement("div");
 
-    if (legendType === "categorical") {
+    if (instance.legendType === "categorical") {
       legend = await legendCategorical(instance);
     } else {
       legend = await legendContinuous(instance);

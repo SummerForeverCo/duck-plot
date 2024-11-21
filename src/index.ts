@@ -18,7 +18,7 @@ import { prepareData } from "./data/prepareData";
 import { getLegendType, getSorts } from "./options/getPlotOptions";
 import "./legend/legend.css";
 import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-import { getUniqueId, processRawData } from "./helpers";
+import { checkForConfigErrors, getUniqueId, processRawData } from "./helpers";
 import { derivePlotOptions } from "./options/derivePlotOptions";
 import { handleProperty } from "./handleProperty";
 import { getAllMarkOptions } from "./options/getAllMarkOptions";
@@ -137,7 +137,6 @@ export class DuckPlot {
   }
 
   // fy column encoding
-  // TODO: maybe remove the plotOptions here
   fy(): PlotProperty<"fy">;
   fy(column: IncomingColumType, options?: PlotOptions["fy"]): this;
   fy(
@@ -147,8 +146,7 @@ export class DuckPlot {
     return handleProperty(this, this._fy, column, options);
   }
 
-  // fy column encoding
-  // TODO: maybe remove the plotOptions here
+  // fx column encoding
   fx(): PlotProperty<"fx">;
   fx(column: IncomingColumType, options?: PlotOptions["fx"]): this;
   fx(
@@ -189,6 +187,7 @@ export class DuckPlot {
     return this._mark!;
   }
 
+  // Observable Plot options (e.g., passed to Plot.plot({options}))
   options(): PlotOptions;
   options(opts: PlotOptions): this;
   options(opts?: PlotOptions): PlotOptions | this {
@@ -199,6 +198,7 @@ export class DuckPlot {
     return this._options!;
   }
 
+  // DuckPlot specific config options
   config(): Config;
   config(config: Config): this;
   config(config?: Config): Config | this {
@@ -232,38 +232,7 @@ export class DuckPlot {
     return this._rawData;
   }
 
-  // Getter/setter methods for accesssing and setting values
-  get newDataProps(): boolean {
-    return this._newDataProps;
-  }
-  set newDataProps(newValue: boolean) {
-    this._newDataProps = newValue;
-  }
-
-  get ddb(): AsyncDuckDB | null | undefined {
-    return this._ddb;
-  }
-  get isServer(): boolean {
-    return this._isServer;
-  }
-
-  get document(): Document {
-    return this._document;
-  }
-
-  get font(): any {
-    return this._font;
-  }
-  get jsdom(): any {
-    return this._jsdom;
-  }
-  get id(): string {
-    return this._id;
-  }
-  data(): Data {
-    return this._data || [];
-  }
-
+  // Prepare data for rendering
   async prepareData(): Promise<Data> {
     // If no new data properties, return the data
     if (!this._newDataProps) return this._data;
@@ -276,18 +245,8 @@ export class DuckPlot {
       this.seriesDomain = []; // reset domain
       return this._data;
     }
-    // TODO: move this error handling.... somewhere else
-    if (!this._ddb) throw new Error("Database not set");
-    if (!this._table) throw new Error("Table not set");
-    if (!this._mark.type) throw new Error("Mark type not set");
-    const multipleX =
-      Array.isArray(this._x.column) && this._x.column.length > 1;
-    const multipleY =
-      Array.isArray(this._y.column) && this._y.column.length > 1;
-    if (multipleX && this._mark.type !== "barX")
-      throw new Error("Multiple x columns only supported for barX type");
-    if (multipleY && this._mark.type === "barX")
-      throw new Error("Multiple y columns not supported for barX type");
+
+    checkForConfigErrors(this); // Will throw any errors
     this._newDataProps = false;
     this.visibleSeries = []; // reset visible series
     this.seriesDomain = []; // reset domain
@@ -298,9 +257,7 @@ export class DuckPlot {
     return this._data;
   }
 
-  sorts(): Sorts | undefined {
-    return this._sorts;
-  }
+  // Get the plot options for all of the marks
   async getAllMarkOptions(): Promise<Markish[]> {
     return await getAllMarkOptions(this);
   }
@@ -308,12 +265,6 @@ export class DuckPlot {
   // Because users can specify options either in .options or with each column, we coalese them here
   async derivePlotOptions(): Promise<PlotOptions> {
     return await derivePlotOptions(this);
-  }
-  describe(): string {
-    return this._description;
-  }
-  queries(): QueryMap | undefined {
-    return this._queries;
   }
 
   // Set the sorts for the plot
@@ -327,6 +278,7 @@ export class DuckPlot {
       };
     }
   }
+
   // Track the legend type and visibility
   setLegend(plotOptions: Plot.PlotOptions) {
     // Note, displaying legends by default
@@ -336,12 +288,8 @@ export class DuckPlot {
       plotOptions.color?.legend !== false;
     this._legendType = plotOptions.color?.type ?? getLegendType(this._data);
   }
-  getLegendSettings() {
-    return {
-      hasLegend: this._hasLegend,
-      legendType: this._legendType,
-    };
-  }
+
+  // Render the plot
   async render(
     newLegend: boolean = true
   ): Promise<SVGElement | HTMLElement | null> {
@@ -350,5 +298,48 @@ export class DuckPlot {
     } catch (error) {
       return await renderError(this, error);
     }
+  }
+  // Getter/setter methods for accesssing and setting values
+  get newDataProps(): boolean {
+    return this._newDataProps;
+  }
+  set newDataProps(newValue: boolean) {
+    this._newDataProps = newValue;
+  }
+  get ddb(): AsyncDuckDB | null | undefined {
+    return this._ddb;
+  }
+  get isServer(): boolean {
+    return this._isServer;
+  }
+  get document(): Document {
+    return this._document;
+  }
+  get font(): any {
+    return this._font;
+  }
+  get jsdom(): any {
+    return this._jsdom;
+  }
+  get id(): string {
+    return this._id;
+  }
+  get sorts(): Sorts {
+    return this._sorts;
+  }
+  data(): Data {
+    return this._data || [];
+  }
+  describe(): string {
+    return this._description;
+  }
+  queries(): QueryMap | undefined {
+    return this._queries;
+  }
+  get hasLegend(): boolean | undefined {
+    return this._hasLegend;
+  }
+  get legendType(): Plot.ScaleType | "categorical" | "continuous" | undefined {
+    return this._legendType;
   }
 }

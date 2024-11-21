@@ -83,7 +83,7 @@ export async function getTopLevelPlotOptions(instance: DuckPlot) {
     ...(await instance.derivePlotOptions()),
   };
   const config = { ...defaultConfig, ...instance.config() };
-  const sorts = instance.sorts();
+  const sorts = instance.sorts;
   const data = instance.data();
   const currentColumns = data?.types ? Object.keys(data.types ?? {}) : [];
 
