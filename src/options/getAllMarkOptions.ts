@@ -5,6 +5,7 @@ import { derivePlotOptions } from "./derivePlotOptions";
 import { getPrimaryMarkOptions } from "./getPrimaryMarkOptions";
 import * as Plot from "@observablehq/plot";
 import { getCommonMarks, getfyMarks } from "./getPlotOptions";
+import { ChartType } from "../types";
 export function getAllMarkOptions(instance: DuckPlot) {
   // Grab the types and labels from the data
   const { types, labels } = instance.data();
@@ -43,15 +44,32 @@ export function getAllMarkOptions(instance: DuckPlot) {
     instance.config().aggregate !== false;
   const hasColumnsOrAggregate =
     (hasX && hasY) || ((hasX || hasY) && hasAggregate);
-
+  // TODO: do we need to update showMark logic for multiple marks?
   const showPrimaryMark =
     (isValidTickChart || hasColumnsOrAggregate) && instance.mark().type;
 
-  const primaryMark = showPrimaryMark
+  // Special case where the rawData has a mark column, render a different mark
+  // for each subset of the data
+  const markColumnMarks: ChartType[] = Array.from(
+    new Set(
+      instance
+        .rawData()
+        .map((d) => d.mark)
+        .filter((d) => d)
+    )
+  );
+  const marks: ChartType[] =
+    markColumnMarks.length > 0 ? markColumnMarks : [instance.mark().type!];
+
+  const primaryMarks = showPrimaryMark
     ? [
-        Plot[instance.mark().type!](
-          instance.filteredData,
-          primaryMarkOptions as MarkOptions
+        ...marks.map((mark: ChartType) =>
+          Plot[mark!](
+            instance.filteredData?.filter((d) =>
+              markColumnMarks.length > 0 ? d.mark === mark : true
+            ),
+            primaryMarkOptions as MarkOptions
+          )
         ),
       ]
     : [];
@@ -69,7 +87,7 @@ export function getAllMarkOptions(instance: DuckPlot) {
   );
   return [
     ...(commonPlotMarks || []),
-    ...(primaryMark || []),
+    ...(primaryMarks || []),
     ...(fyMarks || []),
   ];
 }

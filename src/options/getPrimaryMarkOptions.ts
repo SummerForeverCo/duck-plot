@@ -22,6 +22,7 @@ export function getPrimaryMarkOptions(instance: DuckPlot) {
 
   const fill = currentColumns.includes("series") ? "series" : color;
   const fx = currentColumns.includes("fx") ? "fx" : undefined;
+  // TODO: Make a tip mark instead
   const tip =
     !instance.isServer && instance.config()?.tip !== false
       ? {
