@@ -87,9 +87,10 @@ export function getAllMarkOptions(instance: DuckPlot) {
     plotOptions.fy
   );
   const tipMark =
-    instance.isServer || instance.config()?.tip === false
+    instance.isServer || instance.config()?.tip === false || !showPrimaryMark
       ? []
       : [getTipMark(instance)];
+
   return [
     ...(commonPlotMarks || []),
     ...(primaryMarks || []),
