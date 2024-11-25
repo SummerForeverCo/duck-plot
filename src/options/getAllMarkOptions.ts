@@ -5,6 +5,8 @@ import { derivePlotOptions } from "./derivePlotOptions";
 import { getPrimaryMarkOptions } from "./getPrimaryMarkOptions";
 import * as Plot from "@observablehq/plot";
 import { getCommonMarks, getfyMarks } from "./getPlotOptions";
+import { ChartType } from "../types";
+import { getTipMark } from "./getTipMark";
 export function getAllMarkOptions(instance: DuckPlot) {
   // Grab the types and labels from the data
   const { types, labels } = instance.data();
@@ -67,9 +69,15 @@ export function getAllMarkOptions(instance: DuckPlot) {
     currentColumns,
     plotOptions.fy
   );
+  const tipMark =
+    instance.isServer || instance.config()?.tip === false || !showPrimaryMark
+      ? []
+      : [getTipMark(instance)];
+
   return [
     ...(commonPlotMarks || []),
     ...(primaryMark || []),
     ...(fyMarks || []),
+    ...tipMark,
   ];
 }
