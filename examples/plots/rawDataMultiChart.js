@@ -14,7 +14,8 @@ duckplot
   .rawData(rawData, types)
   .x("col1")
   .y("col2")  
-  .mark("line")
+  .mark("dot")
+  .markColumn("mark")
 `;
 
 export const rawDataMultiChart = (options) =>

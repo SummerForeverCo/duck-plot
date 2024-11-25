@@ -158,9 +158,7 @@ export function processRawData(instance: DuckPlot): Data {
     { key: "fx", column: instance.fx().column },
     { key: "r", column: instance.r().column },
     { key: "text", column: instance.text().column },
-    { key: "mark", column: "mark" }, // Special handling if a mark column is supplied
-    // TODO: maybe allow someone to define which column this is with
-    // .markColumn().... and maybe that would work for ALL data....
+    { key: "markColumn", column: instance.markColumn() },
   ];
 
   // Map over raw data to extract chart data based on defined columns
@@ -230,4 +228,6 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
     throw new Error("Multiple x columns only supported for barX type");
   if (multipleY && instance.mark().type === "barX")
     throw new Error("Multiple y columns not supported for barX type");
+  if (instance.markColumn() && !instance.rawData())
+    throw new Error("MarkColumn is only supported with rawData");
 };

@@ -52,23 +52,20 @@ export function getAllMarkOptions(instance: DuckPlot) {
   // Special case where the rawData has a mark column, render a different mark
   // for each subset of the data
   const markColumnMarks: ChartType[] = Array.from(
-    new Set(
-      instance
-        .rawData()
-        .map((d) => d.mark)
-        .filter((d) => d)
-    )
+    new Set(instance.filteredData.map((d) => d.markColumn).filter((d) => d))
   );
   const marks: ChartType[] =
-    markColumnMarks.length > 0 ? markColumnMarks : [instance.mark().type!];
+    markColumnMarks.length > 0 && instance.markColumn() !== undefined
+      ? markColumnMarks
+      : [instance.mark().type!];
 
   const primaryMarks = showPrimaryMark
     ? [
         ...marks.map((mark: ChartType) =>
           Plot[mark!](
-            instance.filteredData?.filter((d) =>
-              markColumnMarks.length > 0 ? d.mark === mark : true
-            ),
+            instance.filteredData?.filter((d) => {
+              return markColumnMarks.length > 0 ? d.markColumn === mark : true;
+            }),
             primaryMarkOptions as MarkOptions
           )
         ),
