@@ -1,4 +1,4 @@
-import { MarkOptions, TipOptions } from "@observablehq/plot";
+import { TipOptions } from "@observablehq/plot";
 import { DuckPlot } from "..";
 import { borderOptions } from "../helpers";
 import * as Plot from "@observablehq/plot";
@@ -64,7 +64,6 @@ export function getTipMark(instance: DuckPlot) {
         }
       : {}),
   } satisfies TipOptions;
-  console.log({ options });
   // Explicitly stack the values for area and bar charts
   const maybeStackedOptions =
     type === "areaY" || type === "barY"

@@ -1,7 +1,7 @@
 import { MarkOptions } from "@observablehq/plot";
 import { DuckPlot } from "..";
 import { isColor } from "./getPlotOptions";
-import { borderOptions, defaultColors } from "../helpers";
+import { defaultColors } from "../helpers";
 
 // Get options for a specific mark (e.g., the line or area marks)
 export function getPrimaryMarkOptions(instance: DuckPlot) {
