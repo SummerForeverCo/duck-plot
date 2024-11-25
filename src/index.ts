@@ -62,7 +62,7 @@ export class DuckPlot {
     undefined;
   visibleSeries: string[] = [];
   filteredData: Data | undefined = undefined;
-  chartElement: HTMLElement | null = null;
+  chartContainer: HTMLElement | null = null;
   seriesDomain: number[] = [];
 
   constructor(
