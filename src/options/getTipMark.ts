@@ -64,7 +64,6 @@ export function getTipMark(instance: DuckPlot) {
         }
       : {}),
   } satisfies TipOptions;
-  console.log({ options });
   // Explicitly stack the values for area and bar charts
   const maybeStackedOptions =
     type === "areaY" || type === "barY"
