@@ -1,4 +1,5 @@
 import type { DuckPlot } from "..";
+import { ChartType } from "../types";
 
 export interface Category {
   name: string;
@@ -12,6 +13,15 @@ export async function legendCategorical(
   const categories = Array.from(
     instance.plotObject?.scale("color")?.domain ?? []
   )?.map((d) => `${d}`);
+
+  // Get the symbols for each category
+  const symbols = categories.map((category) => {
+    if (!instance.markColumn()) return instance.mark().type;
+    const data = instance.data();
+    // == as this has been stringified above
+    const symbol = data.find((d) => d.series == category)?.markColumn;
+    return symbol;
+  });
 
   // Set the visible series to all categories if it's empty
   if (instance.visibleSeries.length === 0) {
@@ -56,13 +66,9 @@ export async function legendCategorical(
       visibleCategories.includes(category) ? "" : " dp-inactive"
     }`;
 
-    const square = document.createElement("div");
-    square.style.backgroundColor = colors[i % colors.length];
-    square.style.width = "12px";
-    square.style.height = "12px";
-    square.style.borderRadius = "5px";
-    square.style.border = "1px solid rgba(0,0,0, .16)";
-    categoryDiv.appendChild(square);
+    const symbolType = symbols[i];
+    const symbol = drawSymbol(symbolType, colors[i % colors.length]);
+    categoryDiv.appendChild(symbol);
 
     const textNode = document.createTextNode(category);
     categoryDiv.appendChild(textNode);
@@ -200,5 +206,26 @@ function showPopover(container: HTMLDivElement, height: number): void {
     popover.style.top = `30px`;
     popover.style.maxHeight = `${height}px`;
     popover.style.overflowY = `auto`;
+  }
+}
+function drawSymbol(symbolType: ChartType, color: string): HTMLElement {
+  const symbol = document.createElement("div");
+  symbol.style.backgroundColor = color;
+  symbol.style.width = "12px";
+  switch (symbolType) {
+    case "dot":
+      symbol.style.height = "12px";
+      symbol.style.borderRadius = "12px";
+      symbol.style.border = "1px solid rgba(0,0,0, .16)";
+      return symbol;
+    case "line":
+      symbol.style.height = "0px"; // Use border for the line thickness
+      symbol.style.borderTop = "2px solid rgba(0,0,0, .16)"; // Define line thickness
+      return symbol;
+    default:
+      symbol.style.height = "12px";
+      symbol.style.borderRadius = "5px";
+      symbol.style.border = "1px solid rgba(0,0,0, .16)";
+      return symbol;
   }
 }
