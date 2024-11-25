@@ -13,7 +13,8 @@ const rawData = [
 duckplot
   .rawData(rawData, types)
   .x("col1")
-  .y("col2")  
+  .y("col2")
+  .color("mark")
   .mark("dot")
   .markColumn("mark")
 `;

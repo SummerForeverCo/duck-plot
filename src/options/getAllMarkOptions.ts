@@ -27,7 +27,6 @@ export function getAllMarkOptions(instance: DuckPlot) {
   const currentColumns = instance.filteredData?.types
     ? Object.keys(instance.filteredData?.types)
     : [];
-  const primaryMarkOptions = getPrimaryMarkOptions(instance);
 
   // Add the primary mark if x and y are defined OR if an aggregate has been
   // specified. Not a great rule, but works for showing aggregate marks with
@@ -66,7 +65,7 @@ export function getAllMarkOptions(instance: DuckPlot) {
             instance.filteredData?.filter((d) => {
               return markColumnMarks.length > 0 ? d.markColumn === mark : true;
             }),
-            primaryMarkOptions as MarkOptions
+            getPrimaryMarkOptions(instance, mark) as MarkOptions
           )
         ),
       ]
