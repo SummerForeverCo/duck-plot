@@ -9,23 +9,21 @@ export async function render(
   instance: DuckPlot,
   newLegend: boolean
 ): Promise<SVGElement | HTMLElement | null> {
-  const marks = instance.getAllMarkOptions();
-  const document = instance.isServer
-    ? instance.jsdom.window.document
-    : undefined;
+  // Set this._sorts that is consumed by getAllMarkOptions
   instance.setSorts();
-  const topLevelPlotOptions = getPlotOptions(instance);
+
+  // Generate Plot Options
   const plotOptions = {
-    ...topLevelPlotOptions,
-    marks,
-    ...(document ? { document } : {}),
+    ...getPlotOptions(instance),
+    marks: instance.getAllMarkOptions(),
+    ...(instance.document ? { document: instance.document } : {}),
   };
 
-  // Adjust margins UNLESS specified otherwise or missing font on the server
-  const serverWithoutFont = instance.isServer && !instance.font;
-  const autoMargin = serverWithoutFont
-    ? false
-    : instance.config().autoMargin !== false;
+  // Detect if the plot should auto adjust margins
+  const autoMargin =
+    instance.isServer && !instance.font
+      ? false
+      : instance.config().autoMargin !== false;
 
   // Create the Plot
   instance.plotObject = autoMargin
@@ -33,43 +31,41 @@ export async function render(
     : Plot.plot(plotOptions);
 
   instance.plotObject.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  let wrapper: HTMLElement | SVGElement | null = null;
+  instance.plotObject.classList.add("plot-object");
 
-  // Find the parent of the existing chart element
-  const parentElement = instance.chartElement?.parentElement;
-  // Replace existing content if there's a parent (for interactions)
-  if (parentElement) {
-    const existingWrapper = parentElement.querySelector(`#${instance.id}`);
-    if (existingWrapper) {
-      wrapper = existingWrapper as HTMLElement | SVGElement;
-      // Clear the wrapper if we're updating the legend
-      if (newLegend) {
-        wrapper.innerHTML = "";
-      } else {
-        // Otherwise just remove the plot
-        wrapper.removeChild(wrapper.lastChild!);
-      }
-    }
-  } else {
-    wrapper = instance.document.createElement("div");
-    wrapper.id = instance.id;
+  // Ensure the chart container exists
+  const container =
+    instance.chartContainer || instance.document.createElement("div");
+  if (!instance.chartContainer) {
+    container.id = instance.id;
+    instance.chartContainer = container;
   }
 
+  // Clear existing content if necessary
+  if (newLegend) container.innerHTML = "";
+
+  // Add or update the legend
   if (instance.hasLegend && newLegend) {
-    let legend: HTMLDivElement;
-    const div = instance.document.createElement("div");
+    const legendContainer =
+      container.querySelector(".legend-container") ||
+      container.appendChild(instance.document.createElement("div"));
 
-    if (instance.legendType === "categorical") {
-      legend = await legendCategorical(instance);
-    } else {
-      legend = await legendContinuous(instance);
-    }
-    div.appendChild(legend);
-    if (wrapper) wrapper?.appendChild(div);
+    legendContainer.className = "legend-container";
+    legendContainer.innerHTML = ""; // Clear old content
+    const legend =
+      instance.legendType === "categorical"
+        ? await legendCategorical(instance)
+        : await legendContinuous(instance);
+    legendContainer.appendChild(legend);
   }
-  if (wrapper) {
-    wrapper.appendChild(instance.plotObject);
-    instance.chartElement = wrapper as HTMLElement; // track this for re-rendering via interactivity
+
+  // Replace or append the plot
+  const existingPlot = container.querySelector(".plot-object");
+  if (existingPlot) {
+    container.replaceChild(instance.plotObject, existingPlot);
+  } else {
+    container.appendChild(instance.plotObject);
   }
-  return wrapper ?? null;
+
+  return container;
 }

@@ -23,12 +23,13 @@ export async function legendCategorical(
     return symbol;
   });
 
-  // Set the visible series to all categories if it's empty
-  if (instance.visibleSeries.length === 0) {
-    instance.visibleSeries = categories;
+  function isActive(category: string): boolean {
+    return (
+      instance.visibleSeries.length === 0 ||
+      instance.visibleSeries.includes(category)
+    );
   }
 
-  const visibleCategories = instance.visibleSeries;
   const colors = Array.from(instance.plotObject?.scale("color")?.range ?? []);
   const options = await instance.derivePlotOptions();
   const width = options.width || 500;
@@ -63,7 +64,7 @@ export async function legendCategorical(
   categories.forEach((category, i) => {
     const categoryDiv = document.createElement("div");
     categoryDiv.className = `dp-category${
-      visibleCategories.includes(category) ? "" : " dp-inactive"
+      isActive(category) ? "" : " dp-inactive"
     }`;
 
     const symbolType = symbols[i];
@@ -110,25 +111,34 @@ export async function legendCategorical(
         // Shift-click: hide all others
         if (mouseEvent.shiftKey) {
           // If this is the only visible element, reset all to visible
-          if (
-            instance.visibleSeries.length === 1 &&
-            instance.visibleSeries.includes(elementId)
-          ) {
-            instance.visibleSeries = categories;
+          if (instance.visibleSeries.length === 1 && isActive(elementId)) {
+            instance.visibleSeries = [];
           } else {
             instance.visibleSeries = [elementId]; // show only this one
           }
         } else {
           // Regular click: toggle visibility of the clicked element
-          if (instance.visibleSeries.includes(elementId)) {
-            instance.visibleSeries = instance.visibleSeries.filter(
+          if (isActive(elementId)) {
+            const currentSeries = instance.visibleSeries.length
+              ? instance.visibleSeries
+              : categories;
+            instance.visibleSeries = currentSeries.filter(
               (id) => id !== elementId
             ); // Hide the clicked element
           } else {
             instance.visibleSeries.push(elementId); // Show the clicked element
           }
         }
-        instance.render();
+        // Update the active state of the items in the legend
+        legendElements.forEach((e) => {
+          if (isActive(`${e.textContent}`)) {
+            e.classList.remove("dp-inactive");
+          } else {
+            e.classList.add("dp-inactive");
+          }
+        });
+        // Rerender the plot, but not the legend itself
+        instance.render(false);
       });
     });
   }

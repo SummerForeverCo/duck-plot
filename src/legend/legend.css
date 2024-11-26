@@ -20,10 +20,6 @@
 .dp-categories {
   display: flex;
   flex-wrap: nowrap;
-  user-select: none;
-  -webkit-user-select: none; /* Safari */
-  -moz-user-select: none; /* Firefox */
-  -ms-user-select: none; /* Internet Explorer/Edge */
 }
 
 .dp-category:not(:last-child) {
@@ -43,6 +39,10 @@
   gap: 2px;
   align-items: center;
   text-wrap: nowrap;
+  user-select: none;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
 }
 
 /* Popover for extra categories */
