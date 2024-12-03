@@ -240,6 +240,7 @@ export class DuckPlot {
   // Mark column- only used with rawData, and the column holds the mark for each
   // row (e.g., "line", "areaY", etc.)
   markColumn(): string | undefined;
+  markColumn(column: string): this;
   markColumn(column?: string): DuckPlot | string | undefined {
     if (!column) return this._markColumn;
     this._markColumn = column;
