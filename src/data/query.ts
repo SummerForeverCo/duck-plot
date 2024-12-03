@@ -237,11 +237,9 @@ export function getAggregateInfo(
   const subquery =
     aggregate !== false
       ? `
-    SELECT ${groupBy.join(", ")}${
-          aggregateSelection ? `, ${aggregateSelection}` : ""
-        }
+    SELECT ${[...groupBy, aggregateSelection].filter(Boolean).join(", ")}
     FROM ${tableName}
-    GROUP BY ${groupBy.join(", ")}`
+    ${groupBy.length ? `GROUP BY ${groupBy.join(", ")}` : ""}`
       : `SELECT *${
           percent ? `, ROW_NUMBER() OVER () AS original_order` : ""
         } FROM ${tableName}`;
@@ -270,19 +268,17 @@ export function getAggregateInfo(
 
   // Use the subquery to aggregate the values
   const queryString = `
-      WITH aggregated AS (${subquery})
-      SELECT ${groupBy.join(", ")}${
-    aggregateColumn ? `, ${aggregateColumn}` : ""
-  }
+  WITH aggregated AS (${subquery})
+  SELECT ${[...groupBy, aggregateColumn].filter(Boolean).join(", ")}
   FROM aggregated
-      ${
-        percent && aggregate === false
-          ? ` ORDER BY original_order`
-          : orderBy
-          ? ` ORDER BY ${orderBy}`
-          : ""
-      }
-    `;
+  ${
+    percent && aggregate === false
+      ? `ORDER BY original_order`
+      : orderBy
+      ? `ORDER BY ${orderBy}`
+      : ""
+  }
+`;
 
   return {
     queryString,
