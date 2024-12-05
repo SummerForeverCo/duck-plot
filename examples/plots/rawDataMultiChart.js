@@ -8,6 +8,10 @@ const rawData = [
   {col1: "a", col2: 10, col3: "Clicks", mark: "line"},
   {col1: "b", col2: 5, col3: "Clicks", mark: "line"},
   {col1: "c", col2: 5, col3: "Clicks", mark: "line"},
+  // TODO: would be nice if the mark generated a different color by default
+  {col1: "a", col2: 10, col3: "Clicks-dot", mark: "dot"},
+  {col1: "b", col2: 5, col3: "Clicks-dot", mark: "dot"},
+  {col1: "c", col2: 5, col3: "Clicks-dot", mark: "dot"},
 ]
   const types = {col1: "string", col2: "number", col3: "string", mark: "string"}
 duckplot

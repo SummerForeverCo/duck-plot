@@ -234,7 +234,7 @@ function drawSymbol(symbolType: ChartType, color: string): HTMLElement {
       return symbol;
     default:
       symbol.style.height = "12px";
-      symbol.style.borderRadius = "5px";
+      symbol.style.borderRadius = "2px";
       symbol.style.border = "1px solid rgba(0,0,0, .16)";
       return symbol;
   }
