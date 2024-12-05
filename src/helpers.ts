@@ -144,8 +144,8 @@ export function processRawData(instance: DuckPlot): Data {
   const rawData = instance.rawData();
   if (!rawData || !rawData.types) return [];
 
-  // Helper function to determine if a column is a string and defined
-  const isStringCol = (col?: ColumnType): boolean =>
+  // Helper function to determine if a column defined
+  const colIsDefined = (col?: ColumnType): boolean =>
     col !== "" && col !== undefined && typeof col === "string";
 
   // Define column mappings for data, types, and labels
@@ -158,13 +158,14 @@ export function processRawData(instance: DuckPlot): Data {
     { key: "fx", column: instance.fx().column },
     { key: "r", column: instance.r().column },
     { key: "text", column: instance.text().column },
+    { key: "markColumn", column: instance.markColumn() },
   ];
 
   // Map over raw data to extract chart data based on defined columns
   const dataArray: Data = rawData.map((d) =>
     Object.fromEntries(
       columnMappings
-        .filter(({ column }) => isStringCol(column))
+        .filter(({ column }) => colIsDefined(column))
         .map(({ key, column }) => [key, d[column as string]])
     )
   );
@@ -172,7 +173,7 @@ export function processRawData(instance: DuckPlot): Data {
   // Extract types based on the defined columns
   const dataTypes = Object.fromEntries(
     columnMappings
-      .filter(({ column }) => isStringCol(column))
+      .filter(({ column }) => colIsDefined(column))
       .map(({ key, column }) => [key, rawData?.types?.[column as string]])
   );
 
@@ -227,4 +228,6 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
     throw new Error("Multiple x columns only supported for barX type");
   if (multipleY && instance.mark().type === "barX")
     throw new Error("Multiple y columns not supported for barX type");
+  if (instance.markColumn() && !instance.rawData())
+    throw new Error("MarkColumn is only supported with rawData");
 };

@@ -27,7 +27,6 @@ export function getAllMarkOptions(instance: DuckPlot) {
   const currentColumns = instance.filteredData?.types
     ? Object.keys(instance.filteredData?.types)
     : [];
-  const primaryMarkOptions = getPrimaryMarkOptions(instance);
 
   // Add the primary mark if x and y are defined OR if an aggregate has been
   // specified. Not a great rule, but works for showing aggregate marks with
@@ -45,15 +44,29 @@ export function getAllMarkOptions(instance: DuckPlot) {
     instance.config().aggregate !== false;
   const hasColumnsOrAggregate =
     (hasX && hasY) || ((hasX || hasY) && hasAggregate);
-
+  // TODO: do we need to update showMark logic for multiple marks?
   const showPrimaryMark =
     (isValidTickChart || hasColumnsOrAggregate) && instance.mark().type;
 
-  const primaryMark = showPrimaryMark
+  // Special case where the rawData has a mark column, render a different mark
+  // for each subset of the data
+  const markColumnMarks: ChartType[] = Array.from(
+    new Set(instance.filteredData.map((d) => d.markColumn).filter((d) => d))
+  );
+  const marks: ChartType[] =
+    markColumnMarks.length > 0 && instance.markColumn() !== undefined
+      ? markColumnMarks
+      : [instance.mark().type!];
+
+  const primaryMarks = showPrimaryMark
     ? [
-        Plot[instance.mark().type!](
-          instance.filteredData,
-          primaryMarkOptions as MarkOptions
+        ...marks.map((mark: ChartType) =>
+          Plot[mark!](
+            instance.filteredData?.filter((d) => {
+              return markColumnMarks.length > 0 ? d.markColumn === mark : true;
+            }),
+            getPrimaryMarkOptions(instance, mark) as MarkOptions
+          )
         ),
       ]
     : [];
@@ -76,7 +89,7 @@ export function getAllMarkOptions(instance: DuckPlot) {
 
   return [
     ...(commonPlotMarks || []),
-    ...(primaryMark || []),
+    ...(primaryMarks || []),
     ...(fyMarks || []),
     ...tipMark,
   ];

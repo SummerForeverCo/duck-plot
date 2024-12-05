@@ -2,12 +2,16 @@ import { MarkOptions } from "@observablehq/plot";
 import { DuckPlot } from "..";
 import { isColor } from "./getPlotOptions";
 import { defaultColors } from "../helpers";
+import { ChartType } from "../types";
 
 // Get options for a specific mark (e.g., the line or area marks)
-export function getPrimaryMarkOptions(instance: DuckPlot) {
+export function getPrimaryMarkOptions(
+  instance: DuckPlot,
+  markType?: ChartType
+) {
   // Grab the types from the data
   const { types } = instance.data();
-  const type = instance.mark().type;
+  const type = markType ?? instance.mark().type; // pass in a markType for mulitple marks
   const data = instance.filteredData ?? instance.data();
   const currentColumns = Object.keys(data.types || {});
   const color = isColor(instance.color()?.column)
