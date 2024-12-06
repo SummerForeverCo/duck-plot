@@ -33,6 +33,18 @@ export async function render(
   instance.plotObject.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   instance.plotObject.classList.add("plot-object");
 
+  // If the rect width is 0 for rects, increase it to .5
+  // TODO add rect example
+  if (instance.mark()?.type === "rectY" || instance.mark()?.type === "rectY") {
+    const rects = instance.plotObject.querySelectorAll("rect");
+    rects.forEach((rect) => {
+      const width = rect.getAttribute("width");
+      if (width && +width < 0.5) {
+        rect.setAttribute("width", "0.5");
+      }
+    });
+  }
+
   // Ensure the chart container exists
   const container =
     instance.chartContainer || instance.document.createElement("div");

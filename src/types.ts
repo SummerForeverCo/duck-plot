@@ -11,6 +11,8 @@ export type ChartType =
   | "text"
   | "tickX"
   | "tickY"
+  | "rectX"
+  | "rectY"
   | undefined;
 
 export type SqlSort = {
