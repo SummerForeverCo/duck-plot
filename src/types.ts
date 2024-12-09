@@ -1,4 +1,9 @@
-import type { MarkOptions, PlotOptions } from "@observablehq/plot";
+import type {
+  BinOptions,
+  MarkOptions,
+  PlotOptions,
+  StackOptions,
+} from "@observablehq/plot";
 import { DuckPlot } from ".";
 
 // TODO: all plot chart types?
@@ -75,9 +80,12 @@ export type PlotProperty<T extends keyof PlotOptions> = {
   options?: PlotOptions[T];
 };
 
+// Extend the MarkOptions to include all the stack and bin options
+export interface AllMarkOptions extends MarkOptions, StackOptions, BinOptions {}
+
 export type MarkProperty = {
   type?: ChartType;
-  options?: MarkOptions;
+  options?: AllMarkOptions;
 };
 
 // A few types that we can't quite squeeze into (or out of) PlotOptions. The

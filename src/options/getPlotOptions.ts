@@ -1,5 +1,6 @@
 import type { DuckPlot } from "..";
 import type {
+  BinOptions,
   MarkOptions,
   PlotOptions,
   StackOptions,
@@ -16,8 +17,6 @@ import type {
   Sorts,
 } from "../types";
 import { borderOptions, defaultColors } from "../helpers";
-// Extend the MarkOptions to include all the stack options
-interface AllMarkOptions extends MarkOptions, StackOptions {}
 
 // Identify the data currently in the dataset
 export function getDataOrder(data: Data | undefined, column: string) {
