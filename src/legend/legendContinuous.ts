@@ -8,7 +8,7 @@ export async function legendContinuous(
   const color = instance.plotObject?.scale("color");
   const document = instance.document;
   const onBrush =
-    instance.config().interactiveLegend === false
+    instance.config().interactiveLegend === false || instance.isServer
       ? null
       : (event: number[]) => {
           instance.seriesDomain = event;
@@ -19,7 +19,10 @@ export async function legendContinuous(
   const container = document.createElement("div");
   container.style.position = "relative";
   container.style.width = "300px";
-  const plotLegend = Plot.legend({ color }) as HTMLDivElement & Plot.Plot;
+  const plotLegend = Plot.legend({
+    color,
+    ...(instance.isServer ? { document: instance.document } : {}),
+  }) as HTMLDivElement & Plot.Plot;
   container.appendChild(plotLegend);
 
   if (onBrush !== null) {

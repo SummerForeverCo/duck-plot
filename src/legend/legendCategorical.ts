@@ -68,7 +68,7 @@ export async function legendCategorical(
     }`;
 
     const symbolType = symbols[i];
-    const symbol = drawSymbol(symbolType, colors[i % colors.length]);
+    const symbol = drawSymbol(symbolType, colors[i % colors.length], document);
     categoryDiv.appendChild(symbol);
 
     const textNode = document.createTextNode(category);
@@ -81,9 +81,6 @@ export async function legendCategorical(
   // Hold collapsed categories
   const collapsedCategoriesDiv = document.createElement("div");
   collapsedCategoriesDiv.className = "dp-collapsed-categories";
-  collapsedCategoriesDiv.addEventListener("click", () =>
-    showPopover(container, height)
-  );
 
   const popoverDiv = document.createElement("div");
   popoverDiv.className = "dp-popover";
@@ -97,9 +94,11 @@ export async function legendCategorical(
   updateLegendDisplay(container, font);
   hiddenContainer.remove();
   legend.appendChild(container);
-
-  // Apply click event
-  if (instance.config().interactiveLegend !== false) {
+  // Apply click event listeners
+  if (instance.config().interactiveLegend !== false && !instance.isServer) {
+    collapsedCategoriesDiv.addEventListener("click", () =>
+      showPopover(container, height)
+    );
     const legendElements = legend.querySelectorAll<HTMLElement>(".dp-category");
 
     legendElements.forEach((element: SVGElement | HTMLElement) => {
@@ -218,7 +217,11 @@ function showPopover(container: HTMLDivElement, height: number): void {
     popover.style.overflowY = `auto`;
   }
 }
-function drawSymbol(symbolType: ChartType, color: string): HTMLElement {
+function drawSymbol(
+  symbolType: ChartType,
+  color: string,
+  document: Document
+): HTMLElement {
   const symbol = document.createElement("div");
   symbol.style.backgroundColor = color;
   symbol.style.width = "12px";
