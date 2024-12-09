@@ -131,7 +131,7 @@ duckPlot
 
 ## Aggregations
 
-For certain mark types (`barY`, `barX`, `areaY`, `line`), DuckPlot will
+For certain mark types (`barY`, `barX`, `areaY`, `line`, `rectX`, `rectY`), DuckPlot will
 automatically aggregate the data based on the data columns (e.g., `x`, `y`,
 `color`, `fx`, `fy`...). If there are multiple rows with the same `x`, `y`, and
 `color` values, DuckPlot will perform a `sum` aggregation.
@@ -168,6 +168,29 @@ duckPlot
   .color("Symbol")
   .mark("barY")
   .config({ aggregate: "avg" }); // makes more sense!
+```
+
+:::
+
+Because DuckPlot performs aggregation at the database level, there is limited
+support for using Plot's (fabulous) binning and grouping. To display continuous
+date values with `rect` marks, DuckPlot computes the appropriate time interval
+to _prevent_ Plot from doing any additional visual aggregation. Thanks to [Fil's
+insight](https://github.com/observablehq/plot/discussions/2233), we have a good
+approach for doing this.
+
+Because the `stocks` data has an observation each _day_, DuckPlot will render a
+mark for each day (preventing aggregation by week, month, or year). Quite helpful for spotting the missing dates in the dataset!
+:::duckplot
+
+```js
+duckPlot
+  .table("stocks")
+  .query(`select * from stocks WHERE year(Date) = 2018`)
+  .x("Date")
+  .y("Close")
+  .color("Symbol")
+  .mark("rectY");
 ```
 
 :::
