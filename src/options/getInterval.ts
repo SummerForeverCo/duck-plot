@@ -15,10 +15,19 @@ import { min, pairs } from "d3-array";
 import { Data } from "../types";
 
 export function computeInterval(data: Data, column: string = "x") {
+  // Handle empty data
+  if (data.length === 0) {
+    return undefined;
+  }
+
   // Sort distinct x values (assumes they are repeated for colors / faceting)
   const sortedData = Array.from(
     new Set(data.map((d) => +(d[column] as number)))
   ).sort((a, b) => a - b);
+
+  if (sortedData.length < 2) {
+    return undefined; // Not enough data to compute an interval
+  }
 
   // Use `pairs` to generate adjacent pairs and compute the differences
   const differences = pairs(sortedData).map(([a, b]) => b - a);
