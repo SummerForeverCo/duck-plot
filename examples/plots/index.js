@@ -30,6 +30,8 @@ export * from "./percentageBarY.js";
 export * from "./percentageFacet.js";
 export * from "./rawData.js";
 export * from "./rawDataMultiChart.js";
+export * from "./rectX.js";
+export * from "./rectY.js";
 export * from "./sortXbyY.js";
 export * from "./sortYbyX.js";
 export * from "./text.js";

@@ -3,6 +3,7 @@ import { DuckPlot } from "..";
 import { isColor } from "./getPlotOptions";
 import { defaultColors } from "../helpers";
 import { ChartType } from "../types";
+import { computeInterval } from "./getInterval";
 
 // Get options for a specific mark (e.g., the line or area marks)
 export function getPrimaryMarkOptions(
@@ -14,6 +15,7 @@ export function getPrimaryMarkOptions(
   const type = markType ?? instance.mark().type; // pass in a markType for mulitple marks
   const data = instance.filteredData ?? instance.data();
   const currentColumns = Object.keys(data.types || {});
+  const userOptions = instance.mark().options;
   const color = isColor(instance.color()?.column)
     ? instance.color()?.column
     : defaultColors[0];
@@ -23,9 +25,19 @@ export function getPrimaryMarkOptions(
   const fx = currentColumns.includes("fx") ? "fx" : undefined;
 
   const sort =
-    instance.mark().options?.sort ?? (types?.x !== "string" && type !== "barX")
+    userOptions?.sort ?? (types?.x !== "string" && type !== "barX")
       ? { sort: (d: any) => d.x }
       : {};
+
+  // If this is a rect mark with a date value axis, compute the interval
+  let interval;
+  if (
+    ((type === "rectY" && types?.x === "date") ||
+      (type === "rectX" && types?.y === "date")) &&
+    userOptions?.interval === undefined // Note, there's no way to just say "no default"
+  ) {
+    interval = computeInterval(data, type === "rectY" ? "x" : "y");
+  }
 
   return {
     ...(type === "line" ? { stroke } : { fill }),
@@ -38,7 +50,8 @@ export function getPrimaryMarkOptions(
       : {}),
     ...(fx ? { fx: `fx` } : {}),
     ...(currentColumns.includes("y") ? { y: `y` } : {}),
-    ...(instance.mark().options ? { ...instance.mark().options } : {}),
+    ...(userOptions ? { ...userOptions } : {}),
+    ...(interval ? { interval } : {}),
     ...(currentColumns.includes("series")
       ? {
           [type === "line" ||

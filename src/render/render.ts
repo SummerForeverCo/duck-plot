@@ -33,14 +33,22 @@ export async function render(
   instance.plotObject.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   instance.plotObject.classList.add("plot-object");
 
-  // If the rect width is 0 for rects, increase it to .5
-  // TODO add rect example
-  if (instance.mark()?.type === "rectY" || instance.mark()?.type === "rectY") {
+  // Set a minimum width and height for rects for visibility
+  if (["rectY", "rectX"].includes(instance.mark()?.type ?? "")) {
+    const minSize = 0.5;
     const rects = instance.plotObject.querySelectorAll("rect");
     rects.forEach((rect) => {
-      const width = rect.getAttribute("width");
-      if (width && +width < 0.5) {
-        rect.setAttribute("width", "0.5");
+      if (instance.mark()?.type === "rectY") {
+        const width = rect.getAttribute("width");
+        if (width && +width < minSize) {
+          rect.setAttribute("width", `${minSize}`);
+        }
+      }
+      if (instance.mark()?.type === "rectX") {
+        const height = rect.getAttribute("height");
+        if (height && +height < minSize) {
+          rect.setAttribute("height", `${minSize}`);
+        }
       }
     });
   }
