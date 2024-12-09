@@ -7,6 +7,8 @@ import * as Plot from "@observablehq/plot";
 import { getCommonMarks, getfyMarks } from "./getPlotOptions";
 import { ChartType } from "../types";
 import { getTipMark } from "./getTipMark";
+import { getTreemapMarks } from "./getTreemapMarks";
+import { prepareTreemapData } from "./prepareTreemapData";
 export function getAllMarkOptions(instance: DuckPlot) {
   // Grab the types and labels from the data
   const { types, labels } = instance.data();
@@ -45,8 +47,12 @@ export function getAllMarkOptions(instance: DuckPlot) {
   const hasColumnsOrAggregate =
     (hasX && hasY) || ((hasX || hasY) && hasAggregate);
   // TODO: do we need to update showMark logic for multiple marks?
+  // TODO: better check for treemap type
   const showPrimaryMark =
-    (isValidTickChart || hasColumnsOrAggregate) && instance.mark().type;
+    (isValidTickChart ||
+      hasColumnsOrAggregate ||
+      instance.mark().type === "treemap") &&
+    instance.mark().type;
 
   // Special case where the rawData has a mark column, render a different mark
   // for each subset of the data
@@ -60,15 +66,19 @@ export function getAllMarkOptions(instance: DuckPlot) {
 
   const primaryMarks = showPrimaryMark
     ? [
-        ...marks.map((mark: ChartType) =>
-          Plot[mark!](
-            instance.filteredData?.filter((d) => {
-              return markColumnMarks.length > 0 ? d.markColumn === mark : true;
-            }),
-            getPrimaryMarkOptions(instance, mark) as MarkOptions
-          )
-        ),
-      ]
+        ...marks.map((mark: ChartType) => {
+          const markData = instance.filteredData?.filter((d) => {
+            return markColumnMarks.length > 0 ? d.markColumn === mark : true;
+          });
+          const markOptions = getPrimaryMarkOptions(
+            instance,
+            mark
+          ) as MarkOptions;
+          return mark === "treemap"
+            ? getTreemapMarks(prepareTreemapData(markData, instance), instance)
+            : Plot[mark!](markData, markOptions);
+        }),
+      ].flat()
     : [];
 
   // TODO: Make frame/grid config options(?)
@@ -88,9 +98,9 @@ export function getAllMarkOptions(instance: DuckPlot) {
       : [getTipMark(instance)];
 
   return [
-    ...(commonPlotMarks || []),
+    // ...(commonPlotMarks || []),
     ...(primaryMarks || []),
-    ...(fyMarks || []),
-    ...tipMark,
+    // ...(fyMarks || []),
+    // ...tipMark,
   ];
 }

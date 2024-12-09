@@ -100,7 +100,7 @@ export function getPlotOptions(instance: DuckPlot) {
       };
   const yDomain = sorts?.y
     ? sorts.y
-    : currentColumns.includes("x")
+    : currentColumns.includes("x") || instance.mark().type === "treemap"
     ? {}
     : {
         domain: extent(
