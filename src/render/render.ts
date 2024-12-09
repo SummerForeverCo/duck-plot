@@ -33,6 +33,26 @@ export async function render(
   instance.plotObject.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   instance.plotObject.classList.add("plot-object");
 
+  // Set a minimum width and height for rects for visibility
+  if (["rectY", "rectX"].includes(instance.mark()?.type ?? "")) {
+    const minSize = 0.5;
+    const rects = instance.plotObject.querySelectorAll("rect");
+    rects.forEach((rect) => {
+      if (instance.mark()?.type === "rectY") {
+        const width = rect.getAttribute("width");
+        if (width && +width < minSize) {
+          rect.setAttribute("width", `${minSize}`);
+        }
+      }
+      if (instance.mark()?.type === "rectX") {
+        const height = rect.getAttribute("height");
+        if (height && +height < minSize) {
+          rect.setAttribute("height", `${minSize}`);
+        }
+      }
+    });
+  }
+
   // Ensure the chart container exists
   const container =
     instance.chartContainer || instance.document.createElement("div");

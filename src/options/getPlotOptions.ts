@@ -1,23 +1,9 @@
 import type { DuckPlot } from "..";
-import type {
-  MarkOptions,
-  PlotOptions,
-  StackOptions,
-} from "@observablehq/plot";
+import type { PlotOptions } from "@observablehq/plot";
 import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
-import type {
-  BasicColumnType,
-  Data,
-  ChartType,
-  ColumnType,
-  Config,
-  Indexable,
-  Sorts,
-} from "../types";
+import type { BasicColumnType, Data, ColumnType, Sorts } from "../types";
 import { borderOptions, defaultColors } from "../helpers";
-// Extend the MarkOptions to include all the stack options
-interface AllMarkOptions extends MarkOptions, StackOptions {}
 
 // Identify the data currently in the dataset
 export function getDataOrder(data: Data | undefined, column: string) {
@@ -318,7 +304,7 @@ const namedColors = new Set(
   "none,currentcolor,transparent,aliceblue,antiquewhite,aqua,aquamarine,azure,beige,bisque,black,blanchedalmond,blue,blueviolet,brown,burlywood,cadetblue,chartreuse,chocolate,coral,cornflowerblue,cornsilk,crimson,cyan,darkblue,darkcyan,darkgoldenrod,darkgray,darkgreen,darkgrey,darkkhaki,darkmagenta,darkolivegreen,darkorange,darkorchid,darkred,darksalmon,darkseagreen,darkslateblue,darkslategray,darkslategrey,darkturquoise,darkviolet,deeppink,deepskyblue,dimgray,dimgrey,dodgerblue,firebrick,floralwhite,forestgreen,fuchsia,gainsboro,ghostwhite,gold,goldenrod,gray,green,greenyellow,grey,honeydew,hotpink,indianred,indigo,ivory,khaki,lavender,lavenderblush,lawngreen,lemonchiffon,lightblue,lightcoral,lightcyan,lightgoldenrodyellow,lightgray,lightgreen,lightgrey,lightpink,lightsalmon,lightseagreen,lightskyblue,lightslategray,lightslategrey,lightsteelblue,lightyellow,lime,limegreen,linen,magenta,maroon,mediumaquamarine,mediumblue,mediumorchid,mediumpurple,mediumseagreen,mediumslateblue,mediumspringgreen,mediumturquoise,mediumvioletred,midnightblue,mintcream,mistyrose,moccasin,navajowhite,navy,oldlace,olive,olivedrab,orange,orangered,orchid,palegoldenrod,palegreen,paleturquoise,palevioletred,papayawhip,peachpuff,peru,pink,plum,powderblue,purple,rebeccapurple,red,rosybrown,royalblue,saddlebrown,salmon,sandybrown,seagreen,seashell,sienna,silver,skyblue,slateblue,slategray,slategrey,snow,springgreen,steelblue,tan,teal,thistle,tomato,turquoise,violet,wheat,white,whitesmoke,yellow".split(
     ","
   )
-); // prettier-ignore
+);
 
 // Returns true if value is a valid CSS color string. This is intentionally lax
 // because the CSS color spec keeps growing, and we don’t need to parse these
