@@ -1,21 +1,8 @@
 import type { DuckPlot } from "..";
-import type {
-  BinOptions,
-  MarkOptions,
-  PlotOptions,
-  StackOptions,
-} from "@observablehq/plot";
+import type { PlotOptions } from "@observablehq/plot";
 import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
-import type {
-  BasicColumnType,
-  Data,
-  ChartType,
-  ColumnType,
-  Config,
-  Indexable,
-  Sorts,
-} from "../types";
+import type { BasicColumnType, Data, ColumnType, Sorts } from "../types";
 import { borderOptions, defaultColors } from "../helpers";
 
 // Identify the data currently in the dataset

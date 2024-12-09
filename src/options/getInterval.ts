@@ -20,7 +20,7 @@ export function computeInterval(data: Data, column: string = "x") {
     return undefined;
   }
 
-  // Sort distinct x values (assumes they are repeated for colors / faceting)
+  // Sort distinct values (assumes they are repeated for colors / faceting)
   const sortedData = Array.from(
     new Set(data.map((d) => +(d[column] as number)))
   ).sort((a, b) => a - b);
