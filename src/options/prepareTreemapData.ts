@@ -1,6 +1,6 @@
 import type { DuckPlot } from "..";
 import { Data, Indexable } from "../types";
-import { group } from "d3-array";
+import { group, sum } from "d3-array";
 import { hierarchy, HierarchyNode, treemap } from "d3-hierarchy";
 
 interface TreemapNode {
@@ -14,6 +14,7 @@ export function prepareTreemapData(
 ): Data | [] {
   if (!data) return [];
   // Group data by series
+  const total = sum(data, (d) => d.y || 0);
   const groupedData = Array.from(
     group(data, (d) => d.series),
     ([key, values]) => ({
@@ -21,6 +22,7 @@ export function prepareTreemapData(
       children: values.map((v) => ({
         name: v.series, // TODO: think about this.... maybe rename to category
         ...v,
+        percent: ((v.y / total) * 100).toFixed(1),
       })),
     })
   );

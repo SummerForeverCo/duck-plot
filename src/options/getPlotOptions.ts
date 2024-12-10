@@ -85,6 +85,7 @@ export function getPlotOptions(instance: DuckPlot) {
   const sorts = instance.sorts;
   const data = instance.data();
   const currentColumns = data?.types ? Object.keys(data.types ?? {}) : [];
+  const markType = instance.mark().type;
 
   // Only compute a custom x/y domain if the other axes is missing
   // Make sure a minimum of 0 is included for x/y domains
@@ -100,7 +101,7 @@ export function getPlotOptions(instance: DuckPlot) {
       };
   const yDomain = sorts?.y
     ? sorts.y
-    : currentColumns.includes("x") || instance.mark().type === "treemap"
+    : currentColumns.includes("x") || markType === "treemap"
     ? {}
     : {
         domain: extent(
@@ -165,37 +166,42 @@ export function getPlotOptions(instance: DuckPlot) {
 
   // TODO: fx labels are set to override x labels (good for grouped bar charts,
   // not good for other charts)
-  const computedX = currentColumns.includes("fx")
-    ? { axis: null, ...xDomain }
-    : {
-        tickSize: 0,
-        tickPadding: 5,
-        ...(!config?.xLabelDisplay || !options.x?.label
-          ? { labelArrow: "none" }
-          : {}),
-        ...(currentColumns.includes("x") &&
-          getTickFormatter(
-            data?.types?.x,
-            "x",
-            options.width || 0,
-            options.height || 0
-          )),
-        ...xDomain,
-      };
-  const computedY = {
-    labelArrow: !config?.yLabelDisplay || !options.y?.label ? "none" : true,
-    labelAnchor: "top",
-    tickSize: 0,
-    tickPadding: 5,
-    ...(currentColumns.includes("y") &&
-      getTickFormatter(
-        data?.types?.y,
-        "y",
-        options.width || 0,
-        options.height || 0
-      )),
-    ...yDomain,
-  };
+  const computedX =
+    currentColumns.includes("fx") || markType === "treemap"
+      ? { axis: null, ...xDomain }
+      : {
+          tickSize: 0,
+          tickPadding: 5,
+          ...(!config?.xLabelDisplay || !options.x?.label
+            ? { labelArrow: "none" }
+            : {}),
+          ...(currentColumns.includes("x") &&
+            getTickFormatter(
+              data?.types?.x,
+              "x",
+              options.width || 0,
+              options.height || 0
+            )),
+          ...xDomain,
+        };
+  const computedY =
+    markType === "treemap"
+      ? { axis: null }
+      : {
+          labelArrow:
+            !config?.yLabelDisplay || !options.y?.label ? "none" : true,
+          labelAnchor: "top",
+          tickSize: 0,
+          tickPadding: 5,
+          ...(currentColumns.includes("y") &&
+            getTickFormatter(
+              data?.types?.y,
+              "y",
+              options.width || 0,
+              options.height || 0
+            )),
+          ...yDomain,
+        };
 
   return {
     ...options,
