@@ -7,6 +7,8 @@ import { Markish } from "@observablehq/plot";
 export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
   const plotOptions = instance.derivePlotOptions();
   const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
+  // TODO: handling text label as input
+  const textLabel = instance.text().column ?? "";
   return [
     Plot.rect(data, {
       x1: "x0",
@@ -40,17 +42,23 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
           return `${d.data.y} (${d.data.percent})`;
         },
         channels: {
-          z: {
+          yValue: {
             label: yLabel,
             value: (d) => {
-              console.log(d.data.y);
               return `${d.data.y} (${d.data.percent}%)`;
+            },
+          },
+          textValue: {
+            label: textLabel,
+            value: (d) => {
+              return `${d.data.text}`;
             },
           },
         },
         format: {
           color: true,
-          z: true,
+          yValue: true,
+          textValue: textLabel ? true : false,
           x: false,
           y: false,
         },
