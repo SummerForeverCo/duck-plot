@@ -6,15 +6,7 @@ import type {
 } from "@observablehq/plot";
 import * as Plot from "@observablehq/plot";
 import { extent } from "d3-array";
-import type {
-  BasicColumnType,
-  Data,
-  ChartType,
-  ColumnType,
-  Config,
-  Indexable,
-  Sorts,
-} from "../types";
+import type { BasicColumnType, Data, ColumnType, Sorts } from "../types";
 import { borderOptions, defaultColors } from "../helpers";
 // Extend the MarkOptions to include all the stack options
 interface AllMarkOptions extends MarkOptions, StackOptions {}
