@@ -20,7 +20,7 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
     Plot.text(data, {
       x: "x0",
       y: "y1",
-      dx: 15,
+      dx: 4,
       dy: 8,
       text: (d) => {
         const v = d.data.text ? `${d.data.text}` : d.parent.data.name;
@@ -28,6 +28,7 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
         const height = 15;
         return d.x1 - d.x0 > width && d.y1 - d.y0 > height ? v : "";
       },
+      textAnchor: "start",
       fill: "#fff",
     }),
     Plot.tip(
