@@ -20,10 +20,9 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
       dx: 15,
       dy: 10,
       text: (d) => {
-        const v = d.parent.data.name; //d.value?.toFixed(1);
-        const width = (v.length - 1) * 8 + 5;
+        const v = d.data.text ? `${d.data.text}` : d.parent.data.name;
+        const width = (v.length - 1) * 8 + 5; // TODO: adjust this based on font size?
         const height = 15;
-
         return d.x1 - d.x0 > width && d.y1 - d.y0 > height ? v : "";
       },
       fill: "#fff",

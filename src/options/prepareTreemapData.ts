@@ -19,8 +19,8 @@ export function prepareTreemapData(
     ([key, values]) => ({
       name: key,
       children: values.map((v) => ({
-        name: v.series,
-        y: v.y, // Preserve `y` on leaf nodes
+        name: v.series, // TODO: think about this.... maybe rename to category
+        ...v,
       })),
     })
   );
