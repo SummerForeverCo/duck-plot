@@ -40,6 +40,7 @@ export async function prepareData(
   let labels: Data["labels"] = {};
   let preQueryTableName = "";
   const reshapeTableName = getUniqueName();
+  const type = instance.mark().type;
 
   // Identify the columns present in the config:
   const columns = Object.fromEntries(
@@ -88,7 +89,7 @@ export async function prepareData(
   // that has generic column names (e.g., `x`, `y`, `series`, etc.)
 
   const tranformQuery = getTransformQuery(
-    instance.mark().type,
+    type,
     columns,
     transformTableFrom,
     reshapeTableName,
@@ -102,9 +103,7 @@ export async function prepareData(
   // the `r` and `label` columns are not considered for distinct-ness but are
   // passed through for usage
   let distinctCols = (
-    instance.mark().type === "barX"
-      ? ["y", "series", "fy", "fx"]
-      : ["x", "series", "fy", "fx"]
+    type === "barX" ? ["y", "series", "fy", "fx"] : ["x", "series", "fy", "fx"]
   ).filter((d) => columnIsDefined(d as keyof ColumnConfig, columns));
 
   // Catch for reshaped data where series gets added
@@ -122,7 +121,7 @@ export async function prepareData(
     distinctCols
   );
   const allowsAggregation =
-    allowAggregation(instance.mark().type) || instance.config().aggregate;
+    allowAggregation(type) || instance.config().aggregate;
 
   // If there are no distinct columns (e.g., y axis is selected without x axis), we can't aggregate
   const shouldAggregate =
@@ -131,13 +130,15 @@ export async function prepareData(
     (distinctCols.includes("y") ||
       distinctCols.includes("x") ||
       distinctCols.includes("fx") ||
+      (distinctCols.includes("series") && type === "treemap") ||
       instance.config().aggregate);
   // TODO: do we need the distincCols includes check here...?
   const transformedTypes = await columnTypes(instance.ddb, reshapeTableName);
+
   // TODO: more clear arguments in here
   const { labels: aggregateLabels, queryString: aggregateQuery } =
     getAggregateInfo(
-      instance.mark().type,
+      type,
       columns,
       [...transformedTypes.keys()],
       reshapeTableName,
@@ -146,6 +147,7 @@ export async function prepareData(
       instance.config().percent
     );
   queryString = aggregateQuery;
+
   labels = aggregateLabels;
   let data;
   let schema: DescribeSchema;
