@@ -57,19 +57,6 @@ export function getSorts(
     }, {});
 }
 
-// TODO: type this
-const defaultOptions = {
-  width: 500,
-  height: 281,
-  color: defaultColors,
-  fx: { label: null },
-  className: "plot-chart",
-  grid: false,
-  style: {
-    overflow: "visible",
-  },
-};
-
 const defaultConfig = {
   xLabelDisplay: true,
   yLabelDisplay: true,
@@ -77,10 +64,8 @@ const defaultConfig = {
 };
 // Get the top level configurations for the plot object
 export function getPlotOptions(instance: DuckPlot) {
-  const options = {
-    ...defaultOptions,
-    ...instance.derivePlotOptions(),
-  };
+  const options = instance.derivePlotOptions();
+
   const config = { ...defaultConfig, ...instance.config() };
   const sorts = instance.sorts;
   const data = instance.data();
@@ -129,7 +114,7 @@ export function getPlotOptions(instance: DuckPlot) {
   // TODO this check seems off....
   const categoricalColor =
     data?.types?.series === "string" ||
-    (!Array.isArray(options.color) && options.color.type === "categorical");
+    (!Array.isArray(options.color) && options.color?.type === "categorical");
   // Array of strings is treated as the range
   if (Array.isArray(colorConfig)) {
     colorRange = colorConfig;
@@ -157,7 +142,7 @@ export function getPlotOptions(instance: DuckPlot) {
 
   const computedColor = hasColor
     ? {
-        label: Array.isArray(options.color) ? "" : options.color.label,
+        label: Array.isArray(options.color) ? "" : options.color?.label,
         ...(colorDomain && { domain: colorDomain }),
         ...(colorRange && { range: colorRange }),
         ...(colorScheme && { scheme: colorScheme }),

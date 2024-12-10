@@ -1,18 +1,15 @@
 import type { DuckPlot } from "..";
-import { Data, Indexable } from "../types";
+import { Data } from "../types";
 import { group, sum } from "d3-array";
-import { hierarchy, HierarchyNode, treemap } from "d3-hierarchy";
+import { hierarchy, treemap } from "d3-hierarchy";
 
-interface TreemapNode {
-  name: string;
-  children?: TreemapNode[]; // Recursive structure for children
-  y?: number; // Include `y` for leaf nodes
-}
 export function prepareTreemapData(
   data: Data | undefined,
   instance: DuckPlot
 ): Data | [] {
   if (!data) return [];
+  const { width, height } = instance.derivePlotOptions();
+
   // Group data by series
   const total = sum(data, (d) => d.y || 0);
   const groupedData = Array.from(
@@ -32,10 +29,11 @@ export function prepareTreemapData(
     name: "root",
     children: groupedData,
   })
-    .sum((d: any) => d.y || 0) // Sum up the `y` values for treemap layout
-    .sort((a, b) => b.y! - a.y!); // Sort nodes by value
+    .sum((d: any) => d.y || 0)
+    .sort((a, b) => b.y! - a.y!);
 
-  // TODO real width and height
-  treemap().size([500, 500]).padding(1)(root);
+  treemap()
+    .size([width ?? 500, height ?? 500])
+    .padding(1)(root);
   return root.leaves();
 }

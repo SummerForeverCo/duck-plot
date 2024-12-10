@@ -1,10 +1,23 @@
 // TODO: add tests for this coalesing
 import type { DuckPlot } from "..";
+import { defaultColors } from "../helpers";
 
+const defaultOptions = {
+  width: 500,
+  height: 281,
+  color: defaultColors,
+  fx: { label: null },
+  className: "plot-chart",
+  grid: false,
+  style: {
+    overflow: "visible",
+  },
+};
 export function derivePlotOptions(instance: DuckPlot) {
   const data = instance.data();
   const options = instance.options();
   let plotOptions = {
+    ...defaultOptions,
     ...options,
     x: {
       ...options.x,
