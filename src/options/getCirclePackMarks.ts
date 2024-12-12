@@ -2,6 +2,8 @@ import * as Plot from "@observablehq/plot";
 import type { DuckPlot } from "..";
 import { Data } from "../types";
 import { Markish } from "@observablehq/plot";
+import { isColor } from "./getPlotOptions";
+import { defaultColors } from "../helpers";
 
 export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
   const plotOptions = instance.derivePlotOptions();
@@ -9,7 +11,9 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
   const textLabel = instance.text().column ?? "";
   const hasSeries = instance.color().column !== "";
   const hideTip = instance.isServer || instance.config()?.tip === false;
-
+  const fill = isColor(instance.color()?.column)
+    ? instance.color()?.column
+    : defaultColors[0];
   return [
     // Parent circle
     Plot.dot(
@@ -44,7 +48,7 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
       x: "x",
       y: "y",
       r: "r",
-      fill: (d) => d.data.series,
+      ...(hasSeries ? { fill: (d) => d.data.series } : { fill }),
     }),
     // Labels
     Plot.text(data.leaves(), {
@@ -70,7 +74,6 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
               x: (d) => d.x,
               y: (d) => d.y,
               r: (d: any) => d.r,
-              fill: (d) => d.parent.data.name,
 
               channels: {
                 yValue: {
