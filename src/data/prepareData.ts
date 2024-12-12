@@ -103,7 +103,9 @@ export async function prepareData(
   // the `r` and `label` columns are not considered for distinct-ness but are
   // passed through for usage
   let distinctCols = (
-    type === "barX" ? ["y", "series", "fy", "fx"] : ["x", "series", "fy", "fx"]
+    type === "barX"
+      ? ["y", "series", "fy", "fx", "text"]
+      : ["x", "series", "fy", "fx", "text"]
   ).filter((d) => columnIsDefined(d as keyof ColumnConfig, columns));
 
   // Catch for reshaped data where series gets added
@@ -130,9 +132,10 @@ export async function prepareData(
     (distinctCols.includes("y") ||
       distinctCols.includes("x") ||
       distinctCols.includes("fx") ||
-      (distinctCols.includes("series") && type === "treemap") ||
-      (distinctCols.includes("series") && type === "circlePack") ||
+      ((type === "treemap" || type === "circlePack") &&
+        (distinctCols.includes("series") || distinctCols.includes("text"))) ||
       instance.config().aggregate);
+
   // TODO: do we need the distincCols includes check here...?
   const transformedTypes = await columnTypes(instance.ddb, reshapeTableName);
 

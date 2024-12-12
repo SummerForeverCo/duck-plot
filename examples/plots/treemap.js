@@ -4,9 +4,9 @@ const codeString = `duckplot
     .query("select round(sum(Close), 1) as Close, year(Date) as year, Symbol from stocks group by year, Symbol")
     .table("stocks")
     .y("Close")
-    .color("Symbol")
+    .color("Symbol") // TODO year as color
     .mark("treemap")
-    .text("year")
+    .text("Symbol")
     `;
 
 export const treemap = (options) =>

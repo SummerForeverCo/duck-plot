@@ -27,6 +27,7 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
       data.descendants().filter(
         (d: any) =>
           d.data?.children?.length !== 1 && // has more than one child
+          d.parent && // has a parent
           d.parent?.children?.length !== 1 // if it's the only child, don't draw a circle
       ),
       {

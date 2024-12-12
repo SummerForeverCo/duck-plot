@@ -4,10 +4,10 @@ const codeString = `duckplot
     .query("select round(sum(Close), 1) as Close, year(Date) as year, Symbol from stocks group by year, Symbol")
     .table("stocks")
     .y("Close")
-    .color("Symbol")
+    .color("Close")
     .mark("circlePack")
     .options({width: 500, height: 500})
-    .text("year")
+    .text("Symbol")
     `;
 
 export const circlePack = (options) =>
