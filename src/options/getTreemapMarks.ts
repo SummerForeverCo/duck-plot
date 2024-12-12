@@ -8,6 +8,8 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
   const plotOptions = instance.derivePlotOptions();
   const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
   const hideTip = instance.isServer || instance.config()?.tip === false;
+  const hasSeries = instance.color().column !== "";
+
   // TODO: handling text label as input
   const textLabel = instance.text().column ?? "";
   return [
@@ -24,7 +26,10 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
       dx: 4,
       dy: 8,
       text: (d) => {
-        const v = d.data.text ? `${d.data.text}` : d.parent.data.name;
+        const v = d.data.text
+          ? `${d.data.text}`
+          : d.parent.data.name || `${d.value.toLocaleString()}`;
+
         const width = (v.length - 1) * 8 + 5; // TODO: adjust this based on font size?
         const height = 15;
         return d.x1 - d.x0 > width && d.y1 - d.y0 > height ? v : "";
@@ -50,7 +55,7 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
                 yValue: {
                   label: yLabel,
                   value: (d) => {
-                    return `${d.data.y} (${d.data.percent}%)`;
+                    return `${d.data.y.toLocaleString()} (${d.data.percent}%)`;
                   },
                 },
                 textValue: {
@@ -61,7 +66,7 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
                 },
               },
               format: {
-                color: true,
+                fill: hasSeries,
                 yValue: true,
                 textValue: textLabel ? true : false,
                 x: false,

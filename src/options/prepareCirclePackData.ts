@@ -14,7 +14,7 @@ export function prepareCirclePackData(
   // Group data by series
   const total = sum(data, (d) => d.y || 0);
   const groupedData = Array.from(
-    group(data, (d) => d.series),
+    group(data, (d) => d.series || false),
     ([key, values]) => ({
       name: key,
       children: values.map((v) => ({

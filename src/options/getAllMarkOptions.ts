@@ -50,13 +50,9 @@ export function getAllMarkOptions(instance: DuckPlot) {
   const hasColumnsOrAggregate =
     (hasX && hasY) || ((hasX || hasY) && hasAggregate);
   // TODO: do we need to update showMark logic for multiple marks?
-  // TODO: better check for treemap type
-  const isValidTreemap =
-    mark === "treemap" && hasY && currentColumns.includes("series");
 
-  // TODO: support no color
-  const isValidCirclePack =
-    mark === "circlePack" && hasY && currentColumns.includes("series");
+  const isValidTreemap = mark === "treemap" && hasY;
+  const isValidCirclePack = mark === "circlePack" && hasY;
   const showPrimaryMark =
     (isValidTickChart ||
       hasColumnsOrAggregate ||

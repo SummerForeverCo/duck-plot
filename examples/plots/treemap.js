@@ -6,7 +6,7 @@ const codeString = `duckplot
     .y("Close")
     .color("Symbol")
     .mark("treemap")
-    // .text("year")
+    .text("year")
     `;
 
 export const treemap = (options) =>

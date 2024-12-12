@@ -7,8 +7,9 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
   const plotOptions = instance.derivePlotOptions();
   const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
   const textLabel = instance.text().column ?? "";
-
+  const hasSeries = instance.color().column !== "";
   const hideTip = instance.isServer || instance.config()?.tip === false;
+
   return [
     // Parent circle
     Plot.dot(
@@ -23,9 +24,11 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
     ),
     // Container circles
     Plot.dot(
-      data
-        .descendants()
-        .filter((d: any) => d.data?.children?.length !== 1 && d.parent),
+      data.descendants().filter(
+        (d: any) =>
+          d.data?.children?.length !== 1 && // has more than one child
+          d.parent?.children?.length !== 1 // if it's the only child, don't draw a circle
+      ),
       {
         x: "x",
         y: "y",
@@ -47,7 +50,9 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
       x: "x",
       y: "y",
       text: (d) => {
-        const v = d.data.text ? `${d.data.text}` : d.parent.data.name;
+        const v = d.data.text
+          ? `${d.data.text}`
+          : d.parent.data.name || `${d.value.toLocaleString()}`;
         const width = (v.length - 1) * 8 + 5; // TODO: adjust this based on font size?
         const height = 15;
         return d.r * 2 > width && d.r * 2 > height ? v : "";
@@ -65,19 +70,20 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
               y: (d) => d.y,
               r: (d: any) => d.r,
               fill: (d) => d.parent.data.name,
-              z: (d: any) => `${d.data.y} (${d.data.percent}%)`,
+
               channels: {
                 yValue: {
                   label: yLabel,
-                  value: (d) => `${d.data.y} (${d.data.percent}%)`,
+                  value: (d) =>
+                    `${d.data.y.toLocaleString()} (${d.data.percent}%)`,
                 },
                 textValue: {
                   label: textLabel,
-                  value: (d) => d.data.text,
+                  value: (d) => `${d.data.text}`,
                 },
               },
               format: {
-                color: true,
+                fill: hasSeries,
                 yValue: true,
                 textValue: !!textLabel,
                 x: false,
