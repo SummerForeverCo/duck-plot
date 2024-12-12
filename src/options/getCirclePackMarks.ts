@@ -2,15 +2,13 @@ import * as Plot from "@observablehq/plot";
 import type { DuckPlot } from "..";
 import { Data } from "../types";
 import { Markish } from "@observablehq/plot";
-import { extent, scaleLinear } from "d3";
 
-// getCirclePackMarks
-// TODO: data type
 export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
   const plotOptions = instance.derivePlotOptions();
   const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
   const textLabel = instance.text().column ?? "";
 
+  const hideTip = instance.isServer || instance.config()?.tip === false;
   return [
     // Parent circle
     Plot.dot(
@@ -57,5 +55,36 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
       textAnchor: "middle",
       fill: "#fff",
     }),
+    ...[
+      hideTip
+        ? []
+        : Plot.tip(
+            data.leaves(),
+            Plot.pointer({
+              x: (d) => d.x,
+              y: (d) => d.y,
+              r: (d: any) => d.r,
+              fill: (d) => d.parent.data.name,
+              z: (d: any) => `${d.data.y} (${d.data.percent}%)`,
+              channels: {
+                yValue: {
+                  label: yLabel,
+                  value: (d) => `${d.data.y} (${d.data.percent}%)`,
+                },
+                textValue: {
+                  label: textLabel,
+                  value: (d) => d.data.text,
+                },
+              },
+              format: {
+                color: true,
+                yValue: true,
+                textValue: !!textLabel,
+                x: false,
+                y: false,
+              },
+            })
+          ),
+    ],
   ];
 }

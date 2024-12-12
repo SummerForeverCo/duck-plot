@@ -7,6 +7,7 @@ import { Markish } from "@observablehq/plot";
 export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
   const plotOptions = instance.derivePlotOptions();
   const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
+  const hideTip = instance.isServer || instance.config()?.tip === false;
   // TODO: handling text label as input
   const textLabel = instance.text().column ?? "";
   return [
@@ -31,39 +32,43 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
       textAnchor: "start",
       fill: "#fff",
     }),
-    Plot.tip(
-      data,
-      Plot.pointer({
-        x1: "x0",
-        x2: "x1",
-        y1: "y0",
-        y2: "y1",
-        fill: (d) => d.parent.data.name,
-        z: (d: any) => {
-          return `${d.data.y} (${d.data.percent})`;
-        },
-        channels: {
-          yValue: {
-            label: yLabel,
-            value: (d) => {
-              return `${d.data.y} (${d.data.percent}%)`;
-            },
-          },
-          textValue: {
-            label: textLabel,
-            value: (d) => {
-              return `${d.data.text}`;
-            },
-          },
-        },
-        format: {
-          color: true,
-          yValue: true,
-          textValue: textLabel ? true : false,
-          x: false,
-          y: false,
-        },
-      })
-    ),
+    ...[
+      hideTip
+        ? null
+        : Plot.tip(
+            data,
+            Plot.pointer({
+              x1: "x0",
+              x2: "x1",
+              y1: "y0",
+              y2: "y1",
+              fill: (d) => d.parent.data.name,
+              z: (d: any) => {
+                return `${d.data.y} (${d.data.percent})`;
+              },
+              channels: {
+                yValue: {
+                  label: yLabel,
+                  value: (d) => {
+                    return `${d.data.y} (${d.data.percent}%)`;
+                  },
+                },
+                textValue: {
+                  label: textLabel,
+                  value: (d) => {
+                    return `${d.data.text}`;
+                  },
+                },
+              },
+              format: {
+                color: true,
+                yValue: true,
+                textValue: textLabel ? true : false,
+                x: false,
+                y: false,
+              },
+            })
+          ),
+    ],
   ];
 }

@@ -120,10 +120,9 @@ export function getAllMarkOptions(instance: DuckPlot) {
 
   const tipMark = hideTip ? [] : [getTipMark(instance)];
 
-  // TODO: don't show tips in tree/circle pack if they're off
   return [
-    ...(primaryMarks || []),
     ...(commonPlotMarks || []),
+    ...(primaryMarks || []),
     ...(fyMarks || []),
     ...tipMark,
   ];
