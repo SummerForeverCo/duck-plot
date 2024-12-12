@@ -131,6 +131,7 @@ export async function prepareData(
       distinctCols.includes("x") ||
       distinctCols.includes("fx") ||
       (distinctCols.includes("series") && type === "treemap") ||
+      (distinctCols.includes("series") && type === "circlePack") ||
       instance.config().aggregate);
   // TODO: do we need the distincCols includes check here...?
   const transformedTypes = await columnTypes(instance.ddb, reshapeTableName);

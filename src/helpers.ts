@@ -28,7 +28,14 @@ export async function checkDistinct(
   return Object.values(result[0])[0];
 }
 
-const supportsAggregation = ["barY", "barX", "line", "areaY", "treemap"];
+const supportsAggregation = [
+  "barY",
+  "barX",
+  "line",
+  "areaY",
+  "treemap",
+  "circlePack",
+];
 export function allowAggregation(chartType?: ChartType) {
   return chartType && supportsAggregation.includes(chartType);
 }

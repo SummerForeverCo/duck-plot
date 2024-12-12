@@ -12,6 +12,7 @@ export type ChartType =
   | "tickX"
   | "tickY"
   | "treemap"
+  | "circlePack"
   | undefined;
 
 export type SqlSort = {

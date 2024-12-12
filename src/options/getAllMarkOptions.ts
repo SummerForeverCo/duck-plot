@@ -9,9 +9,12 @@ import { ChartType } from "../types";
 import { getTipMark } from "./getTipMark";
 import { getTreemapMarks } from "./getTreemapMarks";
 import { prepareTreemapData } from "./prepareTreemapData";
+import { getCirclePackMarks } from "./getCirclePackMarks";
+import { prepareCirclePackData } from "./prepareCirclePackData";
 export function getAllMarkOptions(instance: DuckPlot) {
   // Grab the types and labels from the data
   const { types, labels } = instance.data();
+  const mark = instance.mark().type;
 
   // Filter down to only the visible series (handled by the legend)
   const filteredData = filterData(
@@ -36,8 +39,8 @@ export function getAllMarkOptions(instance: DuckPlot) {
 
   // Tick Chart can only have x or y
   const isValidTickChart =
-    (instance.mark().type === "tickX" && currentColumns.includes("x")) ||
-    (instance.mark().type === "tickY" && currentColumns.includes("y"));
+    (mark === "tickX" && currentColumns.includes("x")) ||
+    (mark === "tickY" && currentColumns.includes("y"));
 
   const hasX = currentColumns.includes("x");
   const hasY = currentColumns.includes("y");
@@ -49,12 +52,17 @@ export function getAllMarkOptions(instance: DuckPlot) {
   // TODO: do we need to update showMark logic for multiple marks?
   // TODO: better check for treemap type
   const isValidTreemap =
-    instance.mark().type === "treemap" &&
-    hasY &&
-    currentColumns.includes("series");
+    mark === "treemap" && hasY && currentColumns.includes("series");
+
+  // TODO: support no color
+  const isValidCirclePack =
+    mark === "circlePack" && hasY && currentColumns.includes("series");
   const showPrimaryMark =
-    (isValidTickChart || hasColumnsOrAggregate || isValidTreemap) &&
-    instance.mark().type;
+    (isValidTickChart ||
+      hasColumnsOrAggregate ||
+      isValidTreemap ||
+      isValidCirclePack) &&
+    mark;
 
   // Special case where the rawData has a mark column, render a different mark
   // for each subset of the data
@@ -64,7 +72,7 @@ export function getAllMarkOptions(instance: DuckPlot) {
   const marks: ChartType[] =
     markColumnMarks.length > 0 && instance.markColumn() !== undefined
       ? markColumnMarks
-      : [instance.mark().type!];
+      : [mark!];
 
   const primaryMarks = showPrimaryMark
     ? [
@@ -76,33 +84,47 @@ export function getAllMarkOptions(instance: DuckPlot) {
             instance,
             mark
           ) as MarkOptions;
+
           return mark === "treemap"
             ? getTreemapMarks(prepareTreemapData(markData, instance), instance)
+            : mark === "circlePack"
+            ? getCirclePackMarks(
+                prepareCirclePackData(markData, instance),
+                instance
+              )
             : Plot[mark!](markData, markOptions);
         }),
       ].flat()
     : [];
 
   // TODO: Make frame/grid config options(?)
-  const commonPlotMarks = [
-    ...getCommonMarks(currentColumns),
-    ...(instance.options().marks || []),
-  ];
-
-  const fyMarks = getfyMarks(
-    instance.filteredData,
-    currentColumns,
-    plotOptions.fy
-  );
-  const tipMark =
-    instance.isServer || instance.config()?.tip === false || !showPrimaryMark
+  const commonPlotMarks =
+    mark === "treemap" || mark === "circlePack"
       ? []
-      : [getTipMark(instance)];
+      : [
+          ...getCommonMarks(currentColumns),
+          ...(instance.options().marks || []),
+        ];
 
+  const fyMarks =
+    mark === "treemap" || mark === "circlePack"
+      ? []
+      : getfyMarks(instance.filteredData, currentColumns, plotOptions.fy);
+
+  const hideTip =
+    instance.isServer ||
+    instance.config()?.tip === false ||
+    !showPrimaryMark ||
+    mark === "treemap" ||
+    mark === "circlePack";
+
+  const tipMark = hideTip ? [] : [getTipMark(instance)];
+
+  // TODO: don't show tips in tree/circle pack if they're off
   return [
-    // ...(commonPlotMarks || []),
     ...(primaryMarks || []),
-    // ...(fyMarks || []),
-    // ...tipMark,
+    ...(commonPlotMarks || []),
+    ...(fyMarks || []),
+    ...tipMark,
   ];
 }
