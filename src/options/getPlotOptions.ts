@@ -70,13 +70,14 @@ export function getPlotOptions(instance: DuckPlot) {
   const data = instance.data();
   const currentColumns = data?.types ? Object.keys(data.types ?? {}) : [];
   const markType = instance.mark().type;
-  const root = prepareCirclePackData(data, instance);
 
   // Only compute a custom x/y domain if the other axes is missing
   // Make sure a minimum of 0 is included for x/y domains
   const xDomain = sorts?.x
     ? sorts.x
-    : currentColumns.includes("y")
+    : currentColumns.includes("y") ||
+      markType === "treemap" ||
+      markType === "circlePack"
     ? {}
     : {
         domain: extent(
@@ -174,7 +175,7 @@ export function getPlotOptions(instance: DuckPlot) {
           ...xDomain,
         };
   const computedY =
-    markType === "treemap"
+    markType === "treemap" || markType === "circlePack"
       ? { axis: null }
       : {
           labelArrow:
@@ -220,7 +221,13 @@ export function getPlotOptions(instance: DuckPlot) {
   const r =
     markType === "circlePack"
       ? {
-          range: [0, max(root.descendants(), (d: Indexable) => d.r ?? 0)],
+          range: [
+            0,
+            max(
+              prepareCirclePackData(data, instance).descendants(),
+              (d: Indexable) => d.r ?? 0
+            ),
+          ],
           type: "linear",
         }
       : {};

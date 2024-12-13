@@ -76,10 +76,6 @@ export function getAllMarkOptions(instance: DuckPlot) {
           const markData = instance.filteredData?.filter((d) => {
             return markColumnMarks.length > 0 ? d.markColumn === mark : true;
           });
-          const markOptions = getPrimaryMarkOptions(
-            instance,
-            mark
-          ) as MarkOptions;
 
           return mark === "treemap"
             ? getTreemapMarks(prepareTreemapData(markData, instance), instance)
@@ -88,19 +84,22 @@ export function getAllMarkOptions(instance: DuckPlot) {
                 prepareCirclePackData(markData, instance),
                 instance
               )
-            : Plot[mark!](markData, markOptions);
+            : Plot[mark!](
+                markData,
+                getPrimaryMarkOptions(instance, mark) as MarkOptions
+              );
         }),
       ].flat()
     : [];
 
   // TODO: Make frame/grid config options(?)
-  const commonPlotMarks =
-    mark === "treemap" || mark === "circlePack"
-      ? []
-      : [
-          ...getCommonMarks(currentColumns),
-          ...(instance.options().marks || []),
-        ];
+  const commonPlotMarks = [
+    // Only include the common marks if the mark is not a treemap or circlePack
+    ...(mark === "treemap" || mark === "circlePack"
+      ? getCommonMarks(currentColumns)
+      : []),
+    ...(instance.options().marks || []),
+  ];
 
   const fyMarks =
     mark === "treemap" || mark === "circlePack"
