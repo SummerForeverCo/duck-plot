@@ -226,15 +226,35 @@ export const borderOptions = {
 export const checkForConfigErrors = (instance: DuckPlot) => {
   if (!instance.ddb) throw new Error("Database not set");
   if (!instance.table()) throw new Error("Table not set");
-  if (!instance.mark().type) throw new Error("Mark type not set");
+  const type = instance.mark().type;
+  if (!type) throw new Error("Mark type not set");
   const multipleX =
     Array.isArray(instance.x().column) && instance.x().column.length > 1;
   const multipleY =
     Array.isArray(instance.y().column) && instance.y().column.length > 1;
-  if (multipleX && instance.mark().type !== "barX")
-    throw new Error("Multiple x columns only supported for barX type");
-  if (multipleY && instance.mark().type === "barX")
-    throw new Error("Multiple y columns not supported for barX type");
+  const multipleColor =
+    Array.isArray(instance.color().column) &&
+    instance.color().column.length > 1;
+
+  // Type specific tests
+  if (type === "treemap" || type === "circlePack") {
+    if (multipleX)
+      throw new Error(`Multiple x columns not supported for ${type} type`);
+    if (multipleY)
+      throw new Error(`Multiple y columns not supported for ${type} type`);
+    if (multipleColor)
+      throw new Error(`Multiple color columns not supported for ${type} type`);
+    if (instance.fx().column || instance.fy().column)
+      throw new Error(`Faceting not supported for ${type} type`);
+  } else if (type === "barX") {
+    if (multipleY)
+      throw new Error("Multiple y columns not supported for barX type");
+  } else {
+    if (multipleX)
+      throw new Error("Multiple x columns only supported for barX type");
+  }
+
+  // Raw data tests
   if (instance.markColumn() && instance.rawData().length === 0)
     throw new Error("MarkColumn is only supported with rawData");
 };

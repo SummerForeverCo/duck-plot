@@ -56,6 +56,81 @@ describe("checkForConfigErrors", () => {
     );
   });
 
+  it("throws an error if multiple x columns are used for treemap", () => {
+    plot.table("table").mark("treemap").x(["col1", "col2"]);
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "Multiple x columns not supported for treemap type"
+    );
+  });
+
+  it("throws an error if multiple y columns are used for treemap", () => {
+    plot.table("table").mark("treemap").y(["col1", "col2"]);
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "Multiple y columns not supported for treemap type"
+    );
+  });
+
+  it("throws an error if multiple color columns are used for treemap", () => {
+    plot.table("table").mark("treemap").color(["col1", "col2"]);
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "Multiple color columns not supported for treemap type"
+    );
+  });
+
+  it("throws an error if faceting is used for treemap", () => {
+    plot.table("table").mark("treemap").fx("facetCol");
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "Faceting not supported for treemap type"
+    );
+    plot.fx(null).fy("facetCol");
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "Faceting not supported for treemap type"
+    );
+  });
+
+  it("throws an error if multiple x columns are used for circlePack", () => {
+    plot.table("table").mark("circlePack").x(["col1", "col2"]);
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "Multiple x columns not supported for circlePack type"
+    );
+  });
+
+  it("throws an error if multiple y columns are used for circlePack", () => {
+    plot.table("table").mark("circlePack").y(["col1", "col2"]);
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "Multiple y columns not supported for circlePack type"
+    );
+  });
+
+  it("throws an error if multiple color columns are used for circlePack", () => {
+    plot.table("table").mark("circlePack").color(["col1", "col2"]);
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "Multiple color columns not supported for circlePack type"
+    );
+  });
+
+  it("throws an error if faceting is used for circlePack", () => {
+    plot.table("table").mark("circlePack").fx("facetCol");
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "Faceting not supported for circlePack type"
+    );
+
+    plot.fx(null).fy("facetCol");
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "Faceting not supported for circlePack type"
+    );
+  });
+
+  it("does not throw an error for valid treemap configuration", () => {
+    plot.table("table").mark("treemap").x("col1").y("col2").color("col3");
+    expect(() => checkForConfigErrors(plot)).not.toThrow();
+  });
+
+  it("does not throw an error for valid circlePack configuration", () => {
+    plot.table("table").mark("circlePack").x("col1").y("col2").color("col3");
+    expect(() => checkForConfigErrors(plot)).not.toThrow();
+  });
+
   it("does not throw an error for a valid configuration", () => {
     plot.table("table").mark("barX");
     expect(() => checkForConfigErrors(plot)).not.toThrow();
