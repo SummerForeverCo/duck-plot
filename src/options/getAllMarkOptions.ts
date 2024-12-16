@@ -96,8 +96,8 @@ export function getAllMarkOptions(instance: DuckPlot) {
   const commonPlotMarks = [
     // Only include the common marks if the mark is not a treemap or circlePack
     ...(mark === "treemap" || mark === "circlePack"
-      ? getCommonMarks(currentColumns)
-      : []),
+      ? []
+      : getCommonMarks(currentColumns)),
     ...(instance.options().marks || []),
   ];
 
