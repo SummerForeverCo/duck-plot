@@ -235,6 +235,6 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
     throw new Error("Multiple x columns only supported for barX type");
   if (multipleY && instance.mark().type === "barX")
     throw new Error("Multiple y columns not supported for barX type");
-  if (instance.markColumn() && !instance.rawData())
+  if (instance.markColumn() && instance.rawData().length === 0)
     throw new Error("MarkColumn is only supported with rawData");
 };
