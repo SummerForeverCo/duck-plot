@@ -3,8 +3,6 @@ import { Data } from "../types";
 import { group, sum } from "d3-array";
 import { hierarchy, treemap } from "d3-hierarchy";
 
-// TODO -- add docs and reference this notebook:
-// https://observablehq.com/@ee2dev/making-a-treemap-and-sankey-diagram-with-observable-plot
 export function prepareTreemapData(
   data: Data | undefined,
   instance: DuckPlot
