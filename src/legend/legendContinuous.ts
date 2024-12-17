@@ -19,8 +19,8 @@ export async function legendContinuous(
   const container = document.createElement("div");
   container.style.position = "relative";
   container.style.width = "300px";
-  const label =
-    instance.color().options?.label ?? instance.data().labels?.series;
+  const options = await instance.derivePlotOptions();
+  const label = options.color?.label ?? instance.data().labels?.series;
   const plotLegend = Plot.legend({
     color,
     label,
