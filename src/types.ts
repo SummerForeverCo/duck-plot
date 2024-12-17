@@ -18,6 +18,8 @@ export type ChartType =
   | "tickY"
   | "rectX"
   | "rectY"
+  | "treemap"
+  | "circlePack"
   | undefined;
 
 export type SqlSort = {

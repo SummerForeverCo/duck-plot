@@ -7,9 +7,14 @@ import * as Plot from "@observablehq/plot";
 import { getCommonMarks, getfyMarks } from "./getPlotOptions";
 import { ChartType } from "../types";
 import { getTipMark } from "./getTipMark";
+import { getTreemapMarks } from "./getTreemapMarks";
+import { prepareTreemapData } from "./prepareTreemapData";
+import { getCirclePackMarks } from "./getCirclePackMarks";
+import { prepareCirclePackData } from "./prepareCirclePackData";
 export function getAllMarkOptions(instance: DuckPlot) {
   // Grab the types and labels from the data
   const { types, labels } = instance.data();
+  const mark = instance.mark().type;
 
   // Filter down to only the visible series (handled by the legend)
   const filteredData = filterData(
@@ -34,8 +39,8 @@ export function getAllMarkOptions(instance: DuckPlot) {
 
   // Tick Chart can only have x or y
   const isValidTickChart =
-    (instance.mark().type === "tickX" && currentColumns.includes("x")) ||
-    (instance.mark().type === "tickY" && currentColumns.includes("y"));
+    (mark === "tickX" && currentColumns.includes("x")) ||
+    (mark === "tickY" && currentColumns.includes("y"));
 
   const hasX = currentColumns.includes("x");
   const hasY = currentColumns.includes("y");
@@ -45,8 +50,16 @@ export function getAllMarkOptions(instance: DuckPlot) {
   const hasColumnsOrAggregate =
     (hasX && hasY) || ((hasX || hasY) && hasAggregate);
   // TODO: do we need to update showMark logic for multiple marks?
+
+  const isValidTreemap = mark === "treemap" && hasY;
+  const isValidCirclePack = mark === "circlePack" && hasY;
+
   const showPrimaryMark =
-    (isValidTickChart || hasColumnsOrAggregate) && instance.mark().type;
+    (isValidTickChart ||
+      hasColumnsOrAggregate ||
+      isValidTreemap ||
+      isValidCirclePack) &&
+    mark;
 
   // Special case where the rawData has a mark column, render a different mark
   // for each subset of the data
@@ -56,36 +69,52 @@ export function getAllMarkOptions(instance: DuckPlot) {
   const marks: ChartType[] =
     markColumnMarks.length > 0 && instance.markColumn() !== undefined
       ? markColumnMarks
-      : [instance.mark().type!];
+      : [mark!];
 
   const primaryMarks = showPrimaryMark
     ? [
-        ...marks.map((mark: ChartType) =>
-          Plot[mark!](
-            instance.filteredData?.filter((d) => {
-              return markColumnMarks.length > 0 ? d.markColumn === mark : true;
-            }),
-            getPrimaryMarkOptions(instance, mark) as MarkOptions
-          )
-        ),
-      ]
+        ...marks.map((mark: ChartType) => {
+          const markData = instance.filteredData?.filter((d) => {
+            return markColumnMarks.length > 0 ? d.markColumn === mark : true;
+          });
+
+          return mark === "treemap"
+            ? getTreemapMarks(prepareTreemapData(markData, instance), instance)
+            : mark === "circlePack"
+            ? getCirclePackMarks(
+                prepareCirclePackData(markData, instance),
+                instance
+              )
+            : Plot[mark!](
+                markData,
+                getPrimaryMarkOptions(instance, mark) as MarkOptions
+              );
+        }),
+      ].flat()
     : [];
 
   // TODO: Make frame/grid config options(?)
   const commonPlotMarks = [
-    ...getCommonMarks(currentColumns),
+    // Only include the common marks if the mark is not a treemap or circlePack
+    ...(mark === "treemap" || mark === "circlePack"
+      ? []
+      : getCommonMarks(currentColumns)),
     ...(instance.options().marks || []),
   ];
 
-  const fyMarks = getfyMarks(
-    instance.filteredData,
-    currentColumns,
-    plotOptions.fy
-  );
-  const tipMark =
-    instance.isServer || instance.config()?.tip === false || !showPrimaryMark
+  const fyMarks =
+    mark === "treemap" || mark === "circlePack"
       ? []
-      : [getTipMark(instance)];
+      : getfyMarks(instance.filteredData, currentColumns, plotOptions.fy);
+
+  const hideTip =
+    instance.isServer ||
+    instance.config()?.tip === false ||
+    !showPrimaryMark ||
+    mark === "treemap" ||
+    mark === "circlePack";
+
+  const tipMark = hideTip ? [] : [getTipMark(instance)];
 
   return [
     ...(commonPlotMarks || []),

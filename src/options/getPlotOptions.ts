@@ -1,9 +1,22 @@
 import type { DuckPlot } from "..";
-import type { PlotOptions } from "@observablehq/plot";
+import type {
+  MarkOptions,
+  PlotOptions,
+  StackOptions,
+} from "@observablehq/plot";
 import * as Plot from "@observablehq/plot";
-import { extent } from "d3-array";
-import type { BasicColumnType, Data, ColumnType, Sorts } from "../types";
+import { extent, max } from "d3-array";
+import type {
+  BasicColumnType,
+  Data,
+  ColumnType,
+  Sorts,
+  Indexable,
+} from "../types";
 import { borderOptions, defaultColors } from "../helpers";
+import { prepareCirclePackData } from "./prepareCirclePackData";
+// Extend the MarkOptions to include all the stack options
+interface AllMarkOptions extends MarkOptions, StackOptions {}
 
 // Identify the data currently in the dataset
 export function getDataOrder(data: Data | undefined, column: string) {
@@ -43,19 +56,6 @@ export function getSorts(
     }, {});
 }
 
-// TODO: type this
-const defaultOptions = {
-  width: 500,
-  height: 281,
-  color: defaultColors,
-  fx: { label: null },
-  className: "plot-chart",
-  grid: false,
-  style: {
-    overflow: "visible",
-  },
-};
-
 const defaultConfig = {
   xLabelDisplay: true,
   yLabelDisplay: true,
@@ -63,20 +63,21 @@ const defaultConfig = {
 };
 // Get the top level configurations for the plot object
 export function getPlotOptions(instance: DuckPlot) {
-  const options = {
-    ...defaultOptions,
-    ...instance.derivePlotOptions(),
-  };
+  const options = instance.derivePlotOptions();
+
   const config = { ...defaultConfig, ...instance.config() };
   const sorts = instance.sorts;
   const data = instance.data();
   const currentColumns = data?.types ? Object.keys(data.types ?? {}) : [];
+  const markType = instance.mark().type;
 
   // Only compute a custom x/y domain if the other axes is missing
   // Make sure a minimum of 0 is included for x/y domains
   const xDomain = sorts?.x
     ? sorts.x
-    : currentColumns.includes("y")
+    : currentColumns.includes("y") ||
+      markType === "treemap" ||
+      markType === "circlePack"
     ? {}
     : {
         domain: extent(
@@ -86,7 +87,9 @@ export function getPlotOptions(instance: DuckPlot) {
       };
   const yDomain = sorts?.y
     ? sorts.y
-    : currentColumns.includes("x")
+    : currentColumns.includes("x") ||
+      markType === "treemap" ||
+      markType === "circlePack"
     ? {}
     : {
         domain: extent(
@@ -114,7 +117,7 @@ export function getPlotOptions(instance: DuckPlot) {
   // TODO this check seems off....
   const categoricalColor =
     data?.types?.series === "string" ||
-    (!Array.isArray(options.color) && options.color.type === "categorical");
+    (!Array.isArray(options.color) && options.color?.type === "categorical");
   // Array of strings is treated as the range
   if (Array.isArray(colorConfig)) {
     colorRange = colorConfig;
@@ -142,7 +145,7 @@ export function getPlotOptions(instance: DuckPlot) {
 
   const computedColor = hasColor
     ? {
-        label: Array.isArray(options.color) ? "" : options.color.label,
+        label: Array.isArray(options.color) ? "" : options.color?.label,
         ...(colorDomain && { domain: colorDomain }),
         ...(colorRange && { range: colorRange }),
         ...(colorScheme && { scheme: colorScheme }),
@@ -151,50 +154,88 @@ export function getPlotOptions(instance: DuckPlot) {
 
   // TODO: fx labels are set to override x labels (good for grouped bar charts,
   // not good for other charts)
-  const computedX = currentColumns.includes("fx")
-    ? { axis: null, ...xDomain }
-    : {
-        tickSize: 0,
-        tickPadding: 5,
-        ...(!config?.xLabelDisplay || !options.x?.label
-          ? { labelArrow: "none" }
-          : {}),
-        ...(currentColumns.includes("x") &&
-          getTickFormatter(
-            data?.types?.x,
-            "x",
-            options.width || 0,
-            options.height || 0
-          )),
-        ...xDomain,
-      };
-  const computedY = {
-    labelArrow: !config?.yLabelDisplay || !options.y?.label ? "none" : true,
-    labelAnchor: "top",
-    tickSize: 0,
-    tickPadding: 5,
-    ...(currentColumns.includes("y") &&
-      getTickFormatter(
-        data?.types?.y,
-        "y",
-        options.width || 0,
-        options.height || 0
-      )),
-    ...yDomain,
-  };
+  const computedX =
+    currentColumns.includes("fx") ||
+    markType === "treemap" ||
+    markType === "circlePack"
+      ? { axis: null, ...xDomain }
+      : {
+          tickSize: 0,
+          tickPadding: 5,
+          ...(!config?.xLabelDisplay || !options.x?.label
+            ? { labelArrow: "none" }
+            : {}),
+          ...(currentColumns.includes("x") &&
+            getTickFormatter(
+              data?.types?.x,
+              "x",
+              options.width || 0,
+              options.height || 0
+            )),
+          ...xDomain,
+        };
+  const computedY =
+    markType === "treemap" || markType === "circlePack"
+      ? { axis: null }
+      : {
+          labelArrow:
+            !config?.yLabelDisplay || !options.y?.label ? "none" : true,
+          labelAnchor: "top",
+          tickSize: 0,
+          tickPadding: 5,
+          ...(currentColumns.includes("y") &&
+            getTickFormatter(
+              data?.types?.y,
+              "y",
+              options.width || 0,
+              options.height || 0
+            )),
+          ...yDomain,
+        };
 
+  const x =
+    markType === "circlePack"
+      ? {
+          axis: null,
+          domain: [0, options.width],
+          range: [0, options.width],
+        }
+      : {
+          ...computedX,
+          ...options.x,
+          label: !config?.xLabelDisplay ? null : options.x?.label,
+        };
+  const y =
+    markType === "circlePack"
+      ? {
+          axis: null,
+          domain: [0, options.height],
+          range: [0, options.height],
+        }
+      : {
+          ...computedY,
+          ...options.y,
+          label: !config?.yLabelDisplay ? null : options.y?.label,
+        };
+
+  const r =
+    markType === "circlePack"
+      ? {
+          range: [
+            0,
+            max(
+              prepareCirclePackData(data, instance).descendants(),
+              (d: Indexable) => d.r ?? 0
+            ),
+          ],
+          type: "linear",
+        }
+      : {};
   return {
     ...options,
-    x: {
-      ...computedX,
-      ...options.x,
-      label: !config?.xLabelDisplay ? null : options.x?.label,
-    },
-    y: {
-      ...computedY,
-      ...options.y,
-      label: !config?.yLabelDisplay ? null : options.y?.label,
-    },
+    x,
+    y,
+    r,
     color: { ...computedColor, ...options.color },
     ...(currentColumns.includes("fy")
       ? {

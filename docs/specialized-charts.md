@@ -7,20 +7,6 @@ outline: deep
 There are a handful of charts that are unique to DuckPlot (or a bit tricky to
 specify, so it's worth describing them).
 
-## Partial charts
-
-If a chart is only partially specified (e.g., missing an `x` or `y` column),
-DuckPlot will render a partial chart, which is to say the specified axes and legend
-without any marks.
-
-:::duckplot
-
-```js
-duckPlot.table("stocks").x("Date").color("Symbol").mark("barY");
-```
-
-:::
-
 ## Percentage charts
 
 DuckPlot handles percentage computations at the database level. To create a
@@ -129,3 +115,88 @@ duckPlot
 
 This example is obviously contrived, but it demonstrates how you can pass
 additional marks to the plot.
+
+## Hierarchical visualizations (limited support)
+
+There is currently limited support for both treemaps and circle pack charts in DuckPlot. You can specify a
+single column for the size (`y`), color (`color`), and text label (`text`).
+Aggregation is supported, in that each group will be aggregated (e.g., to each
+`color` or `text` category). The proportion represented by each group is
+displayed in the tooltip. Note, legend filtering works as expected, and the
+displayed proportion will update accordingly.
+
+Implementation is based on [this notebook](https://observablehq.com/@ee2dev/making-a-treemap-and-sankey-diagram-with-observable-plot).
+
+:::duckplot
+
+```js
+// Aggregate by color
+// Treemap of closing price aggregated by symbol
+duckPlot.table("stocks").y("Close").color("Symbol").mark("treemap");
+```
+
+:::
+
+:::duckplot
+
+```js
+// No aggregation
+// Circle pack of the last 30 days closing price
+duckPlot
+  .query(`select * from stocks ORDER BY Date DESC LIMIT 30`)
+  .table("stocks")
+  .y("Close")
+  .mark("treemap");
+```
+
+:::
+
+:::duckplot
+
+```js
+// Aggregate by color and text
+// CirclePack of closing price aggregated by symbol and month
+duckPlot
+  .query(
+    `select month(Date) as Month, Symbol, sum(Close) as Close
+          from stocks
+          where year(Date) = 2017
+          group by month(Date), Symbol`
+  )
+  .table("stocks")
+  .y("Close")
+  .color("Symbol")
+  .mark("circlePack")
+  .text("Month");
+```
+
+:::
+
+:::duckplot
+
+```js
+// Continuous legend
+// Circle pack of the last 100 highest closing prices
+duckPlot
+  .query(`select * from stocks ORDER BY Close DESC LIMIT 100`)
+  .table("stocks")
+  .y("Close")
+  .color("Close")
+  .mark("treemap");
+```
+
+:::
+
+## Partial charts
+
+If a chart is only partially specified (e.g., missing an `x` or `y` column),
+DuckPlot will render a partial chart, which is to say the specified axes and legend
+without any marks.
+
+:::duckplot
+
+```js
+duckPlot.table("stocks").x("Date").color("Symbol").mark("barY");
+```
+
+:::
