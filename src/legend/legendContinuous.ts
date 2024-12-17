@@ -19,8 +19,11 @@ export async function legendContinuous(
   const container = document.createElement("div");
   container.style.position = "relative";
   container.style.width = "300px";
+  const label =
+    instance.color().options?.label ?? instance.data().labels?.series;
   const plotLegend = Plot.legend({
     color,
+    label,
     ...(instance.isServer ? { document: instance.document } : {}),
   }) as HTMLDivElement & Plot.Plot;
   container.appendChild(plotLegend);
