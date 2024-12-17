@@ -3,7 +3,7 @@ import { renderPlot } from "../util/renderPlotClient.js";
 const codeString = `duckplot 
     .query("select round(sum(Close), 1) as Close, year(Date) as year, Symbol from stocks group by year, Symbol")
     .table("stocks")
-    .y("Close")
+    .y(["Close"])
     .color("Close")
     .mark("circlePack")
     .options({width: 500, height: 500})

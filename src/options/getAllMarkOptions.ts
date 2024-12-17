@@ -53,6 +53,7 @@ export function getAllMarkOptions(instance: DuckPlot) {
 
   const isValidTreemap = mark === "treemap" && hasY;
   const isValidCirclePack = mark === "circlePack" && hasY;
+
   const showPrimaryMark =
     (isValidTickChart ||
       hasColumnsOrAggregate ||

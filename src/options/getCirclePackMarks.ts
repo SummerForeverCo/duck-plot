@@ -9,11 +9,14 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
   const plotOptions = instance.derivePlotOptions();
   const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
   const textLabel = instance.text().column ?? "";
-  const hasSeries = instance.color().column !== "";
+  const hasSeries =
+    instance.color().column && !isColor(instance.color().column);
+
   const hideTip = instance.isServer || instance.config()?.tip === false;
   const fill = isColor(instance.color()?.column)
     ? instance.color()?.column
     : defaultColors[0];
+
   return [
     // Parent circle
     Plot.dot(

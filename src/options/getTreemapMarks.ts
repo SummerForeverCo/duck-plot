@@ -10,7 +10,8 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
   const plotOptions = instance.derivePlotOptions();
   const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
   const hideTip = instance.isServer || instance.config()?.tip === false;
-  const hasSeries = instance.color().column !== "";
+  const hasSeries =
+    instance.color().column && !isColor(instance.color().column);
   const fill = isColor(instance.color()?.column)
     ? instance.color()?.column
     : defaultColors[0];
