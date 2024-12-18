@@ -103,7 +103,7 @@ export async function prepareData(
   // the `r` and `label` columns are not considered for distinct-ness but are
   // passed through for usage
   let distinctCols = (
-    type === "barX"
+    type === "barX" || type === "rectX"
       ? ["y", "series", "fy", "fx", "text"]
       : ["x", "series", "fy", "fx", "text"]
   ).filter((d) => columnIsDefined(d as keyof ColumnConfig, columns));

@@ -25,7 +25,8 @@ export function getPrimaryMarkOptions(
   const fx = currentColumns.includes("fx") ? "fx" : undefined;
 
   const sort =
-    userOptions?.sort ?? (types?.x !== "string" && type !== "barX")
+    userOptions?.sort ??
+    (types?.x !== "string" && type !== "barX" && type !== "rectX")
       ? { sort: (d: any) => d.x }
       : {};
 
