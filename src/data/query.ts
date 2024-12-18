@@ -30,7 +30,7 @@ export function getTransformType(
   type: ChartType,
   { x, y, series }: ColumnConfig
 ) {
-  if (type === "barX") {
+  if (isHorizontalX(type)) {
     if (Array.isArray(x) && x.length > 1) {
       return hasProperty(series) ? "unPivotWithSeries" : "unPivot";
     }
@@ -70,13 +70,13 @@ export function getUnpivotQuery(
 ) {
   const createStatment = `CREATE TABLE ${into} as`;
 
-  const selectStr =
-    type === "barX"
-      ? `SELECT ${columnIsDefined("y", { y }) ? `"${y}" as y, ` : ""}value AS x`
-      : `SELECT ${columnIsDefined("fx", { fx }) ? `"${fx}" as fx, ` : ""}
+  const selectStr = isHorizontalX(type)
+    ? `SELECT ${columnIsDefined("y", { y }) ? `"${y}" as y, ` : ""}value AS x`
+    : `SELECT ${columnIsDefined("fx", { fx }) ? `"${fx}" as fx, ` : ""}
         ${columnIsDefined("x", { x }) ? `"${x}" as x, ` : ""}value AS y`;
-  const keysStr =
-    type === "barX" ? quoteColumns(x)?.join(", ") : quoteColumns(y)?.join(", ");
+  const keysStr = isHorizontalX(type)
+    ? quoteColumns(x)?.join(", ")
+    : quoteColumns(y)?.join(", ");
   const fyStr = fy ? maybeConcatCols(fy, "fy,") : "";
   const rStr = r ? `${standardColName({ r }, "r")} ,` : "";
   const textStr = text ? `${standardColName({ text }, "text")} ,` : "";
@@ -96,7 +96,7 @@ export function getUnpivotWithSeriesQuery(
   into: string
 ) {
   const xStatement = columnIsDefined("x", { x })
-    ? type === "barX"
+    ? isHorizontalX(type)
       ? `${quoteColumns(x)?.join(", ")}`
       : `"${x}" as x`
     : "";
@@ -110,11 +110,12 @@ export function getUnpivotWithSeriesQuery(
     y.length > 1 &&
     columnIsDefined("series", { series });
 
-  const yStatement =
-    type === "barX" ? `"${y}" as y` : quoteColumns(y)?.join(", ");
+  const yStatement = isHorizontalX(type)
+    ? `"${y}" as y`
+    : quoteColumns(y)?.join(", ");
 
   const unPivotStatement = `FOR pivotCol IN (${quoteColumns(
-    type === "barX" ? x : y
+    isHorizontalX(type) ? x : y
   )?.join(", ")})`;
 
   const createStatement = `CREATE TABLE ${into} AS`;
@@ -153,7 +154,7 @@ export function getUnpivotWithSeriesQuery(
       SELECT ${innerSelectClause}
       FROM ${tableName}
     ) p
-    UNPIVOT (${type === "barX" ? "x" : "y"} ${unPivotStatement});
+    UNPIVOT (${isHorizontalX(type) ? "x" : "y"} ${unPivotStatement});
   `;
 }
 
@@ -170,11 +171,11 @@ export function getTransformQuery(
 
   // Return the constructed query
   if (transformType === "unPivotWithSeries") {
-    const transformColumns = type === "barX" ? config.x : config.y;
+    const transformColumns = isHorizontalX(type) ? config.x : config.y;
     description.value += `The columns ${transformColumns} were unpivoted and then concatenated with ${config.series}, creating colors for each column-series.\n`;
     return getUnpivotWithSeriesQuery(type, config, tableName, intoTable);
   } else if (transformType === "unPivot") {
-    const transformColumns = type === "barX" ? config.x : config.y;
+    const transformColumns = isHorizontalX(type) ? config.x : config.y;
     description.value += `The columns ${transformColumns} were unpivoted, creating colors for each series.\n`;
     return getUnpivotQuery(type, config, tableName, intoTable);
   } else {
@@ -209,7 +210,7 @@ export function getAggregateInfo(
   let labels: Data["labels"] = {};
 
   // Handling horizontal bar charts differently (aggregate on x-axis)
-  if (type === "barX") {
+  if (isHorizontalX(type)) {
     if (x && x.length > 0 && aggregate !== false) {
       aggregateSelection = ` ${agg}(x::FLOAT) as x`;
       labels.x = `${capitalize(agg)} of ${getLabel(x)}`;
@@ -228,7 +229,7 @@ export function getAggregateInfo(
 
   if (aggregate !== false) {
     description.value += `The ${
-      type === "barX" ? "x" : "y"
+      isHorizontalX(type) ? "x" : "y"
     } values were aggregated with a ${agg} aggregation, grouped by ${groupBy.join(
       `, `
     )}.`;
@@ -246,7 +247,7 @@ export function getAggregateInfo(
 
   // Then, calculate the percentage over the aggregated values if needed
   let aggregateColumn = "";
-  if (type === "barX" && x && x.length > 0) {
+  if (isHorizontalX(type) && x && x.length > 0) {
     aggregateColumn = percent
       ? ` (x / (SUM(x) OVER (PARTITION BY ${groupBy
           .filter((d) => d !== "series")
@@ -262,7 +263,7 @@ export function getAggregateInfo(
 
   if (percent) {
     description.value += ` The ${
-      type === "barX" ? "x" : "y"
+      isHorizontalX(type) ? "x" : "y"
     } values were calculated as a percentage of the total for each group.`;
   }
 
@@ -298,8 +299,11 @@ export function getOrder(
   y: string[]
 ) {
   let orderBy;
-  if ((type === "barX" && x.length > 1) || (type !== "barX" && y.length > 1)) {
-    const orderByArray = type === "barX" && x.length > 1 ? x : y; // columns to order
+  if (
+    (isHorizontalX(type) && x.length > 1) ||
+    (type !== "barX" && y.length > 1)
+  ) {
+    const orderByArray = isHorizontalX(type) && x.length > 1 ? x : y; // columns to order
     // This is a handling for the use of fx to create a grouped bar chart. Feels
     // a bit fragile
     const exclude =
@@ -375,4 +379,8 @@ export function getLabel(columnSpec: ColumnType | undefined): string {
         .map(toTitleCase) // title case each one before joining
         ?.join(", ")
     : toTitleCase(columnSpec);
+}
+
+function isHorizontalX(type: ChartType) {
+  return type === "barX" || type === "rectX";
 }

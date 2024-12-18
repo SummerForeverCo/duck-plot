@@ -33,9 +33,12 @@ const supportsAggregation = [
   "barX",
   "line",
   "areaY",
+  "rectY",
+  "rectX",
   "treemap",
   "circlePack",
 ];
+
 export function allowAggregation(chartType?: ChartType) {
   return chartType && supportsAggregation.includes(chartType);
 }
@@ -227,7 +230,8 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
   if (!instance.ddb) throw new Error("Database not set");
   if (!instance.table()) throw new Error("Table not set");
   const type = instance.mark().type;
-  if (!type) throw new Error("Mark type not set");
+  if (!type && !instance.markColumn())
+    throw new Error("Mark type or mark column not set");
   const multipleX =
     Array.isArray(instance.x().column) && instance.x().column.length > 1;
   const multipleY =
@@ -254,7 +258,9 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
       throw new Error("Multiple x columns only supported for barX type");
   }
 
-  // Raw data tests
+  // Using rawData and/or markColumn checks
   if (instance.markColumn() && instance.rawData().length === 0)
-    throw new Error("MarkColumn is only supported with rawData");
+    throw new Error("You must supply rawData to use markColumn");
+  if (instance.markColumn() && instance.mark())
+    throw new Error("You cannot use both a markColumn and a mark type");
 };

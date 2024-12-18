@@ -21,7 +21,7 @@ duckPlot
   .x("Date")
   .y(["GOOG", "AMZN", "IBM", "AAPL"])
   .config({ percent: true })
-  .mark("barY");
+  .mark("rectY");
 ```
 
 :::
@@ -108,7 +108,7 @@ duckPlot
   .y("High")
   .color("Symbol")
   .mark("line")
-  .options({ marks: [Plot.ruleY([1000])] });
+  .options({ marks: [Plot.ruleY([1000], { stroke: "red" })] });
 ```
 
 :::

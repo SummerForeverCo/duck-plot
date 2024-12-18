@@ -54,18 +54,19 @@ export function getAllMarkOptions(instance: DuckPlot) {
   const isValidTreemap = mark === "treemap" && hasY;
   const isValidCirclePack = mark === "circlePack" && hasY;
 
-  const showPrimaryMark =
-    (isValidTickChart ||
-      hasColumnsOrAggregate ||
-      isValidTreemap ||
-      isValidCirclePack) &&
-    mark;
-
   // Special case where the rawData has a mark column, render a different mark
   // for each subset of the data
   const markColumnMarks: ChartType[] = Array.from(
     new Set(instance.filteredData.map((d) => d.markColumn).filter((d) => d))
   );
+  const showPrimaryMark =
+    (isValidTickChart ||
+      hasColumnsOrAggregate ||
+      isValidTreemap ||
+      isValidCirclePack) &&
+    (mark || markColumnMarks.length > 0);
+
+  // Assume that if someone has specified a markcolumn, they want to show it
   const marks: ChartType[] =
     markColumnMarks.length > 0 && instance.markColumn() !== undefined
       ? markColumnMarks

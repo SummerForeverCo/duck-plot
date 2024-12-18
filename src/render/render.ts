@@ -33,6 +33,34 @@ export async function render(
   instance.plotObject.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   instance.plotObject.classList.add("plot-object");
 
+  // Set a minimum width and height for rects for visibility
+  const allMarks = instance.mark()?.type
+    ? [instance.mark().type]
+    : Array.from(
+        new Set(
+          instance.filteredData?.map((d) => d.markColumn).filter((d) => d) || []
+        )
+      );
+
+  if (allMarks.some((mark) => ["rectY", "rectX"].includes(mark))) {
+    const minSize = 0.5;
+    const rects = instance.plotObject.querySelectorAll("rect");
+    rects.forEach((rect) => {
+      if (allMarks.includes("rectY")) {
+        const width = rect.getAttribute("width");
+        if (width && +width < minSize) {
+          rect.setAttribute("width", `${minSize}`);
+        }
+      }
+      if (allMarks.includes("rectX")) {
+        const height = rect.getAttribute("height");
+        if (height && +height < minSize) {
+          rect.setAttribute("height", `${minSize}`);
+        }
+      }
+    });
+  }
+
   // Ensure the chart container exists
   const container =
     instance.chartContainer || instance.document.createElement("div");
