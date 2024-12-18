@@ -33,6 +33,7 @@ export * from "./rawData.js";
 export * from "./rawDataMultiChart.js";
 export * from "./rectX.js";
 export * from "./rectXfacet.js";
+export * from "./rectXRaw.js";
 export * from "./rectY.js";
 export * from "./rectYfacet.js";
 export * from "./sortXbyY.js";

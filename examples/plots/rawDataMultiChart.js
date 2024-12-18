@@ -19,7 +19,6 @@ duckplot
   .x("col1")
   .y("col2")
   .color("col3")
-  .mark("dot")
   .markColumn("mark")
 `;
 

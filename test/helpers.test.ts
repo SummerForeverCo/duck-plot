@@ -31,7 +31,9 @@ describe("checkForConfigErrors", () => {
 
   it("throws an error if the mark type is not set", () => {
     plot.table("tableName");
-    expect(() => checkForConfigErrors(plot)).toThrow("Mark type not set");
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "Mark type or mark column not set"
+    );
   });
 
   it("throws an error if multiple x columns are used but mark type is not barX", () => {
@@ -50,9 +52,20 @@ describe("checkForConfigErrors", () => {
   });
 
   it("throws an error if markColumn is set but rawData is not", () => {
-    plot.table("table").mark("barX").markColumn("mockColumn");
+    plot.table("table").markColumn("mockColumn");
     expect(() => checkForConfigErrors(plot)).toThrow(
-      "MarkColumn is only supported with rawData"
+      "You must supply rawData to use markColumn"
+    );
+  });
+
+  it("throws an error if markColumn and mark are set", () => {
+    plot
+      .table("table")
+      .rawData([{ a: 1 }], { a: "number" })
+      .mark("barX")
+      .markColumn("mockColumn");
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "You cannot use both a markColumn and a mark type"
     );
   });
 
