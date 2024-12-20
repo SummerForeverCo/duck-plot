@@ -35,31 +35,39 @@ export function computeInterval(data: Data, column: string = "x") {
   // Find the minimum difference
   const minDifference = min(differences) ?? 0; // Handle potential undefined
 
+  const second = 1000;
+  const minute = 60 * second;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  const week = 7 * day;
+  const month = 4 * week;
+  const quarter = month * 3;
+  const year = 365 * day;
+  const decade = 10 * year;
+  const century = 100 * year;
+
   // Map minDifference to a D3 time interval
-  if (minDifference < 1000) {
+  if (minDifference < second) {
     return utcMillisecond; // Sub-second intervals
-  } else if (minDifference < 60 * 1000) {
+  } else if (minDifference < minute) {
     return utcSecond; // Seconds
-  } else if (minDifference < 60 * 60 * 1000) {
+  } else if (minDifference < hour) {
     return utcMinute; // Minutes
-  } else if (minDifference < 24 * 60 * 60 * 1000) {
+  } else if (minDifference < day) {
     return utcHour; // Hours
-  } else if (minDifference < 7 * 24 * 60 * 60 * 1000) {
+  } else if (minDifference < week) {
     return utcDay; // Days
-  } else if (minDifference < 30 * 24 * 60 * 60 * 1000) {
+  } else if (minDifference < month) {
     return utcWeek; // Weeks
-  } else if (minDifference < 3 * 30 * 24 * 60 * 60 * 1000) {
+  } else if (minDifference < quarter) {
     return utcMonth; // Months
-  } else if (minDifference < 365 * 24 * 60 * 60 * 1000) {
-    // Approximate 1 quarter as 3 months
+  } else if (minDifference < year) {
     return utcMonth.every(3); // Quarters
-  } else if (minDifference < 10 * 365 * 24 * 60 * 60 * 1000) {
+  } else if (minDifference < decade) {
     return utcYear; // Years
-  } else if (minDifference < 100 * 365 * 24 * 60 * 60 * 1000) {
-    // Approximate 1 decade as 10 years
+  } else if (minDifference < century) {
     return utcYear.every(10); // Decades
   } else {
-    // Approximate 1 century as 100 years
     return utcYear.every(100); // Centuries
   }
 }
