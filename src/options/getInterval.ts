@@ -34,8 +34,6 @@ export function computeInterval(data: Data, column: string = "x") {
 
   // Find the minimum difference
   const minDifference = min(differences) ?? 0; // Handle potential undefined
-  const dayLimit = 7 * 24 * 60 * 60 * 1000;
-  const weekLimit = 3 * 30 * 24 * 60 * 60 * 1000;
 
   const second = 1000;
   const minute = 60 * second;
@@ -48,7 +46,6 @@ export function computeInterval(data: Data, column: string = "x") {
   const decade = 10 * year;
   const century = 100 * year;
 
-  console.log({ minDifference, dayLimit });
   // Map minDifference to a D3 time interval
   if (minDifference < second) {
     return utcMillisecond; // Sub-second intervals
