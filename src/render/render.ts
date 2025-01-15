@@ -30,6 +30,25 @@ export async function render(
     ? PlotAutoMargin(plotOptions, {}, instance.font)
     : Plot.plot(plotOptions);
 
+  // Keep track of the hovered element for click events!
+  if (instance.config().onClick && !instance.isServer) {
+    instance.plotObject.addEventListener(
+      "pointerdown",
+      (event) => {
+        event.stopPropagation();
+        instance.config().onClick!(event, instance.plotObject?.value);
+        // Force a pointerleave to hide the tooltip
+        // see https://github.com/observablehq/plot/issues/1832
+        const pointerleave = new PointerEvent("pointerleave", {
+          bubbles: true,
+          pointerType: "mouse",
+        });
+        event.target?.dispatchEvent(pointerleave);
+      },
+      { capture: true }
+    );
+  }
+
   instance.plotObject.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   instance.plotObject.classList.add("plot-object");
 

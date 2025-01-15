@@ -22,6 +22,7 @@ export * from "./multiY.js";
 export * from "./multiYReordered.js";
 export * from "./multiYandSeries.js";
 export * from "./options.js";
+export * from "./onClick.js";
 export * from "./partialChart.js";
 export * from "./partialChartContinuousColor.js";
 export * from "./partialChartX.js";
