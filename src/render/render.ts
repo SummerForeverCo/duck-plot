@@ -36,7 +36,18 @@ export async function render(
       "pointerdown",
       (event) => {
         event.stopPropagation();
-        instance.config().onClick!(event, instance.plotObject?.value);
+        const raw = instance.plotObject?.value;
+        const scaled = {
+          x:
+            instance.plotObject?.scale("x")?.apply(raw.x) +
+            (instance.plotObject?.scale("fx")?.apply(raw.fx) || 0),
+          y:
+            instance.plotObject?.scale("y")?.apply(raw.y) +
+            (instance.plotObject?.scale("fy")?.apply(raw.fy) || 0) -
+            10, // for font height,
+        };
+
+        instance.config().onClick!(event, { raw, scaled });
         // Force a pointerleave to hide the tooltip
         // see https://github.com/observablehq/plot/issues/1832
         const pointerleave = new PointerEvent("pointerleave", {
