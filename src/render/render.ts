@@ -32,43 +32,43 @@ export async function render(
 
   // Keep track of the hovered element for click events!
   if (instance.config().onClick && !instance.isServer) {
-    function svgToPixel(svgElement: SVGSVGElement, x: number, y: number) {
-      const viewBox = svgElement.viewBox.baseVal;
-      const renderedWidth = svgElement.clientWidth;
-      const renderedHeight = svgElement.clientHeight;
+    // function svgToPixel(svgElement: SVGSVGElement, x: number, y: number) {
+    //   const viewBox = svgElement.viewBox.baseVal;
+    //   const renderedWidth = svgElement.clientWidth;
+    //   const renderedHeight = svgElement.clientHeight;
 
-      const scaleX = renderedWidth / viewBox.width;
-      const scaleY = renderedHeight / viewBox.height;
+    //   const scaleX = renderedWidth / viewBox.width;
+    //   const scaleY = renderedHeight / viewBox.height;
 
-      const pixelX = (x - viewBox.x) * scaleX;
-      const pixelY = (y - viewBox.y) * scaleY;
+    //   const pixelX = (x - viewBox.x) * scaleX;
+    //   const pixelY = (y - viewBox.y) * scaleY;
 
-      return { x: pixelX, y: pixelY };
-    }
+    //   return { x: pixelX, y: pixelY };
+    // }
     instance.plotObject.addEventListener(
       "pointerdown",
       (event) => {
         event.stopPropagation();
         const raw = instance.plotObject?.value;
         // Scale the point to the svg's coordinates
-        const scaledRaw = {
-          x:
-            instance.plotObject?.scale("x")?.apply(raw.x) +
-            (instance.plotObject?.scale("fx")?.apply(raw.fx) || 0),
-          y:
-            instance.plotObject?.scale("y")?.apply(raw.y) +
-            (instance.plotObject?.scale("fy")?.apply(raw.fy) || 0) -
-            10, // for font height,
-        };
+        // const scaled = {
+        //   x:
+        //     instance.plotObject?.scale("x")?.apply(raw.x) +
+        //     (instance.plotObject?.scale("fx")?.apply(raw.fx) || 0),
+        //   y:
+        //     instance.plotObject?.scale("y")?.apply(raw.y) +
+        //     (instance.plotObject?.scale("fy")?.apply(raw.fy) || 0) -
+        //     10, // for font height,
+        // };
 
-        // Convert the scaled point to pixel coordinates
-        const scaled = svgToPixel(
-          instance.plotObject as SVGSVGElement,
-          scaledRaw.x,
-          scaledRaw.y
-        );
+        // // Convert the scaled point to pixel coordinates
+        // const scaled = svgToPixel(
+        //   instance.plotObject as SVGSVGElement,
+        //   scaledRaw.x,
+        //   scaledRaw.y
+        // );
 
-        instance.config().onClick!(event, { raw, scaled });
+        instance.config().onClick!(event, { ...raw });
         // Force a pointerleave to hide the tooltip
         // see https://github.com/observablehq/plot/issues/1832
         const pointerleave = new PointerEvent("pointerleave", {
