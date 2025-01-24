@@ -1,6 +1,7 @@
 import { renderPlot } from "../util/renderPlotClient.js";
 // This code is both displayed in the browser and executed
 const onClick = (event, value) => {
+  console.log({ event, value });
   const div = document.createElement("div");
   div.style.position = "absolute";
   div.style.top = `${value.scaled.y}px`;
