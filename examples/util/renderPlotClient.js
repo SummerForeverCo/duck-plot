@@ -12,7 +12,12 @@ if (typeof window !== "undefined") {
   // Server-side
   DuckPlot = (await import("../../dist/index.cjs")).DuckPlot;
 }
-export async function renderPlot(fileName, codeString, constructorOptions) {
+export async function renderPlot(
+  fileName,
+  codeString,
+  constructorOptions,
+  onClick
+) {
   try {
     const db = await createDb(fileName);
     const duckplot = constructorOptions
@@ -23,8 +28,9 @@ export async function renderPlot(fileName, codeString, constructorOptions) {
       "db",
       "Plot",
       "d3",
+      "onClick",
       codeString
-    )(duckplot, db, Plot, d3);
+    )(duckplot, db, Plot, d3, onClick);
     const plot = await duckplot.render();
     return [plot, codeString];
   } catch (error) {

@@ -112,6 +112,7 @@ export type Config = {
   aggregate?: Aggregate;
   interactiveLegend?: boolean;
   percent?: boolean; // for percent stacked charts, TODO document clearly
+  onClick?: (event: Event, value: unknown) => void;
 };
 
 export type Aggregate =

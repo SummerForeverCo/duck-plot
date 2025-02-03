@@ -45,6 +45,7 @@ async function renderPlots() {
       // Wrapper for charts and code
       const wrapper = document.createElement("div");
       wrapper.style.display = "flex";
+      wrapper.style.position = "relative";
       const label = document.createElement("h2");
       label.innerHTML = name;
       label.style.fontWeight = "normal";
