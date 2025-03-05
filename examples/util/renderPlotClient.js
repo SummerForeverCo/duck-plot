@@ -16,7 +16,8 @@ export async function renderPlot(
   fileName,
   codeString,
   constructorOptions,
-  onClick
+  onClick,
+  customRender
 ) {
   try {
     const db = await createDb(fileName);
@@ -29,8 +30,9 @@ export async function renderPlot(
       "Plot",
       "d3",
       "onClick",
+      "customRender",
       codeString
-    )(duckplot, db, Plot, d3, onClick);
+    )(duckplot, db, Plot, d3, onClick, customRender);
     const plot = await duckplot.render();
     return [plot, codeString];
   } catch (error) {

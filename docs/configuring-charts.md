@@ -125,25 +125,27 @@ duckPlot
 These options are a bit awkward, not fitting in anywhere else very cleanly.
 
 ```javascript
-xLabelDisplay?: boolean; // Display axis labels, default true
-yLabelDisplay?: boolean; // Display axis labels, default true
-tip?: boolean; // Show tooltips, default true
-// For use in the tooltip
-tipLabels?: {
-  x?: string;
-  y?: string;
-  color?: string;
-};
-tipValues?: {
-  x?: (d: Indexable, i: number) => string;
-  y?: (d: Indexable, i: number) => string;
-  color?: (d: Indexable, i: number) => string;
-};
-autoMargin?: boolean; // Automatically adjust margins, default true
-aggregate?: "sum" | "avg" .... // DuckDB supported aggregation type
-interactiveLegend?: boolean; // Make legend interactive, default true
-percent?: boolean; // for percent stacked charts, default false
-
+.config({
+  xLabelDisplay?: boolean; // Display axis labels, default true
+  yLabelDisplay?: boolean; // Display axis labels, default true
+  tip?: boolean; // Show tooltips, default true
+  // For use in the tooltip
+  tipLabels?: {
+    x?: string;
+    y?: string;
+    color?: string;
+  };
+  tipValues?: {
+    x?: (d: Indexable, i: number) => string;
+    y?: (d: Indexable, i: number) => string;
+    color?: (d: Indexable, i: number) => string;
+  };
+  autoMargin?: boolean; // Automatically adjust margins, default true
+  aggregate?: "sum" | "avg" .... // DuckDB supported aggregation type
+  interactiveLegend?: boolean; // Make legend interactive, default true
+  percent?: boolean; // for percent stacked charts, default false
+  customRender?: Plot.RenderFunction // the `render` function passed through to the primary mark
+})
 ```
 
 :::duckplot
