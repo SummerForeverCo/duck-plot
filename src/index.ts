@@ -8,6 +8,7 @@ import { getAllMarkOptions } from "./options/getAllMarkOptions";
 import { render } from "./render/render";
 import { renderError } from "./render/renderError";
 import "./legend/legend.css";
+import "./styles.css";
 import type { Database } from "duckdb-async";
 import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import type { JSDOM } from "jsdom";

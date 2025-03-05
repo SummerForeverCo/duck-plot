@@ -6,7 +6,7 @@ import { getPrimaryMarkOptions } from "./getPrimaryMarkOptions";
 import * as Plot from "@observablehq/plot";
 import { getCommonMarks, getfyMarks } from "./getPlotOptions";
 import { ChartType } from "../types";
-import { getTipMark } from "./getTipMark";
+import { getTipMarks } from "./getTipMark";
 import { getTreemapMarks } from "./getTreemapMarks";
 import { prepareTreemapData } from "./prepareTreemapData";
 import { getCirclePackMarks } from "./getCirclePackMarks";
@@ -115,7 +115,7 @@ export function getAllMarkOptions(instance: DuckPlot) {
     mark === "treemap" ||
     mark === "circlePack";
 
-  const tipMark = hideTip ? [] : [getTipMark(instance)];
+  const tipMark = hideTip ? [] : getTipMarks(instance);
 
   return [
     ...(commonPlotMarks || []),

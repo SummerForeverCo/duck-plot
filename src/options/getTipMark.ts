@@ -4,7 +4,7 @@ import { borderOptions } from "../helpers";
 import * as Plot from "@observablehq/plot";
 
 // Get options for a specific mark (e.g., the line or area marks)
-export function getTipMark(instance: DuckPlot) {
+export function getTipMarks(instance: DuckPlot) {
   const plotOptions = instance.derivePlotOptions();
   const type = instance.mark().type;
   const xLabel = instance.config().tipLabels?.x ?? plotOptions.x?.label ?? "",
@@ -75,5 +75,14 @@ export function getTipMark(instance: DuckPlot) {
   // User pointerY for barX charts
   const pointer =
     type === "barX" || type === "rectX" ? Plot.pointerY : Plot.pointerX;
-  return Plot.tip(instance.filteredData, pointer(maybeStackedOptions));
+  return [
+    Plot.tip(instance.filteredData, pointer(maybeStackedOptions)),
+    Plot.dot(instance.filteredData, {
+      ...pointer(maybeStackedOptions),
+      r: 5,
+      stroke: "black",
+      ...(currentColumns.includes("series") ? { fill: "series" } : {}),
+      className: "mark-cursor",
+    }),
+  ];
 }
