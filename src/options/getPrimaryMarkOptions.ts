@@ -1,9 +1,10 @@
-import { MarkOptions } from "@observablehq/plot";
+import { MarkOptions, Plot, RenderFunction } from "@observablehq/plot";
 import { DuckPlot } from "..";
 import { isColor } from "./getPlotOptions";
 import { defaultColors } from "../helpers";
 import { ChartType } from "../types";
 import { computeInterval } from "./getInterval";
+import * as d3 from "d3";
 
 // Get options for a specific mark (e.g., the line or area marks)
 export function getPrimaryMarkOptions(
@@ -40,6 +41,56 @@ export function getPrimaryMarkOptions(
     interval = computeInterval(data, type === "rectY" ? "x" : "y");
   }
 
+  // Click events are assigned to the primary mark so that we can access the
+  // transformed (e.g., stacked) data in the click events
+  const render: RenderFunction | undefined =
+    instance.config().onClick && !instance.isServer
+      ? function (index, scales, values, dimensions, context, next) {
+          context.ownerSVGElement.addEventListener("pointerdown", (event) => {
+            event.stopImmediatePropagation(); // prevent click-to-stick
+            const { value } = context.ownerSVGElement as SVGSVGElement & Plot;
+            if (value) {
+              // Find the index of the clicked element
+              const i = this.data.indexOf(value);
+              console.log({ i, values, value });
+              // Get the svg coordinate values based on the index
+              const x = values.x ? values.x[i] : 0;
+              const y = values.y2 ? values.y2[i] : values.y ? values.y[i] : 0;
+              console.log({ y });
+              const xOffset = scales.scales.x?.bandwidth
+                ? scales.scales.x.bandwidth / 2
+                : 0;
+              const yOffset = scales.scales.y?.bandwidth
+                ? scales.scales.y.bandwidth / 2
+                : 0;
+              const fy =
+                value.fy && scales.scales.fy
+                  ? scales.scales.fy.apply(value.fy) - dimensions.marginTop
+                  : 0;
+              console.log({ y, fy, yOffset, valueFy: value.fy, dimensions });
+              // For measuring distance from the middle of the bar
+              const cx = x + xOffset;
+              const cy = y + yOffset + fy;
+              const [xPoint, yPoint] = d3.pointer(event);
+              // TODO: make sure this works with faceted stacked bar charts
+              const yMidPoint =
+                values.y1 && values.y2 ? (values.y1[i] + values.y2[i]) / 2 : cy;
+              if (Math.hypot(cx - xPoint, yMidPoint - yPoint) < 8) {
+                instance.config().onClick!(event, { cx, cy });
+                // For demonstration
+                d3.select(context.ownerSVGElement)
+                  .append("circle")
+                  .attr("r", 10)
+                  .attr("stroke", "red")
+                  .attr("fill", "none")
+                  .attr("cx", cx)
+                  .attr("cy", cy);
+              }
+            }
+          });
+          return next(index, scales, values, dimensions, context);
+        }
+      : undefined;
   return {
     ...(type === "line" ? { stroke } : { fill }),
     ...(currentColumns.includes("x") ? { x: `x` } : {}),
@@ -62,5 +113,6 @@ export function getPrimaryMarkOptions(
             : "fill"]: `series`,
         }
       : {}),
-  } satisfies MarkOptions;
+    ...(render ? { render } : {}),
+  };
 }
