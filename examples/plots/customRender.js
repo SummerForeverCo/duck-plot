@@ -4,7 +4,6 @@ import * as d3 from "d3";
 const onClick = (event, value) => {};
 const render = function (index, scales, values, dimensions, context, next) {
   const g = next(index, scales, values, dimensions, context);
-  console.log({ values, g });
   d3.select(g)
     .selectAll("rect")
     .attr("width", 0)
