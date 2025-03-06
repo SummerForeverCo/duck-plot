@@ -52,6 +52,9 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
       y: "y",
       r: "r",
       ...(hasSeries ? { fill: (d) => d.data.series } : { fill }),
+      ...(instance.config().customRender
+        ? { render: instance.config().customRender }
+        : {}),
     }),
     // Labels
     Plot.text(data.leaves(), {
