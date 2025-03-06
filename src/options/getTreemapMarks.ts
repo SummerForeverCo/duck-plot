@@ -25,6 +25,9 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
       y1: "y0",
       y2: "y1",
       ...(hasSeries ? { fill: (d) => d.parent.data.name } : { fill }),
+      ...(instance.config().customRender
+        ? { render: instance.config().customRender }
+        : {}),
     }),
     Plot.text(data, {
       x: "x0",

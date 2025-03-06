@@ -2,6 +2,7 @@ import type {
   BinOptions,
   MarkOptions,
   PlotOptions,
+  RenderFunction,
   StackOptions,
 } from "@observablehq/plot";
 import { DuckPlot } from ".";
@@ -113,6 +114,7 @@ export type Config = {
   interactiveLegend?: boolean;
   percent?: boolean; // for percent stacked charts, TODO document clearly
   onClick?: (event: Event, value: unknown) => void;
+  customRender?: RenderFunction;
 };
 
 export type Aggregate =

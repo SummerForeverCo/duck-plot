@@ -62,5 +62,8 @@ export function getPrimaryMarkOptions(
             : "fill"]: `series`,
         }
       : {}),
+    ...(instance.config().customRender
+      ? { render: instance.config().customRender }
+      : {}),
   } satisfies MarkOptions;
 }
