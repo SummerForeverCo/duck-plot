@@ -18,6 +18,54 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
 
   // TODO: handling text label as input
   const textLabel = instance.text().column ?? "";
+
+  const tip = Plot.tip(
+    data,
+    Plot.pointer({
+      x1: "x0",
+      x2: "x1",
+      y1: "y0",
+      y2: "y1",
+      fill: (d) => d.parent.data.name,
+      z: (d: any) => {
+        return `${d.data.y} (${d.data.percent})`;
+      },
+      channels: {
+        yValue: {
+          label: yLabel,
+          value: (d) => {
+            return `${d.data.y.toLocaleString()} (${d.data.percent}%)`;
+          },
+        },
+        textValue: {
+          label: textLabel,
+          value: (d) => {
+            return `${d.data.text}`;
+          },
+        },
+      },
+      format: {
+        fill: hasSeries,
+        yValue: true,
+        textValue: textLabel ? true : false,
+        x: false,
+        y: false,
+      },
+    })
+  );
+  const tipMarks = [tip];
+  const otherMark = instance.config().tipMark;
+  if (otherMark?.type) {
+    const otherTip = Plot[otherMark.type](data, {
+      ...Plot.pointer({
+        x: (d) => (d.x0 + d.x1) / 2,
+        y: (d) => (d.y0 + d.y1) / 2,
+      }),
+      ...otherMark.options,
+    });
+    tipMarks.push(otherTip);
+  }
+
   return [
     Plot.rect(data, {
       x1: "x0",
@@ -46,43 +94,6 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
       textAnchor: "start",
       fill: "#fff",
     }),
-    ...[
-      hideTip
-        ? null
-        : Plot.tip(
-            data,
-            Plot.pointer({
-              x1: "x0",
-              x2: "x1",
-              y1: "y0",
-              y2: "y1",
-              fill: (d) => d.parent.data.name,
-              z: (d: any) => {
-                return `${d.data.y} (${d.data.percent})`;
-              },
-              channels: {
-                yValue: {
-                  label: yLabel,
-                  value: (d) => {
-                    return `${d.data.y.toLocaleString()} (${d.data.percent}%)`;
-                  },
-                },
-                textValue: {
-                  label: textLabel,
-                  value: (d) => {
-                    return `${d.data.text}`;
-                  },
-                },
-              },
-              format: {
-                fill: hasSeries,
-                yValue: true,
-                textValue: textLabel ? true : false,
-                x: false,
-                y: false,
-              },
-            })
-          ),
-    ],
+    ...[hideTip ? null : tipMarks],
   ];
 }

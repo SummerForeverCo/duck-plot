@@ -21,6 +21,7 @@ export type ChartType =
   | "rectY"
   | "treemap"
   | "circlePack"
+  | "image"
   | undefined;
 
 export type SqlSort = {
@@ -108,6 +109,10 @@ export type Config = {
     x?: (d: Indexable, i: number) => string;
     y?: (d: Indexable, i: number) => string;
     color?: (d: Indexable, i: number) => string;
+  };
+  tipMark?: {
+    type: Exclude<ChartType, "circlePack" | "treemap">;
+    options: MarkOptions;
   };
   autoMargin?: boolean; // Automatically adjust margins
   aggregate?: Aggregate;
