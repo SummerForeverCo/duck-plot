@@ -53,7 +53,7 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
       },
     })
   );
-  const toolTipMarks = [tip];
+  const tipMarks = [tip];
   const otherMark = instance.config().tipMark;
   if (otherMark?.type) {
     const otherTip = Plot[otherMark.type](data, {
@@ -63,7 +63,7 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
       }),
       ...otherMark.options,
     });
-    toolTipMarks.push(otherTip);
+    tipMarks.push(otherTip);
   }
 
   return [
@@ -94,6 +94,6 @@ export function getTreemapMarks(data: Data, instance: DuckPlot): Markish[] {
       textAnchor: "start",
       fill: "#fff",
     }),
-    ...[hideTip ? null : toolTipMarks],
+    ...[hideTip ? null : tipMarks],
   ];
 }

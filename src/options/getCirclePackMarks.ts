@@ -17,6 +17,45 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
     ? instance.color()?.column
     : defaultColors[0];
 
+  const tip = Plot.tip(
+    data.leaves(),
+    Plot.pointer({
+      x: (d) => d.x,
+      y: (d) => d.y,
+      r: (d: any) => d.r,
+
+      channels: {
+        yValue: {
+          label: yLabel,
+          value: (d) => `${d.data.y.toLocaleString()} (${d.data.percent}%)`,
+        },
+        textValue: {
+          label: textLabel,
+          value: (d) => `${d.data.text}`,
+        },
+      },
+      format: {
+        fill: hasSeries,
+        yValue: true,
+        textValue: !!textLabel,
+        x: false,
+        y: false,
+      },
+    })
+  );
+  const tipMarks = [tip];
+
+  const otherMark = instance.config().tipMark;
+  if (otherMark?.type) {
+    const otherTip = Plot[otherMark.type](data.leaves(), {
+      ...Plot.pointer({
+        x: "x",
+        y: "y",
+      }),
+      ...otherMark.options,
+    });
+    tipMarks.push(otherTip);
+  }
   return [
     // Parent circle
     Plot.dot(
@@ -71,36 +110,6 @@ export function getCirclePackMarks(data: any, instance: DuckPlot): Markish[] {
       textAnchor: "middle",
       fill: "#fff",
     }),
-    ...[
-      hideTip
-        ? []
-        : Plot.tip(
-            data.leaves(),
-            Plot.pointer({
-              x: (d) => d.x,
-              y: (d) => d.y,
-              r: (d: any) => d.r,
-
-              channels: {
-                yValue: {
-                  label: yLabel,
-                  value: (d) =>
-                    `${d.data.y.toLocaleString()} (${d.data.percent}%)`,
-                },
-                textValue: {
-                  label: textLabel,
-                  value: (d) => `${d.data.text}`,
-                },
-              },
-              format: {
-                fill: hasSeries,
-                yValue: true,
-                textValue: !!textLabel,
-                x: false,
-                y: false,
-              },
-            })
-          ),
-    ],
+    ...[hideTip ? [] : tipMarks],
   ];
 }
