@@ -75,8 +75,8 @@ export function getTipMarks(instance: DuckPlot) {
   // User pointerY for barX charts
   const pointer =
     type === "barX" || type === "rectX" ? Plot.pointerY : Plot.pointerX;
-  const otherMark = instance.config().tipMark;
   let marks = [Plot.tip(instance.filteredData, pointer(maybeStackedOptions))];
+  const otherMark = instance.config().tipMark;
   if (otherMark?.type) {
     const otherTip = Plot[otherMark.type](instance.filteredData, {
       ...pointer(maybeStackedOptions),
