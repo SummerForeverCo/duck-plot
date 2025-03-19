@@ -4,7 +4,7 @@ import { JSDOM } from "jsdom";
 import { describe, expect, it, vi } from "vitest";
 import { createDbServer } from "../examples/util/createDbServer.js";
 import { getPrimaryMarkOptions } from "../src/options/getPrimaryMarkOptions";
-import { getTipMark } from "../src/options/getTipMark.js";
+import { getTipMarks } from "../src/options/getTipMarks.js";
 import { Indexable } from "../src/types.js";
 const jsdom = new JSDOM(`
 <!DOCTYPE html>
@@ -60,13 +60,13 @@ describe("getMarkOptions", () => {
       .mark("areaY");
     // Plot.tip returns an object with a channels property, but getting a type
     // error without recasting
-    const result = getTipMark(plot) as Indexable;
-    expect(result.channels).toHaveProperty("xCustom", {
+    const result = getTipMarks(plot) as Indexable;
+    expect(result[0].channels).toHaveProperty("xCustom", {
       label: "Custom X Axis",
       value: "x",
       filter: null,
     });
-    expect(result.channels).toHaveProperty("yCustom", {
+    expect(result[0].channels).toHaveProperty("yCustom", {
       label: "Custom Y Axis",
       value: "y",
       filter: null,
