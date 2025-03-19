@@ -13,14 +13,15 @@ const smileySVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14
 
 const smileyDataURL = `data:image/svg+xml,${encodeURIComponent(smileySVG)}`;
 
-const codeString = `duckplot
-    .query('select * from stocks limit 20')
+const codeString = `duckplot 
+    .query("select round(sum(Close), 1) as Close, year(Date) as year, Symbol from stocks group by year, Symbol")
     .table("stocks")
-    .x("Date")
-    .y("Close")        
-    .mark("barY")
+    .y("Close")
+    .color("Symbol") // TODO year as color
+    .mark("treemap")
+    .text("Symbol")
     .config({tipMark: {type: "image", options: {src: () => "${smileyDataURL}"}}})
     `;
 
-export const tipMark = (options) =>
+export const tipMarkTreemap = (options) =>
   renderPlot("stocks.csv", codeString, options);
