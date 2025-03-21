@@ -15,7 +15,9 @@ export function getPrimaryMarkOptions(
   const type = markType ?? instance.mark().type; // pass in a markType for mulitple marks
   const data = instance.filteredData ?? instance.data();
   const currentColumns = Object.keys(data.types || {});
-  const userOptions = instance.mark().options;
+  const userOptions = markType
+    ? instance.markColumn().options?.[markType]
+    : instance.mark().options;
   const color = isColor(instance.color()?.column)
     ? instance.color()?.column
     : defaultColors[0];

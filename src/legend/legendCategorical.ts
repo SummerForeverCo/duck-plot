@@ -16,7 +16,7 @@ export async function legendCategorical(
 
   // Get the symbols for each category
   const symbols = categories.map((category) => {
-    if (!instance.markColumn()) return instance.mark().type;
+    if (!instance.markColumn().column) return instance.mark().type;
     const data = instance.data();
     // == as this has been stringified above
     const symbol = data.find((d) => d.series == category)?.markColumn;

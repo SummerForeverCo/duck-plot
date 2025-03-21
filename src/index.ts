@@ -24,6 +24,7 @@ import {
   PlotProperty,
   QueryMap,
   Sorts,
+  MarkColumnProperty,
 } from "./types";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
@@ -45,7 +46,7 @@ export class DuckPlot {
   private _newDataProps: boolean = true;
   private _data: Data = [];
   private _rawData: Data = [];
-  private _markColumn: string | undefined = undefined;
+  private _markColumn: MarkColumnProperty = {};
   private _config: Config = {};
   private _query: string = "";
   private _description: string = ""; // TODO: add tests
@@ -239,12 +240,20 @@ export class DuckPlot {
 
   // Mark column- only used with rawData, and the column holds the mark for each
   // row (e.g., "line", "areaY", etc.)
-  markColumn(): string | undefined;
-  markColumn(column: string): this;
-  markColumn(column?: string): DuckPlot | string | undefined {
-    if (!column) return this._markColumn;
-    this._markColumn = column;
-    return this;
+  markColumn(): MarkColumnProperty;
+  markColumn(column: string, options?: MarkColumnProperty["options"]): this;
+  markColumn(
+    column?: string,
+    options?: MarkColumnProperty["options"]
+  ): MarkColumnProperty | this {
+    if (column) {
+      if (this._markColumn.column !== column) {
+        this._newDataProps = true; // when changed, we need to requery the data
+      }
+      this._markColumn = { column, ...(options ? { options } : {}) };
+      return this;
+    }
+    return this._markColumn!;
   }
 
   // Prepare data for rendering

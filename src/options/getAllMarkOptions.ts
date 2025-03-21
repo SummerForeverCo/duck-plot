@@ -68,7 +68,7 @@ export function getAllMarkOptions(instance: DuckPlot) {
 
   // Assume that if someone has specified a markcolumn, they want to show it
   const marks: ChartType[] =
-    markColumnMarks.length > 0 && instance.markColumn() !== undefined
+    markColumnMarks.length > 0 && instance.markColumn().column !== undefined
       ? markColumnMarks
       : [mark!];
 

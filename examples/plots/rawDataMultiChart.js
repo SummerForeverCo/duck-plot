@@ -19,7 +19,7 @@ duckplot
   .x("col1")
   .y("col2")
   .color("col3")
-  .markColumn("mark")
+  .markColumn("mark", {dot: {r: 10}, barY: {opacity: .2}})
 `;
 
 export const rawDataMultiChart = (options) =>

@@ -92,6 +92,15 @@ export type MarkProperty = {
   options?: AllMarkOptions;
 };
 
+// Remove `undefined` from the chart type keys for type below
+type DefinedChartType = Exclude<ChartType, undefined>;
+
+// The options are key-value pairs so they're specific to each mark type
+export type MarkColumnProperty = {
+  column?: string;
+  options?: Partial<Record<DefinedChartType, AllMarkOptions>>;
+};
+
 // A few types that we can't quite squeeze into (or out of) PlotOptions. The
 // label display options are important because the labels specifcy the labels
 // in the tooltips (but someone might want to turn off the labels in the plot)
