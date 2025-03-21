@@ -47,7 +47,7 @@ describe("checkForConfigErrors", () => {
   it("throws an error if multiple y columns are used with barX type", () => {
     plot.table("table").mark("barX").y(["col1", "col2"], { axis: "top" });
     expect(() => checkForConfigErrors(plot)).toThrow(
-      "Multiple y columns not supported for barX type"
+      "Multiple y columns not supported for barX or rectX type"
     );
   });
 
