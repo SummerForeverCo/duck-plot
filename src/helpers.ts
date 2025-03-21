@@ -250,9 +250,11 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
       throw new Error(`Multiple color columns not supported for ${type} type`);
     if (instance.fx().column || instance.fy().column)
       throw new Error(`Faceting not supported for ${type} type`);
-  } else if (type === "barX") {
+  } else if (type === "barX" || type === "rectX") {
     if (multipleY)
-      throw new Error("Multiple y columns not supported for barX type");
+      throw new Error(
+        "Multiple y columns not supported for barX or rectX type"
+      );
   } else {
     if (multipleX)
       throw new Error("Multiple x columns only supported for barX type");
