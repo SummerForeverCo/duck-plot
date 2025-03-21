@@ -168,7 +168,7 @@ export function processRawData(instance: DuckPlot): Data {
     { key: "fx", column: instance.fx().column },
     { key: "r", column: instance.r().column },
     { key: "text", column: instance.text().column },
-    { key: "markColumn", column: instance.markColumn() },
+    { key: "markColumn", column: instance.markColumn().column },
   ];
 
   // Map over raw data to extract chart data based on defined columns
@@ -230,7 +230,7 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
   if (!instance.ddb) throw new Error("Database not set");
   if (!instance.table()) throw new Error("Table not set");
   const type = instance.mark().type;
-  if (!type && !instance.markColumn())
+  if (!type && !instance.markColumn().column)
     throw new Error("Mark type or mark column not set");
   const multipleX =
     Array.isArray(instance.x().column) && instance.x().column.length > 1;
@@ -259,8 +259,8 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
   }
 
   // Using rawData and/or markColumn checks
-  if (instance.markColumn() && instance.rawData().length === 0)
+  if (instance.markColumn().column && instance.rawData().length === 0)
     throw new Error("You must supply rawData to use markColumn");
-  if (instance.markColumn() && instance.mark())
+  if (instance.markColumn().column && instance.mark())
     throw new Error("You cannot use both a markColumn and a mark type");
 };
