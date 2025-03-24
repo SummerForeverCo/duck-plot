@@ -20,7 +20,7 @@ describe("getMarkOptions", () => {
       .color("Symbol")
       .mark("line");
     await plot.prepareData();
-    const result = getPrimaryMarkOptions(plot);
+    const result = getPrimaryMarkOptions(plot, "line"); // internally the mark is always passed
     expect(result).toHaveProperty("stroke", "series");
   });
 
@@ -31,7 +31,7 @@ describe("getMarkOptions", () => {
       .color("Symbol")
       .mark("areaY");
     await plot.prepareData();
-    const result = getPrimaryMarkOptions(plot);
+    const result = getPrimaryMarkOptions(plot, "areaY"); // internally the mark is always passed
     expect(result).toHaveProperty("fill", "series");
   });
 
@@ -44,7 +44,7 @@ describe("getMarkOptions", () => {
       .mark("areaY");
     await plot.prepareData();
 
-    const result = getPrimaryMarkOptions(plot);
+    const result = getPrimaryMarkOptions(plot, "areaY"); // internally the mark is always passed
     expect(result).toHaveProperty("fy", "fy");
   });
   it("should use custom x and y labels in the tooltip", () => {
