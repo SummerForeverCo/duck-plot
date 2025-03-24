@@ -10,14 +10,15 @@ export function getPrimaryMarkOptions(
   instance: DuckPlot,
   markType?: ChartType
 ) {
+  if (!markType) return {};
   // Grab the types from the data
   const { types } = instance.data();
-  const type = markType ?? instance.mark().type; // pass in a markType for mulitple marks
   const data = instance.filteredData ?? instance.data();
   const currentColumns = Object.keys(data.types || {});
-  const userOptions = markType
-    ? instance.markColumn().options?.[markType]
-    : instance.mark().options;
+  // Options may be specified on the mark or the markColumn
+  const userOptions =
+    instance.mark().options ?? instance.markColumn().options?.[markType];
+
   const color = isColor(instance.color()?.column)
     ? instance.color()?.column
     : defaultColors[0];
@@ -28,27 +29,27 @@ export function getPrimaryMarkOptions(
 
   const sort =
     userOptions?.sort ??
-    (types?.x !== "string" && type !== "barX" && type !== "rectX")
+    (types?.x !== "string" && markType !== "barX" && markType !== "rectX")
       ? { sort: (d: any) => d.x }
       : {};
 
   // If this is a rect mark with a date value axis, compute the interval
   let interval;
   if (
-    ((type === "rectY" && types?.x === "date") ||
-      (type === "rectX" && types?.y === "date")) &&
+    ((markType === "rectY" && types?.x === "date") ||
+      (markType === "rectX" && types?.y === "date")) &&
     userOptions?.interval === undefined // Note, there's no way to just say "no default"
   ) {
-    interval = computeInterval(data, type === "rectY" ? "x" : "y");
+    interval = computeInterval(data, markType === "rectY" ? "x" : "y");
   }
 
   return {
-    ...(type === "line" ? { stroke } : { fill }),
+    ...(markType === "line" ? { stroke } : { fill }),
     ...(currentColumns.includes("x") ? { x: `x` } : {}),
     ...(sort ? sort : {}),
     ...(currentColumns.includes("fy") ? { fy: "fy" } : {}),
-    ...(type === "dot" && currentColumns.includes("r") ? { r: "r" } : {}),
-    ...(type === "text" && currentColumns.includes("text")
+    ...(markType === "dot" && currentColumns.includes("r") ? { r: "r" } : {}),
+    ...(markType === "text" && currentColumns.includes("text")
       ? { text: "text" }
       : {}),
     ...(fx ? { fx: `fx` } : {}),
@@ -57,9 +58,9 @@ export function getPrimaryMarkOptions(
     ...(interval ? { interval } : {}),
     ...(currentColumns.includes("series")
       ? {
-          [type === "line" ||
-          type?.startsWith("rule") ||
-          type?.startsWith("tick")
+          [markType === "line" ||
+          markType?.startsWith("rule") ||
+          markType?.startsWith("tick")
             ? "stroke"
             : "fill"]: `series`,
         }
