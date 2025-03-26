@@ -1,21 +1,44 @@
-import { Database } from "duckdb-async";
+import * as duckdb from "@duckdb/duckdb-wasm";
 import path from "path";
 import { fileURLToPath } from "url";
+import { default as Worker } from "web-worker";
+import { readFile } from "fs/promises";
+import { createRequire } from "module";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const require = createRequire(import.meta.url);
+const duckdbWasmPath = require.resolve("@duckdb/duckdb-wasm");
+const DUCKDB_DIST = path.dirname(duckdbWasmPath);
 
 export const createDbServer = async (fileName) => {
-  // Get the directory name of the current module
-  const __filename = fileURLToPath(import.meta.url);
-  let __dirname = path.dirname(__filename);
-  __dirname = path.join(__dirname, "..");
   const tableName = fileName.replace(".csv", "").replace("-", "");
+  const csvPath = path.join(__dirname, "..", "data", fileName);
 
-  const csvPath = path.join(__dirname, "data", fileName); // Constructing the absolute path to the CSV file
-  // Create an in-memory DuckDB instance
-  const db = await Database.create(":memory:");
+  const DUCKDB_CONFIG = await duckdb.selectBundle({
+    mvp: {
+      mainModule: path.resolve(DUCKDB_DIST, "./duckdb-mvp.wasm"),
+      mainWorker: path.resolve(DUCKDB_DIST, "./duckdb-node-mvp.worker.cjs"),
+    },
+  });
 
-  // Create a table and load CSV data into it
-  await db.run(
-    `CREATE TABLE ${tableName} AS SELECT * FROM read_csv_auto('${csvPath}')`
-  );
+  const logger = new duckdb.VoidLogger();
+  const worker = new Worker(DUCKDB_CONFIG.mainWorker);
+  const db = new duckdb.AsyncDuckDB(logger, worker);
+  await db.instantiate(DUCKDB_CONFIG.mainModule, DUCKDB_CONFIG.pthreadWorker);
+  const conn = await db.connect();
+
+  const csvData = await readFile(csvPath, "utf-8");
+  await db.registerFileText("data.csv", csvData);
+
+  await conn.insertCSVFromPath("data.csv", {
+    schema: "main",
+    name: tableName,
+    detect: true,
+    header: true,
+    delimiter: ",",
+  });
+
   return db;
 };

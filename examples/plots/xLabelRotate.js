@@ -5,7 +5,8 @@ const codeString = `duckplot
   .query(\`select *, concat('The company: ', Symbol) as company from stocks\`)
   .table("stocks")
   .x("company")
-  .y("Close")  
+  .y("Close")
+  .color("company")
   .mark("barY")
   .options({width: 300})
   .config({aggregate: "avg"})`;
