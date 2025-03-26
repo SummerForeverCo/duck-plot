@@ -8,7 +8,6 @@ import { getAllMarkOptions } from "./options/getAllMarkOptions";
 import { render } from "./render/render";
 import { renderError } from "./render/renderError";
 import "./legend/legend.css";
-import type { Database } from "duckdb-async";
 import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 import type { JSDOM } from "jsdom";
 import type { Markish, PlotOptions } from "@observablehq/plot";
@@ -28,7 +27,7 @@ import {
 } from "./types";
 const emptyProp = { column: "", options: {} };
 export class DuckPlot {
-  private _ddb: AsyncDuckDB | Database | undefined | null = null;
+  private _ddb: AsyncDuckDB | undefined | null = null;
   private _table: string | null = null;
   private _x: PlotProperty<"x"> = { ...emptyProp };
   private _y: PlotProperty<"y"> = { ...emptyProp };
@@ -68,7 +67,7 @@ export class DuckPlot {
   seriesDomain: number[] = [];
 
   constructor(
-    ddb?: AsyncDuckDB | Database | null, // Allow null so you can work on the server without a database
+    ddb?: AsyncDuckDB | null, // Allow null so you can work with raw data
     { jsdom, font }: { jsdom?: JSDOM; font?: any } = {}
   ) {
     this._ddb = ddb;
@@ -334,7 +333,7 @@ export class DuckPlot {
   set newDataProps(newValue: boolean) {
     this._newDataProps = newValue;
   }
-  get ddb(): AsyncDuckDB | Database | null | undefined {
+  get ddb(): AsyncDuckDB | null | undefined {
     return this._ddb;
   }
   get isServer(): boolean {

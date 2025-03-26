@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { JSDOM } from "jsdom";
 import { DuckPlot } from "../src";
 import { createDbServer } from "../examples/util/createDbServer";
-import { Database } from "duckdb-async";
+import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 
 // Not testing the font measurment here
 const fakeFont = {
@@ -12,7 +12,7 @@ const fakeFont = {
 describe("DuckPlot", () => {
   let plot: any;
   let jsdom: JSDOM;
-  let ddb: Database;
+  let ddb: AsyncDuckDB;
 
   beforeEach(async () => {
     jsdom = new JSDOM();
