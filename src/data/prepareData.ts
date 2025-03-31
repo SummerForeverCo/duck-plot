@@ -154,7 +154,10 @@ export async function prepareData(
   let data;
   let schema: DescribeSchema;
   queries["final"] = queryString;
-  data = await runQuery(instance.ddb, queryString);
+  // This query will *generate* the final table, which we then need to
+  // separately select from
+  await runQuery(instance.ddb, queryString);
+  data = await runQuery(instance.ddb, `SELECT * FROM chart_${instance.id()}`);
   schema = await runQuery(instance.ddb, `DESCRIBE ${reshapeTableName}`);
   // Format data as an array of objects
   let formatted: Data = formatResults(data, schema);
