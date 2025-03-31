@@ -4,9 +4,9 @@ import {
   ChartType,
   Data,
   Aggregate,
-  QueryMap,
   ColumnType,
 } from "../types";
+import type { DuckPlot } from "..";
 
 // Quick helper
 const hasProperty = (prop?: ColumnType): boolean =>
@@ -191,16 +191,17 @@ export function arrayIfy(value?: string | (string | undefined)[]): string[] {
   return (value.filter((d) => d) as string[]) || [];
 }
 
-// Returns both querystring and labels
-export function getAggregateInfo(
-  type: ChartType,
+// Returns both querystring and labels, aggregating if necessary
+export function getFinalQuery(
+  instance: DuckPlot,
   config: ColumnConfig,
   columns: string[],
   tableName: string,
   aggregate: Aggregate | undefined, // TODO: add tests
-  description: { value: string },
-  percent?: boolean
+  description: { value: string }
 ): { queryString: string; labels: Data["labels"] } {
+  const type = instance.mark().type;
+  const percent = instance.config().percent;
   // Ensure that the x and y values are arrays
   const y = arrayIfy(config.y);
   const x = arrayIfy(config.x);
@@ -269,6 +270,7 @@ export function getAggregateInfo(
 
   // Use the subquery to aggregate the values
   const queryString = `
+  CREATE OR REPLACE TABLE chart_${instance.id()} AS
   WITH aggregated AS (${subquery})
   SELECT ${[...groupBy, aggregateColumn].filter(Boolean).join(", ")}
   FROM aggregated

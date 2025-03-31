@@ -7,7 +7,7 @@ import {
 } from "../types";
 import {
   columnIsDefined,
-  getAggregateInfo,
+  getFinalQuery,
   getLabel,
   getTransformQuery,
 } from "./query";
@@ -140,17 +140,15 @@ export async function prepareData(
   const transformedTypes = await columnTypes(instance.ddb, reshapeTableName);
 
   // TODO: more clear arguments in here
-  const { labels: aggregateLabels, queryString: aggregateQuery } =
-    getAggregateInfo(
-      type,
-      columns,
-      [...transformedTypes.keys()],
-      reshapeTableName,
-      !shouldAggregate ? false : instance.config().aggregate,
-      description,
-      instance.config().percent
-    );
-  queryString = aggregateQuery;
+  const { labels: aggregateLabels, queryString: finalQuery } = getFinalQuery(
+    instance,
+    columns,
+    [...transformedTypes.keys()],
+    reshapeTableName,
+    !shouldAggregate ? false : instance.config().aggregate,
+    description
+  );
+  queryString = finalQuery;
 
   labels = aggregateLabels;
   let data;

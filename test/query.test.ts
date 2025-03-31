@@ -1,8 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   arrayIfy,
-  getAggregateInfo,
+  getFinalQuery,
   getOrder,
   getStandardTransformQuery,
   getTransformQuery,
@@ -15,10 +15,19 @@ import {
   toTitleCase,
   getLabel,
 } from "../src/data/query";
+import { JSDOM } from "jsdom";
+import { createDbServer } from "../examples/util/createDbServer";
+import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
+import { DuckPlot } from "../src";
 
 function removeSpacesAndBreaks(str: string) {
   return str.replace(/\s+/g, "");
 }
+// Not testing the font measurment here
+const fakeFont = {
+  getAdvanceWidth: () => 10,
+};
+
 describe("getTransformType", () => {
   it('barX: should return a "standard" transform with 1 x and 1 y', () => {
     const config = { x: ["x1"], y: ["y1"], series: [], fy: [] };
@@ -275,13 +284,24 @@ describe("arrayify", () => {
   });
 });
 
-describe("getAggregateInfo", () => {
+describe("getFinalQuery", () => {
+  let plot: any;
+  let jsdom: JSDOM;
+  let ddb: AsyncDuckDB;
+
+  beforeEach(async () => {
+    jsdom = new JSDOM();
+    ddb = await createDbServer("stocks.csv");
+    plot = new DuckPlot(ddb, { jsdom, font: fakeFont });
+  });
+
   // Test for 'barX' aggregation when `x` is present
   it("barX: should sum X if x present", () => {
     const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
     const expectedQueryString = `
+      CREATE OR REPLACE TABLE chart_${plot.id()} AS
       WITH aggregated AS (
         SELECT y, sum(x::FLOAT) as x
         FROM reshaped
@@ -291,9 +311,10 @@ describe("getAggregateInfo", () => {
       FROM aggregated
     `;
 
+    plot.mark("barX");
     expect(
       removeSpacesAndBreaks(
-        getAggregateInfo("barX", config, columns, reshapedName, undefined, {
+        getFinalQuery(plot, config, columns, reshapedName, undefined, {
           value: "",
         }).queryString
       )
@@ -306,6 +327,7 @@ describe("getAggregateInfo", () => {
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
     const expectedQueryString = `
+      CREATE OR REPLACE TABLE chart_${plot.id()} AS
       WITH aggregated AS (
         SELECT x, sum(y::FLOAT) as y
         FROM reshaped
@@ -314,10 +336,11 @@ describe("getAggregateInfo", () => {
       SELECT x, y
       FROM aggregated
     `;
+    plot.mark("barY");
 
     expect(
       removeSpacesAndBreaks(
-        getAggregateInfo("barY", config, columns, reshapedName, undefined, {
+        getFinalQuery(plot, config, columns, reshapedName, undefined, {
           value: "",
         }).queryString
       )
@@ -330,6 +353,7 @@ describe("getAggregateInfo", () => {
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
     const expectedQueryString = `
+      CREATE OR REPLACE TABLE chart_${plot.id()} AS
       WITH aggregated AS (
         SELECT y, avg(x::FLOAT) as x
         FROM reshaped
@@ -339,19 +363,12 @@ describe("getAggregateInfo", () => {
       FROM aggregated
     `;
 
+    plot.mark("barX").config({ percent: false });
     expect(
       removeSpacesAndBreaks(
-        getAggregateInfo(
-          "barX",
-          config,
-          columns,
-          reshapedName,
-          "avg",
-          {
-            value: "",
-          },
-          false
-        ).queryString
+        getFinalQuery(plot, config, columns, reshapedName, "avg", {
+          value: "",
+        }).queryString
       )
     ).toBe(removeSpacesAndBreaks(expectedQueryString));
   });
@@ -361,7 +378,9 @@ describe("getAggregateInfo", () => {
     const config = { x: ["x"], y: ["y1"], series: [], fy: [] };
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
+    plot.mark("barX").config({ percent: true });
     const expectedQueryString = `
+      CREATE OR REPLACE TABLE chart_${plot.id()} AS
       WITH aggregated AS (
         SELECT y, sum(x::FLOAT) as x
         FROM reshaped
@@ -371,19 +390,12 @@ describe("getAggregateInfo", () => {
       FROM aggregated
     `;
 
+    plot.mark("barX").config({ percent: true });
     expect(
       removeSpacesAndBreaks(
-        getAggregateInfo(
-          "barX",
-          config,
-          columns,
-          reshapedName,
-          "sum",
-          {
-            value: "",
-          },
-          true
-        ).queryString
+        getFinalQuery(plot, config, columns, reshapedName, "sum", {
+          value: "",
+        }).queryString
       )
     ).toBe(removeSpacesAndBreaks(expectedQueryString));
   });
@@ -393,7 +405,9 @@ describe("getAggregateInfo", () => {
     const config = { x: ["x1"], y: ["y"], series: [], fy: [] };
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
+
     const expectedQueryString = `
+      CREATE OR REPLACE TABLE chart_${plot.id()} AS
       WITH aggregated AS (
         SELECT x, avg(y::FLOAT) as y
         FROM reshaped
@@ -403,19 +417,12 @@ describe("getAggregateInfo", () => {
       FROM aggregated
     `;
 
+    plot.mark("barY").config({ percent: true });
     expect(
       removeSpacesAndBreaks(
-        getAggregateInfo(
-          "barY",
-          config,
-          columns,
-          reshapedName,
-          "avg",
-          {
-            value: "",
-          },
-          true
-        ).queryString
+        getFinalQuery(plot, config, columns, reshapedName, "avg", {
+          value: "",
+        }).queryString
       )
     ).toBe(removeSpacesAndBreaks(expectedQueryString));
   });
@@ -425,12 +432,15 @@ describe("getAggregateInfo", () => {
     const config = { x: ["x1"], y: ["y1"], series: [], fy: [] };
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
-    const expectedQueryString = `WITH aggregated AS (SELECT * FROM reshaped) 
+    const expectedQueryString = `
+    CREATE OR REPLACE TABLE chart_${plot.id()} AS
+    WITH aggregated AS (SELECT * FROM reshaped) 
     SELECT y, x FROM aggregated`;
 
+    plot.mark("barX");
     expect(
       removeSpacesAndBreaks(
-        getAggregateInfo("barX", config, columns, reshapedName, false, {
+        getFinalQuery(plot, config, columns, reshapedName, false, {
           value: "",
         }).queryString
       )

@@ -86,7 +86,7 @@ export async function render(
   const container =
     instance.chartContainer || instance.document.createElement("div");
   if (!instance.chartContainer) {
-    container.id = instance.id;
+    container.id = instance.id();
     instance.chartContainer = container;
   }
 

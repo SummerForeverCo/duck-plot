@@ -349,11 +349,11 @@ export class DuckPlot {
   get jsdom(): any {
     return this._jsdom;
   }
-  get id(): string {
-    return this._id;
-  }
   get sorts(): Sorts {
     return this._sorts;
+  }
+  id(): string {
+    return this._id;
   }
   data(): Data {
     return this._data || [];
