@@ -7,7 +7,7 @@ import {
 } from "../types";
 import {
   columnIsDefined,
-  getAggregateInfo,
+  getFinalQuery,
   getLabel,
   getTransformQuery,
 } from "./query";
@@ -140,24 +140,25 @@ export async function prepareData(
   const transformedTypes = await columnTypes(instance.ddb, reshapeTableName);
 
   // TODO: more clear arguments in here
-  const { labels: aggregateLabels, queryString: aggregateQuery } =
-    getAggregateInfo(
-      type,
-      columns,
-      [...transformedTypes.keys()],
-      reshapeTableName,
-      !shouldAggregate ? false : instance.config().aggregate,
-      description,
-      instance.config().percent
-    );
-  queryString = aggregateQuery;
+  const { labels: aggregateLabels, queryString: finalQuery } = getFinalQuery(
+    instance,
+    columns,
+    [...transformedTypes.keys()],
+    reshapeTableName,
+    !shouldAggregate ? false : instance.config().aggregate,
+    description
+  );
+  queryString = finalQuery;
 
   labels = aggregateLabels;
   let data;
   let schema: DescribeSchema;
   queries["final"] = queryString;
-  data = await runQuery(instance.ddb, queryString);
-  schema = await runQuery(instance.ddb, `DESCRIBE ${reshapeTableName}`);
+  // This query will *generate* the final table, which we then need to
+  // separately select from
+  await runQuery(instance.ddb, queryString);
+  data = await runQuery(instance.ddb, `SELECT * FROM chart_${instance.id()}`);
+  schema = await runQuery(instance.ddb, `DESCRIBE chart_${instance.id()}`);
   // Format data as an array of objects
   let formatted: Data = formatResults(data, schema);
 
