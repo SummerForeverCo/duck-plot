@@ -1,8 +1,9 @@
 import * as Plot from "@observablehq/plot";
 import { prepareData } from "./data/prepareData";
 import { getLegendType, getSorts } from "./options/getPlotOptions";
-import { checkForConfigErrors, getUniqueId, processRawData } from "./helpers";
+import { checkForConfigErrors, processRawData } from "./helpers";
 import { derivePlotOptions } from "./options/derivePlotOptions";
+import { createId } from "@paralleldrive/cuid2";
 import { handleProperty } from "./handleProperty";
 import { getAllMarkOptions } from "./options/getAllMarkOptions";
 import { render } from "./render/render";
@@ -77,7 +78,7 @@ export class DuckPlot {
     this._document = this._isServer
       ? this._jsdom!.window.document
       : window?.document;
-    this._id = getUniqueId();
+    this._id = createId();
   }
 
   // Set the table to query against
