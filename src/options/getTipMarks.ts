@@ -2,6 +2,7 @@ import { TipOptions } from "@observablehq/plot";
 import { DuckPlot } from "..";
 import { borderOptions } from "../helpers";
 import * as Plot from "@observablehq/plot";
+import { computeInterval } from "./getInterval";
 
 // Get options for a specific mark (e.g., the line or area marks)
 export function getTipMarks(instance: DuckPlot) {
@@ -19,6 +20,18 @@ export function getTipMarks(instance: DuckPlot) {
   function truncateLabel(label: string | undefined, length: number = 25) {
     if (!label || label.length < length) return label;
     return label.slice(0, length) + ellipsis;
+  }
+
+  // Handle date axes for bar charts, which requires using the interval to
+  // specify the start and end of each rect
+  let interval;
+  // Options may be specified on the mark or the markColumn
+  const userOptions =
+    instance.mark().options ?? instance.markColumn().options?.[type!];
+  const hasDateX = type === "rectY" && data.types?.x === "date";
+  const hasDateY = type === "rectX" && data.types?.y === "date";
+  if ((hasDateX || hasDateY) && userOptions?.interval === undefined) {
+    interval = computeInterval(data, type === "rectY" ? "x" : "y");
   }
 
   const options = {
@@ -50,10 +63,17 @@ export function getTipMarks(instance: DuckPlot) {
       z: false, // Hide the auto generated "series" for area charts
     },
     stroke: borderOptions.borderColor,
-    ...(currentColumns.includes("x") ? { x: `x` } : {}),
+    ...(currentColumns.includes("x") && !hasDateX ? { x: `x` } : {}),
+    ...(currentColumns.includes("x") && hasDateX && interval
+      ? { x1: `x`, x2: (d) => interval.offset(d.x, 1) }
+      : {}),
     ...(currentColumns.includes("fy") ? { fy: "fy" } : {}),
     ...(fx ? { fx: `fx` } : {}),
     ...(currentColumns.includes("y") ? { y: `y` } : {}),
+    ...(currentColumns.includes("y") && hasDateY && interval
+      ? { y1: `y`, y2: (d) => interval.offset(d.y, 1) }
+      : {}),
+    ...(interval ? { interval } : {}),
     ...(currentColumns.includes("series")
       ? {
           [type === "line" ||
