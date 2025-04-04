@@ -98,8 +98,20 @@ export function getTipMarks(instance: DuckPlot) {
   let marks = [Plot.tip(instance.filteredData, pointer(maybeStackedOptions))];
   const otherMark = instance.config().tipMark;
   if (otherMark?.type) {
+    // Because image marks don't support  x1 and x2, we need to compute the
+    // midpoint for rects
+    let x, y;
+    if (hasDateX && interval)
+      x = (d: { x: number | Date }) => (+d.x + +interval.offset(d.x, 1)) / 2;
+    if (hasDateY && interval)
+      y = (d: { y: number | Date }) => (+d.y + +interval.offset(d.y, 1)) / 2;
+
     const otherTip = Plot[otherMark.type](instance.filteredData, {
-      ...pointer(maybeStackedOptions),
+      ...pointer({
+        ...maybeStackedOptions,
+        ...(x ? { x } : {}),
+        ...(y ? { y } : {}),
+      }),
       ...otherMark.options,
     });
     marks.push(otherTip);
