@@ -18,7 +18,7 @@ const codeString = `duckplot
     .table("stocks")
     .x("Date")
     .y("Close")        
-    .mark("barY")
+    .mark("rectY")
     .config({tipMark: {type: "image", options: {src: () => "${smileyDataURL}"}}})
     `;
 
