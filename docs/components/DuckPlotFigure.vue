@@ -19,37 +19,11 @@ import * as duckdb from "@duckdb/duckdb-wasm";
 import * as Plot from "@observablehq/plot";
 import { DuckPlot } from "@summerforeverco/duck-plot";
 import "@summerforeverco/tmp/dist/style.css"; // tmp is included for vitepress build
-import { getDuckDB } from "../DuckDBInstance";
+import { getDuckDB, registerTableOnce } from "../DuckDBInstance";
 
 export const createDbClient = async (fileName) => {
-  const tableName = fileName.replace(".csv", "").replace("-", "");
   const db = await getDuckDB();
-
-  const conn = await db.connect();
-
-  // Check if table already exists
-  const result = await conn.query(`
-    SELECT COUNT(*) as count
-    FROM information_schema.tables
-    WHERE table_schema = 'main' AND table_name = '${tableName}'
-  `);
-
-  const exists = result.toArray()[0].count > 0;
-
-  if (!exists) {
-    const response = await fetch(`data/${fileName}`);
-    const csvData = await response.text();
-
-    await db.registerFileText(`${fileName}.csv`, csvData);
-    await conn.insertCSVFromPath(`${fileName}.csv`, {
-      schema: "main",
-      name: tableName,
-      detect: true,
-      header: true,
-      delimiter: ",",
-    });
-  }
-
+  await registerTableOnce(db, fileName);
   return db;
 };
 
