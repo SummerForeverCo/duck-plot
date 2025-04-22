@@ -11,6 +11,7 @@ import { getTreemapMarks } from "./getTreemapMarks";
 import { prepareTreemapData } from "./prepareTreemapData";
 import { getCirclePackMarks } from "./getCirclePackMarks";
 import { prepareCirclePackData } from "./prepareCirclePackData";
+import { getPieMarks } from "./getPieMarks";
 export function getAllMarkOptions(instance: DuckPlot) {
   // Grab the types and labels from the data
   const { types, labels } = instance.data();
@@ -53,6 +54,7 @@ export function getAllMarkOptions(instance: DuckPlot) {
 
   const isValidTreemap = mark === "treemap" && hasY;
   const isValidCirclePack = mark === "circlePack" && hasY;
+  const isValidPie = mark === "pie" && hasY;
 
   // Special case where the rawData has a mark column, render a different mark
   // for each subset of the data
@@ -63,7 +65,8 @@ export function getAllMarkOptions(instance: DuckPlot) {
     (isValidTickChart ||
       hasColumnsOrAggregate ||
       isValidTreemap ||
-      isValidCirclePack) &&
+      isValidCirclePack ||
+      isValidPie) &&
     (mark || markColumnMarks.length > 0);
 
   // Assume that if someone has specified a markcolumn, they want to show it
@@ -78,7 +81,6 @@ export function getAllMarkOptions(instance: DuckPlot) {
           const markData = instance.filteredData?.filter((d) => {
             return markColumnMarks.length > 0 ? d.markColumn === mark : true;
           });
-
           return mark === "treemap"
             ? getTreemapMarks(prepareTreemapData(markData, instance), instance)
             : mark === "circlePack"
@@ -86,6 +88,8 @@ export function getAllMarkOptions(instance: DuckPlot) {
                 prepareCirclePackData(markData, instance),
                 instance
               )
+            : mark === "pie"
+            ? getPieMarks(markData, instance)
             : Plot[mark!](
                 markData,
                 getPrimaryMarkOptions(instance, mark) as MarkOptions
@@ -97,7 +101,8 @@ export function getAllMarkOptions(instance: DuckPlot) {
   // TODO: Make frame/grid config options(?)
   const commonPlotMarks = [
     // Only include the common marks if the mark is not a treemap or circlePack
-    ...(mark === "treemap" || mark === "circlePack"
+    // or pie
+    ...(mark === "treemap" || mark === "circlePack" || mark === "pie"
       ? []
       : getCommonMarks(currentColumns)),
     ...(instance.options().marks || []),

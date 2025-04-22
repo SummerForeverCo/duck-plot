@@ -22,6 +22,7 @@ export type ChartType =
   | "treemap"
   | "circlePack"
   | "image"
+  | "pie"
   | undefined;
 
 export type SqlSort = {
@@ -120,7 +121,7 @@ export type Config = {
     color?: (d: Indexable, i: number) => string;
   };
   tipMark?: {
-    type: Exclude<ChartType, "circlePack" | "treemap">;
+    type: Exclude<ChartType, "circlePack" | "treemap" | "pie">;
     options: MarkOptions;
   };
   autoMargin?: boolean; // Automatically adjust margins

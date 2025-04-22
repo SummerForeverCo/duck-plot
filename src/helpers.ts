@@ -36,6 +36,7 @@ const supportsAggregation = [
   "rectX",
   "treemap",
   "circlePack",
+  "pie",
 ];
 
 export function allowAggregation(chartType?: ChartType) {
