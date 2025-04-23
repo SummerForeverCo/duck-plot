@@ -42,7 +42,7 @@ export * from "./pie.js";
 // export * from "./sortXbyY.js";
 // export * from "./sortYbyX.js";
 // export * from "./text.js";
-// export * from "./tipMark.js";
+export * from "./tipMark.js";
 // export * from "./tipMarkCirclepack.js";
 // export * from "./tipMarkTreemap.js";
 // export * from "./tick.js";

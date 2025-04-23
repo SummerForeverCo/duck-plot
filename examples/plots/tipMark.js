@@ -14,11 +14,11 @@ const smileySVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14
 const smileyDataURL = `data:image/svg+xml,${encodeURIComponent(smileySVG)}`;
 
 const codeString = `duckplot
-    .query('select * from stocks limit 20')
+    .query('select * from stocks')
     .table("stocks")
-    .x("Date")
+    .color("Symbol")
     .y("Close")        
-    .mark("rectY")
+    .mark("pie")
     .config({tipMark: {type: "image", options: {src: () => "${smileyDataURL}"}}})
     `;
 

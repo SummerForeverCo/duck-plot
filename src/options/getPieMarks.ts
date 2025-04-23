@@ -7,6 +7,7 @@ import { defaultColors } from "../helpers";
 import { cumsum } from "d3-array";
 import type { GeometryCollection, Polygon } from "geojson";
 
+type PolygonWithSeries = Polygon & { series?: string };
 // Derived from this example: https://observablehq.com/@observablehq/pie-to-donut-chart
 export function getPieMarks(
   data: Data | undefined,
@@ -21,7 +22,7 @@ export function getPieMarks(
   const r = 360 / cs[cs.length - 1];
   for (let i = 0; i < cs.length; ++i) cs[i] *= r;
 
-  const geometries: Polygon[] = data.map((d, i) => {
+  const geometries: PolygonWithSeries[] = data.map((d, i) => {
     const a = -(cs[i - 1] || 0);
     const b = -cs[i];
     const numSteps = 3; // Keep an eye on this, it may need to be adjusted
@@ -60,6 +61,22 @@ export function getPieMarks(
     tipMarks.push(otherTip);
   }
 
+  const labels = instance.config().pieLabels;
+  const labelData = geometries.filter(
+    (d) => d.series && labels[d.series] !== undefined
+  );
+
+  const labelMark = Plot.text(
+    labelData,
+    Plot.geoCentroid({
+      x: (d) => d.x0,
+      y: (d) => d.y0,
+      text: (d) => labels[d.series],
+      fontSize: 12,
+      textAnchor: "middle",
+      dy: -5,
+    })
+  );
   return [
     Plot.geo(
       {
@@ -71,5 +88,6 @@ export function getPieMarks(
       }
     ),
     ...[hideTip ? null : tipMarks],
+    ...[!labelData ? null : labelMark],
   ];
 }

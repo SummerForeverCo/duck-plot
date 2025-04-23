@@ -124,6 +124,10 @@ export type Config = {
     type: Exclude<ChartType, "circlePack" | "treemap" | "pie">;
     options: MarkOptions;
   };
+  // For pie chart section labels
+  pieLabels: {
+    [key: string]: string;
+  };
   autoMargin?: boolean; // Automatically adjust margins
   aggregate?: Aggregate;
   interactiveLegend?: boolean;

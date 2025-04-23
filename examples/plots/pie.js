@@ -7,6 +7,12 @@ const codeString = `duckplot
     .color("Symbol")
     .mark("pie")
     .options({width: 400, height: 400})
+    .config({
+        pieLabels: {
+            "GOOG": "Google",
+            "AMZN": "Amazon",
+        }
+    })
     `;
 
 export const pie = (options) => renderPlot("stocks.csv", codeString, options);
