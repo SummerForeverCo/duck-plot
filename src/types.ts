@@ -125,7 +125,7 @@ export type Config = {
     options: MarkOptions;
   };
   // For pie chart section labels
-  pieLabels: {
+  pieLabels?: {
     [key: string]: string;
   };
   autoMargin?: boolean; // Automatically adjust margins

@@ -6,6 +6,7 @@ import { isColor } from "./getPlotOptions";
 import { defaultColors } from "../helpers";
 import { cumsum } from "d3-array";
 import type { GeometryCollection, Polygon } from "geojson";
+import { truncateLabel } from "./getTipMarks";
 
 type PolygonWithSeries = Polygon & { series?: string };
 // Derived from this example: https://observablehq.com/@observablehq/pie-to-donut-chart
@@ -19,7 +20,8 @@ export function getPieMarks(
   // TODO: move to other fn
   // Prepare pieChartData
   const cs = cumsum(data, (d) => d.y);
-  const r = 360 / cs[cs.length - 1];
+  const total = cs[cs.length - 1];
+  const r = 360 / total;
   for (let i = 0; i < cs.length; ++i) cs[i] *= r;
 
   const geometries: PolygonWithSeries[] = data.map((d, i) => {
@@ -38,11 +40,39 @@ export function getPieMarks(
       coordinates: [[[0, 90], ...arcPoints, [0, 90]]],
     };
   });
+
+  // Get tip label from config (if there)
+  const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
+
   const tip = Plot.tip(
     geometries,
     Plot.pointer(
       Plot.geoCentroid({
         fill: "series",
+        channels: {
+          yCustom: {
+            label: truncateLabel(yLabel),
+            value: "y",
+          },
+          percent: {
+            label: "Percent",
+            value: (d) => {
+              const percent = ((d.y / total) * 100).toFixed(1);
+              console.log(d.y, cs, percent);
+              return `${percent}%`;
+            },
+          },
+        },
+        format: {
+          yCustom: true,
+          percent: true,
+          color: true,
+          x: false,
+          y: false,
+          fy: false,
+          fx: false,
+          z: false, // Hide the auto generated "series" for area charts
+        },
       })
     )
   );
@@ -62,21 +92,24 @@ export function getPieMarks(
   }
 
   const labels = instance.config().pieLabels;
-  const labelData = geometries.filter(
-    (d) => d.series && labels[d.series] !== undefined
-  );
+  const labelData = labels
+    ? geometries.filter((d) => d.series && labels[d.series] !== undefined)
+    : null;
 
-  const labelMark = Plot.text(
-    labelData,
-    Plot.geoCentroid({
-      x: (d) => d.x0,
-      y: (d) => d.y0,
-      text: (d) => labels[d.series],
-      fontSize: 12,
-      textAnchor: "middle",
-      dy: -5,
-    })
-  );
+  const labelMark =
+    labels && labelData
+      ? Plot.text(
+          labelData,
+          Plot.geoCentroid({
+            x: (d) => d.x0,
+            y: (d) => d.y0,
+            text: (d) => labels[d.series],
+            fontSize: 12,
+            textAnchor: "middle",
+            dy: -5,
+          })
+        )
+      : null;
   return [
     Plot.geo(
       {
@@ -87,7 +120,7 @@ export function getPieMarks(
         fill: "series",
       }
     ),
+    labelMark,
     ...[hideTip ? null : tipMarks],
-    ...[!labelData ? null : labelMark],
   ];
 }
