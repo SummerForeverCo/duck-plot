@@ -23,8 +23,8 @@ export async function render(
             // equal-area is crucial to maintain comparability of the slices,
             // but it could be any other equal-area projection
             type: "azimuthal-equal-area",
-            rotate: [0, 90],
-          },
+            rotate: [0, -90],
+          } satisfies Plot.ProjectionOptions,
         }
       : {}),
     marks: instance.getAllMarkOptions(),

@@ -14,14 +14,7 @@ export function getPieMarks(
 ): Markish[] {
   if (!data) return [];
   const plotOptions = instance.derivePlotOptions();
-  const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
   const hideTip = instance.isServer || instance.config()?.tip === false;
-  const hasSeries =
-    instance.color().column && !isColor(instance.color().column);
-  const fill = isColor(instance.color()?.column)
-    ? instance.color()?.column
-    : defaultColors[0];
-
   // TODO: move to other fn
   // Prepare pieChartData
   const cs = cumsum(data, (d) => d.y);
@@ -31,22 +24,41 @@ export function getPieMarks(
   const geometries: Polygon[] = data.map((d, i) => {
     const a = -(cs[i - 1] || 0);
     const b = -cs[i];
+    const numSteps = 3; // Keep an eye on this, it may need to be adjusted
+
+    const arcPoints = Array.from({ length: numSteps + 1 }, (_, j) => [
+      a + ((b - a) * j) / numSteps,
+      0,
+    ]);
 
     return {
       type: "Polygon",
       ...d,
-      coordinates: [
-        [
-          [0, 90],
-          [a, 0],
-          [(2 * a + b) / 3, 0],
-          [(a + 2 * b) / 3, 0],
-          [b, 0],
-          [0, 90],
-        ],
-      ],
+      coordinates: [[[0, 90], ...arcPoints, [0, 90]]],
     };
   });
+  const tip = Plot.tip(
+    geometries,
+    Plot.pointer(
+      Plot.geoCentroid({
+        fill: "series",
+      })
+    )
+  );
+  const tipMarks = [tip];
+  const otherMark = instance.config().tipMark;
+  if (otherMark?.type) {
+    const otherTip = Plot[otherMark.type](geometries, {
+      ...Plot.pointer(
+        Plot.geoCentroid({
+          x: (d) => (d.x0 + d.x1) / 2,
+          y: (d) => (d.y0 + d.y1) / 2,
+        })
+      ),
+      ...otherMark.options,
+    });
+    tipMarks.push(otherTip);
+  }
 
   return [
     Plot.geo(
@@ -58,5 +70,6 @@ export function getPieMarks(
         fill: "series",
       }
     ),
+    ...[hideTip ? null : tipMarks],
   ];
 }
