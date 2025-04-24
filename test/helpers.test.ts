@@ -3,7 +3,7 @@ import { checkForConfigErrors } from "../src/helpers";
 import { DuckPlot } from "../src/";
 import { createDbServer } from "../examples/util/createDbServer";
 import { JSDOM } from "jsdom";
-import { Database } from "duckdb-async";
+import { AsyncDuckDB } from "@duckdb/duckdb-wasm";
 
 // Not testing the font measurment here
 const fakeFont = {
@@ -13,7 +13,7 @@ const fakeFont = {
 describe("checkForConfigErrors", () => {
   let plot: any;
   let jsdom: JSDOM;
-  let ddb: Database;
+  let ddb: AsyncDuckDB;
 
   beforeEach(async () => {
     jsdom = new JSDOM();
@@ -147,5 +147,12 @@ describe("checkForConfigErrors", () => {
   it("does not throw an error for a valid configuration", () => {
     plot.table("table").mark("barX");
     expect(() => checkForConfigErrors(plot)).not.toThrow();
+  });
+
+  it("throws an error if unsupported columns are specified for pie charts", () => {
+    plot.table("table").mark("pie").x("col1");
+    expect(() => checkForConfigErrors(plot)).toThrow(
+      "Pie charts only support y (size) and color (category) columns"
+    );
   });
 });

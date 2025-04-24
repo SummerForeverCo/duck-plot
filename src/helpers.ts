@@ -251,6 +251,16 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
       throw new Error(
         "Multiple y columns not supported for barX or rectX type"
       );
+  } else if (type === "pie") {
+    if (
+      instance.x().column ||
+      instance.y().column ||
+      instance.fx().column ||
+      instance.fy().column
+    )
+      throw new Error(
+        "Pie charts only support y (size) and color (category) columns"
+      );
   } else {
     if (multipleX)
       throw new Error("Multiple x columns only supported for barX type");
