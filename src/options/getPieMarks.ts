@@ -58,12 +58,7 @@ export function getPieMarks(
   const otherMark = instance.config().tipMark;
   if (otherMark?.type) {
     const otherTip = Plot[otherMark.type](geometries, {
-      ...Plot.pointer(
-        Plot.geoCentroid({
-          x: (d) => (d.x0 + d.x1) / 2,
-          y: (d) => (d.y0 + d.y1) / 2,
-        })
-      ),
+      ...Plot.pointer(Plot.geoCentroid()),
       ...otherMark.options,
     });
     tipMarks.push(otherTip);
