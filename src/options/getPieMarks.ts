@@ -80,8 +80,6 @@ export function getPieMarks(
       ? Plot.text(
           labelData,
           Plot.geoCentroid({
-            x: (d) => d.x0,
-            y: (d) => d.y0,
             text: (d) => labels[d.series],
             fontSize: 12,
             textAnchor: "middle",

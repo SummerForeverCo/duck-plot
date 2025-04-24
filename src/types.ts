@@ -128,6 +128,7 @@ export type Config = {
   pieLabels?: {
     [key: string]: string;
   };
+  donut?: boolean; // For pie charts
   autoMargin?: boolean; // Automatically adjust margins
   aggregate?: Aggregate;
   interactiveLegend?: boolean;
