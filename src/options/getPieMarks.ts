@@ -7,8 +7,8 @@ import { defaultColors } from "../helpers";
 import { cumsum } from "d3-array";
 import type { GeometryCollection, Polygon } from "geojson";
 import { truncateLabel } from "./getTipMarks";
-
 type PolygonWithSeries = Polygon & { series?: string };
+
 // Derived from this example: https://observablehq.com/@observablehq/pie-to-donut-chart
 export function getPieMarks(
   data: Data | undefined,
@@ -16,34 +16,11 @@ export function getPieMarks(
 ): Markish[] {
   if (!data) return [];
   const plotOptions = instance.derivePlotOptions();
-  const hideTip = instance.isServer || instance.config()?.tip === false;
-  // TODO: move to other fn
-  // Prepare pieChartData
-  const cs = cumsum(data, (d) => d.y);
-  const total = cs[cs.length - 1];
-  const r = 360 / total;
-  for (let i = 0; i < cs.length; ++i) cs[i] *= r;
-
-  const geometries: PolygonWithSeries[] = data.map((d, i) => {
-    const a = -(cs[i - 1] || 0);
-    const b = -cs[i];
-    const numSteps = 3; // Keep an eye on this, it may need to be adjusted
-
-    const arcPoints = Array.from({ length: numSteps + 1 }, (_, j) => [
-      a + ((b - a) * j) / numSteps,
-      0,
-    ]);
-
-    return {
-      type: "Polygon",
-      ...d,
-      coordinates: [[[0, 90], ...arcPoints, [0, 90]]],
-    };
-  });
+  const { geometries, total } = preparePieData(data);
 
   // Get tip label from config (if there)
+  const hideTip = instance.isServer || instance.config()?.tip === false;
   const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
-
   const tip = Plot.tip(
     geometries,
     Plot.pointer(
@@ -75,6 +52,8 @@ export function getPieMarks(
       })
     )
   );
+
+  // Additional tip marks
   const tipMarks = [tip];
   const otherMark = instance.config().tipMark;
   if (otherMark?.type) {
@@ -90,6 +69,7 @@ export function getPieMarks(
     tipMarks.push(otherTip);
   }
 
+  // Labels
   const labels = instance.config().pieLabels;
   const labelData = labels
     ? geometries.filter((d) => d.series && labels[d.series] !== undefined)
@@ -125,4 +105,29 @@ export function getPieMarks(
     labelMark,
     ...[hideTip ? null : tipMarks],
   ];
+}
+
+function preparePieData(data: Data) {
+  // Prepare pieChartData
+  const cs = cumsum(data, (d) => d.y);
+  const total = cs[cs.length - 1];
+  const r = 360 / total;
+  for (let i = 0; i < cs.length; ++i) cs[i] *= r;
+
+  const geometries: PolygonWithSeries[] = data.map((d, i) => {
+    const a = -(cs[i - 1] || 0);
+    const b = -cs[i];
+    const numSteps = 3; // Keep an eye on this, it may need to be adjusted
+
+    const arcPoints = Array.from({ length: numSteps + 1 }, (_, j) => [
+      a + ((b - a) * j) / numSteps,
+      0,
+    ]);
+    return {
+      type: "Polygon",
+      ...d,
+      coordinates: [[[0, 90], ...arcPoints, [0, 90]]],
+    };
+  });
+  return { geometries, total };
 }
