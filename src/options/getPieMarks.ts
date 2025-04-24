@@ -58,7 +58,6 @@ export function getPieMarks(
             label: "Percent",
             value: (d) => {
               const percent = ((d.y / total) * 100).toFixed(1);
-              console.log(d.y, cs, percent);
               return `${percent}%`;
             },
           },
