@@ -117,6 +117,9 @@ export function getPieMarks(
       },
       {
         fill: "series",
+        ...(instance.config().customRender
+          ? { render: instance.config().customRender }
+          : {}),
       }
     ),
     labelMark,
