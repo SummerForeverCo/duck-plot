@@ -16,12 +16,6 @@ export function getTipMarks(instance: DuckPlot) {
   const currentColumns = Object.keys(data.types || {});
   const fx = currentColumns.includes("fx") ? "fx" : undefined;
 
-  const ellipsis = "…";
-  function truncateLabel(label: string | undefined, length: number = 25) {
-    if (!label || label.length < length) return label;
-    return label.slice(0, length) + ellipsis;
-  }
-
   // Handle date axes for bar charts, which requires using the interval to
   // specify the start and end of each rect
   let interval;
@@ -117,4 +111,10 @@ export function getTipMarks(instance: DuckPlot) {
     marks.push(otherTip);
   }
   return marks;
+}
+
+const ellipsis = "…";
+export function truncateLabel(label: string | undefined, length: number = 25) {
+  if (!label || label.length < length) return label;
+  return label.slice(0, length) + ellipsis;
 }

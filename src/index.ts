@@ -324,6 +324,7 @@ export class DuckPlot {
       await this.prepareData();
       return await render(this, newLegend);
     } catch (error) {
+      console.log(error);
       return await renderError(this, error);
     }
   }

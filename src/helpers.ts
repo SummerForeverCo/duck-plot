@@ -36,6 +36,7 @@ const supportsAggregation = [
   "rectX",
   "treemap",
   "circlePack",
+  "pie",
 ];
 
 export function allowAggregation(chartType?: ChartType) {
@@ -249,6 +250,11 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
     if (multipleY)
       throw new Error(
         "Multiple y columns not supported for barX or rectX type"
+      );
+  } else if (type === "pie") {
+    if (instance.x().column || instance.fx().column || instance.fy().column)
+      throw new Error(
+        "Pie charts only support y (size) and color (category) columns"
       );
   } else {
     if (multipleX)

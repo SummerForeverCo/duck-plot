@@ -132,7 +132,7 @@ export async function prepareData(
     (distinctCols.includes("y") ||
       distinctCols.includes("x") ||
       distinctCols.includes("fx") ||
-      ((type === "treemap" || type === "circlePack") &&
+      ((type === "treemap" || type === "circlePack" || type === "pie") &&
         (distinctCols.includes("series") || distinctCols.includes("text"))) ||
       instance.config().aggregate);
 
