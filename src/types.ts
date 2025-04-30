@@ -63,6 +63,10 @@ export interface Data extends Array<Indexable> {
   types?: { [key: string]: BasicColumnType };
   labels?: { x?: string; y?: string; series?: string };
 }
+export interface PieData {
+  y: number;
+  series: string;
+}
 export type BasicColumnType = "string" | "number" | "date" | undefined;
 // TODO: maybe rename this...?
 export type ColumnType = string | string[];
