@@ -10,6 +10,8 @@ const codeString = `duckplot
     .config({
         donut: true,
         pieLabels: {
+            "AAPL": "A",
+            "IBM": "I",
             "GOOG": "G",
             "AMZN": "A",
         }

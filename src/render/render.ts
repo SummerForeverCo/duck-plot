@@ -20,15 +20,10 @@ export async function render(
     ...currentOptions,
     ...(instance.mark().type === "pie"
       ? {
-          margin: 0,
-          marginTop: 0,
-          marginRight: 0,
-          marginBottom: 0,
-          marginLeft: 0,
-          padding: 0,
+          margin: 10,
           height: size,
-          size,
           width: size,
+          frameAnchor: "middle",
           x: {
             axis: null,
             domain: [-90, 90],

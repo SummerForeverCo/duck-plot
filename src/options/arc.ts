@@ -9,10 +9,11 @@ type ArcOptions = Partial<{
   endAngle: (d: { endAngle: number }) => number;
   innerRadius: number;
   outerRadius: number;
-  x: number;
-  y: number;
+  x: (d: { x: number }) => number;
+  y: (d: { yPos: number }) => number;
   fill: (d: PieData) => string;
   stroke: (d: PieData) => string;
+  customRender: RenderFunction;
 }>;
 
 export class Arc extends Mark {
@@ -21,6 +22,7 @@ export class Arc extends Mark {
   options: ArcOptions;
   fill: (d: any) => string;
   stroke: (d: any) => string;
+  customRender: RenderFunction | undefined;
   constructor(data: PieData[], options: ArcOptions = {}) {
     super();
     const {
@@ -32,10 +34,12 @@ export class Arc extends Mark {
       y,
       fill,
       stroke,
+      customRender,
       ...rest
     } = options;
 
     this.data = data;
+    this.customRender = customRender;
     this.channels = {
       startAngle: { value: startAngle },
       endAngle: { value: endAngle },
@@ -50,13 +54,16 @@ export class Arc extends Mark {
   }
 
   render: RenderFunction = (index, scales, channels, dimensions, context) => {
+    // This is a bit of a workaround that supports the *side effects* of
+    // customRender() functions while still rendering the mark.
+    if (this.customRender) {
+      this.customRender(index, scales, channels, dimensions, context);
+    }
     const {
       startAngle: SA,
       endAngle: EA,
       innerRadius: RI,
       outerRadius: RO,
-      x: X = [],
-      y: Y = [],
     } = channels;
 
     const indexAccessor = (arr?: number[]) => (i: unknown) =>
@@ -79,10 +86,7 @@ export class Arc extends Mark {
         .attr("d", arcGen(i as any))
         .attr("fill", fillFn(i))
         .attr("stroke", this.stroke ? this.stroke(this.data[i]) : "white")
-        .attr(
-          "transform",
-          `translate(${+(X as number[])[i]},${(Y as number[])[i]})`
-        );
+        .attr("transform", `translate(${scales.x?.(0)},${scales.y?.(0)})`);
     }
 
     return g.node() as SVGElement;

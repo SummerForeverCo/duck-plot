@@ -12,12 +12,10 @@ export function getPieMarks(
   if (!data) return [];
   const plotOptions = instance.derivePlotOptions();
   const outerRadius =
-    Math.min(plotOptions.width ?? 0, plotOptions.height ?? 0) / 2 - 20;
+    Math.min((plotOptions.width ?? 0) - 20, (plotOptions.height ?? 0) - 20) / 2;
+
   const donut = instance.config().donut;
   const innerRadius = donut ? outerRadius / 2 : 0;
-
-  const cx = 0,
-    cy = 0;
 
   const pieGen = d3pie<{ y: number; series: string }>()
     .value((d) => d.y)
@@ -36,33 +34,32 @@ export function getPieMarks(
       yPos: number;
     } => {
       const angle = (d.startAngle + d.endAngle) / 2;
-      const bias = donut ? 0.25 : 0.25;
-      const radius =
-        innerRadius * bias * 2 + (outerRadius - innerRadius) * bias;
-
+      const domainExtent = donut ? 90 + 45 : 90;
+      const labelRadius = domainExtent;
       return {
         startAngle: d.startAngle,
         endAngle: d.endAngle,
         series: d.data?.series,
         y: d.data?.y,
-        x: Math.sin(angle) * radius,
-        yPos: Math.cos(angle) * radius,
+        x: (Math.sin(angle) * labelRadius) / 2,
+        yPos: (Math.cos(angle) * labelRadius) / 2,
       };
     }
   );
+
   const slices = arc(pieData, {
-    x: cx,
-    y: cy,
+    x: (d: { x: number }) => d.x,
+    y: (d: { yPos: number }) => d.yPos,
     startAngle: (d: { startAngle: number }) => d.startAngle,
     endAngle: (d: { endAngle: number }) => d.endAngle,
     innerRadius,
     outerRadius,
     fill: (d: { series: string }) => d.series,
+    customRender: instance.config().customRender,
   });
 
   // TODO: easier
-  let total = 0;
-  data.forEach((d) => (total += d.y));
+  const total = data.reduce((sum, d) => sum + d.y, 0);
 
   const hideTip = instance.isServer || instance.config()?.tip === false;
   const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
@@ -105,6 +102,7 @@ export function getPieMarks(
         x: (d) => d.x,
         y: (d) => d.yPos,
         text: (d) => labels[d.series],
+        textAnchor: "middle",
       });
 
   // Additional tip marks
