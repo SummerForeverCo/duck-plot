@@ -13,18 +13,25 @@ export async function render(
   instance.setSorts();
 
   // Generate Plot Options
+  const currentOptions = getPlotOptions(instance);
+  const size = Math.min(currentOptions.height ?? 0, currentOptions.width ?? 0);
   // Generate Plot Options
   const plotOptions = {
-    ...getPlotOptions(instance),
+    ...currentOptions,
     ...(instance.mark().type === "pie"
       ? {
-          y: {},
-          projection: {
-            // equal-area is crucial to maintain comparability of the slices,
-            // but it could be any other equal-area projection
-            type: "azimuthal-equal-area",
-            rotate: [0, instance.config().donut ? 90 : -90],
-          } satisfies Plot.ProjectionOptions,
+          margin: 10,
+          height: size,
+          width: size,
+          frameAnchor: "middle",
+          x: {
+            axis: null,
+            domain: [-90, 90],
+          },
+          y: {
+            axis: null,
+            domain: [-90, 90],
+          },
         }
       : {}),
     marks: instance.getAllMarkOptions(),
@@ -32,7 +39,6 @@ export async function render(
   };
 
   // Detect if the plot should auto adjust margins
-  // TODO: should be able to take away this check
   const autoMargin =
     instance.isServer && !instance.font
       ? false

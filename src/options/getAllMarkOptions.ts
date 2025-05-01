@@ -5,7 +5,7 @@ import { derivePlotOptions } from "./derivePlotOptions";
 import { getPrimaryMarkOptions } from "./getPrimaryMarkOptions";
 import * as Plot from "@observablehq/plot";
 import { getCommonMarks, getfyMarks } from "./getPlotOptions";
-import { ChartType } from "../types";
+import { ChartType, Data } from "../types";
 import { getTipMarks } from "./getTipMarks";
 import { getTreemapMarks } from "./getTreemapMarks";
 import { prepareTreemapData } from "./prepareTreemapData";
@@ -78,9 +78,11 @@ export function getAllMarkOptions(instance: DuckPlot) {
   const primaryMarks = showPrimaryMark
     ? [
         ...marks.map((mark: ChartType) => {
-          const markData = instance.filteredData?.filter((d) => {
-            return markColumnMarks.length > 0 ? d.markColumn === mark : true;
-          });
+          const markData: Data | undefined = instance.filteredData?.filter(
+            (d) => {
+              return markColumnMarks.length > 0 ? d.markColumn === mark : true;
+            }
+          );
           return mark === "treemap"
             ? getTreemapMarks(prepareTreemapData(markData, instance), instance)
             : mark === "circlePack"

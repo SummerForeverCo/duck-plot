@@ -63,6 +63,10 @@ export interface Data extends Array<Indexable> {
   types?: { [key: string]: BasicColumnType };
   labels?: { x?: string; y?: string; series?: string };
 }
+export interface PieData {
+  y: number;
+  series: string;
+}
 export type BasicColumnType = "string" | "number" | "date" | undefined;
 // TODO: maybe rename this...?
 export type ColumnType = string | string[];
@@ -161,3 +165,14 @@ export type Sorts = {
   fy?: { domain: string[] };
   series?: { domain: string[] }; // TODO, color?
 };
+
+export type ArcOptions = Partial<{
+  startAngle: (d: { startAngle: number }) => number;
+  endAngle: (d: { endAngle: number }) => number;
+  innerRadius: number;
+  outerRadius: number;
+  x: (d: { x: number }) => number;
+  y: (d: { yPos: number }) => number;
+  fill: (d: PieData) => string;
+  customRender: RenderFunction;
+}>;
