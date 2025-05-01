@@ -58,7 +58,6 @@ export function getPieMarks(
     customRender: instance.config().customRender,
   });
 
-  // TODO: easier
   const total = data.reduce((sum, d) => sum + d.y, 0);
 
   const hideTip = instance.isServer || instance.config()?.tip === false;

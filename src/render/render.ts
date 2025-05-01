@@ -39,9 +39,8 @@ export async function render(
   };
 
   // Detect if the plot should auto adjust margins
-  // TODO: should be able to take away this check
   const autoMargin =
-    (instance.isServer && !instance.font) || instance.mark().type === "pie"
+    instance.isServer && !instance.font
       ? false
       : instance.config().autoMargin !== false;
 

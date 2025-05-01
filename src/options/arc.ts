@@ -2,26 +2,13 @@ import { arc as shapeArc } from "d3-shape";
 import { create } from "d3-selection";
 import { Mark } from "@observablehq/plot";
 import type { RenderFunction } from "@observablehq/plot";
-import { PieData } from "../types";
-
-type ArcOptions = Partial<{
-  startAngle: (d: { startAngle: number }) => number;
-  endAngle: (d: { endAngle: number }) => number;
-  innerRadius: number;
-  outerRadius: number;
-  x: (d: { x: number }) => number;
-  y: (d: { yPos: number }) => number;
-  fill: (d: PieData) => string;
-  stroke: (d: PieData) => string;
-  customRender: RenderFunction;
-}>;
+import { ArcOptions, PieData } from "../types";
 
 export class Arc extends Mark {
   data: PieData[];
   channels: any;
   options: ArcOptions;
   fill: (d: any) => string;
-  stroke: (d: any) => string;
   customRender: RenderFunction | undefined;
   constructor(data: PieData[], options: ArcOptions = {}) {
     super();
@@ -33,7 +20,6 @@ export class Arc extends Mark {
       x,
       y,
       fill,
-      stroke,
       customRender,
       ...rest
     } = options;
@@ -50,7 +36,6 @@ export class Arc extends Mark {
     };
     this.options = options;
     this.fill = fill ?? (() => "steelblue");
-    this.stroke = stroke ?? (() => "white");
   }
 
   render: RenderFunction = (index, scales, channels, dimensions, context) => {
@@ -85,7 +70,6 @@ export class Arc extends Mark {
       g.append("path")
         .attr("d", arcGen(i as any))
         .attr("fill", fillFn(i))
-        .attr("stroke", this.stroke ? this.stroke(this.data[i]) : "white")
         .attr("transform", `translate(${scales.x?.(0)},${scales.y?.(0)})`);
     }
 
