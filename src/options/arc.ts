@@ -1,17 +1,28 @@
 import { arc as shapeArc } from "d3-shape";
 import { create } from "d3-selection";
-import { Mark } from "@observablehq/plot"; // assuming Mark is public (or you copy it)
+import { Mark } from "@observablehq/plot";
+import type { RenderFunction } from "@observablehq/plot";
 import { PieData } from "../types";
+
+type ArcOptions = Partial<{
+  startAngle: (d: { startAngle: number }) => number;
+  endAngle: (d: { endAngle: number }) => number;
+  innerRadius: number;
+  outerRadius: number;
+  x: number;
+  y: number;
+  fill: (d: PieData) => string;
+  stroke: (d: PieData) => string;
+}>;
 
 export class Arc extends Mark {
   data: PieData[];
   channels: any;
-  options: any;
+  options: ArcOptions;
   fill: (d: any) => string;
   stroke: (d: any) => string;
-  constructor(data: PieData[], options: any = {}) {
-    super(); // ✅ no arguments!
-
+  constructor(data: PieData[], options: ArcOptions = {}) {
+    super();
     const {
       startAngle,
       endAngle,
@@ -38,40 +49,46 @@ export class Arc extends Mark {
     this.stroke = stroke ?? (() => "white");
   }
 
-  render(index, scales, channels, dimensions, context) {
+  render: RenderFunction = (index, scales, channels, dimensions, context) => {
     const {
       startAngle: SA,
       endAngle: EA,
       innerRadius: RI,
       outerRadius: RO,
-      x: X = constant(0),
-      y: Y = constant(0),
+      x: X = [],
+      y: Y = [],
     } = channels;
 
+    const indexAccessor = (arr?: number[]) => (i: unknown) =>
+      arr?.[i as number] ?? 0;
+
     const arcGen = shapeArc()
-      .startAngle((i) => SA[i])
-      .endAngle((i) => EA[i])
-      .innerRadius((i) => RI[i])
-      .outerRadius((i) => RO[i]);
+      .startAngle(indexAccessor(SA))
+      .endAngle(indexAccessor(EA))
+      .innerRadius(indexAccessor(RI))
+      .outerRadius(indexAccessor(RO));
 
     const fillFn = scales.color
-      ? (i) => scales.color(this.fill(this.data[i]))
-      : (i) => this.fill(this.data[i]);
+      ? (i: number) => scales?.color?.(this.fill(this.data[i]))
+      : (i: number) => this.fill(this.data[i]);
 
     const g = create("svg:g");
 
     for (let i = 0; i < this.data.length; ++i) {
       g.append("path")
-        .attr("d", arcGen(i))
+        .attr("d", arcGen(i as any))
         .attr("fill", fillFn(i))
         .attr("stroke", this.stroke ? this.stroke(this.data[i]) : "white")
-        .attr("transform", `translate(${X[i]},${Y[i]})`);
+        .attr(
+          "transform",
+          `translate(${+(X as number[])[i]},${(Y as number[])[i]})`
+        );
     }
 
     return g.node() as SVGElement;
-  }
+  };
 }
-const constant = (x) => () => x;
-export function arc(data, options) {
+
+export function arc(data: PieData[], options: ArcOptions) {
   return new Arc(data, options);
 }

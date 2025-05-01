@@ -5,7 +5,10 @@ import { truncateLabel } from "./getTipMarks";
 import { Data, DuckPlotInstance } from "../types";
 import { Markish } from "@observablehq/plot";
 
-export function getPieMarks(data: Data, instance: DuckPlotInstance): Markish[] {
+export function getPieMarks(
+  data: Data | undefined,
+  instance: DuckPlotInstance
+): Markish[] {
   if (!data) return [];
   const plotOptions = instance.derivePlotOptions();
   const outerRadius =
@@ -27,8 +30,8 @@ export function getPieMarks(data: Data, instance: DuckPlotInstance): Markish[] {
     ): {
       startAngle: number;
       endAngle: number;
-      series: string | undefined;
-      y: number | undefined;
+      series: string;
+      y: number;
       x: number;
       yPos: number;
     } => {
@@ -48,8 +51,8 @@ export function getPieMarks(data: Data, instance: DuckPlotInstance): Markish[] {
     }
   );
   const slices = arc(pieData, {
-    x: () => cx,
-    y: () => cy,
+    x: cx,
+    y: cy,
     startAngle: (d: { startAngle: number }) => d.startAngle,
     endAngle: (d: { endAngle: number }) => d.endAngle,
     innerRadius,
@@ -104,5 +107,20 @@ export function getPieMarks(data: Data, instance: DuckPlotInstance): Markish[] {
         text: (d) => labels[d.series],
       });
 
-  return [slices, labelMark, tipMark];
+  // Additional tip marks
+  const tipMarks = [tipMark];
+  const otherMark = instance.config().tipMark;
+  if (otherMark?.type) {
+    const otherTip = Plot[otherMark.type](
+      pieData,
+      Plot.pointer({
+        x: (d) => d.x,
+        y: (d) => d.yPos,
+        ...otherMark.options,
+      })
+    );
+    tipMarks.push(otherTip);
+  }
+
+  return [slices, labelMark, tipMarks];
 }
