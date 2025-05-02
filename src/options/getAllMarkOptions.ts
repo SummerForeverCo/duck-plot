@@ -119,8 +119,10 @@ export function getAllMarkOptions(instance: DuckPlot) {
     instance.isServer ||
     instance.config()?.tip === false ||
     !showPrimaryMark ||
+    // These marks handle their own tips
     mark === "treemap" ||
-    mark === "circlePack";
+    mark === "circlePack" ||
+    mark === "pie";
 
   const tipMark = hideTip ? [] : getTipMarks(instance);
 

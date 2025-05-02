@@ -119,5 +119,5 @@ export function getPieMarks(
     tipMarks.push(otherTip);
   }
 
-  return [slices, labelMark, tipMarks];
+  return [slices, labelMark, ...tipMarks];
 }
