@@ -12,6 +12,7 @@ import { prepareTreemapData } from "./prepareTreemapData";
 import { getCirclePackMarks } from "./getCirclePackMarks";
 import { prepareCirclePackData } from "./prepareCirclePackData";
 import { getPieMarks } from "./getPieMarks";
+import { getGeoMarks } from "./getGeoMarks";
 export function getAllMarkOptions(instance: DuckPlot) {
   // Grab the types and labels from the data
   const { types, labels } = instance.data();
@@ -55,6 +56,7 @@ export function getAllMarkOptions(instance: DuckPlot) {
   const isValidTreemap = mark === "treemap" && hasY;
   const isValidCirclePack = mark === "circlePack" && hasY;
   const isValidPie = mark === "pie" && hasY;
+  const isValidGeo = mark === "geo" && hasY; // TODO has area
 
   // Special case where the rawData has a mark column, render a different mark
   // for each subset of the data
@@ -66,6 +68,7 @@ export function getAllMarkOptions(instance: DuckPlot) {
       hasColumnsOrAggregate ||
       isValidTreemap ||
       isValidCirclePack ||
+      isValidGeo ||
       isValidPie) &&
     (mark || markColumnMarks.length > 0);
 
@@ -74,6 +77,7 @@ export function getAllMarkOptions(instance: DuckPlot) {
     markColumnMarks.length > 0 && instance.markColumn().column !== undefined
       ? markColumnMarks
       : [mark!];
+  console.log({ marks });
 
   const primaryMarks = showPrimaryMark
     ? [
@@ -92,6 +96,8 @@ export function getAllMarkOptions(instance: DuckPlot) {
               )
             : mark === "pie"
             ? getPieMarks(markData, instance)
+            : mark === "geo"
+            ? getGeoMarks(markData, instance)
             : Plot[mark!](
                 markData,
                 getPrimaryMarkOptions(instance, mark) as MarkOptions
@@ -104,7 +110,10 @@ export function getAllMarkOptions(instance: DuckPlot) {
   const commonPlotMarks = [
     // Only include the common marks if the mark is not a treemap or circlePack
     // or pie
-    ...(mark === "treemap" || mark === "circlePack" || mark === "pie"
+    ...(mark === "treemap" ||
+    mark === "circlePack" ||
+    mark === "pie" ||
+    mark === "geo"
       ? []
       : getCommonMarks(currentColumns)),
     ...(instance.options().marks || []),

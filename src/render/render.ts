@@ -18,6 +18,16 @@ export async function render(
   // Generate Plot Options
   const plotOptions = {
     ...currentOptions,
+    ...(instance.mark().type === "geo"
+      ? {
+          projection: "albers-usa",
+          color: {
+            type: "quantile",
+            n: 7,
+            scheme: "blues",
+          },
+        }
+      : {}),
     ...(instance.mark().type === "pie"
       ? {
           margin: 10,
@@ -48,6 +58,7 @@ export async function render(
   instance.plotObject = autoMargin
     ? PlotAutoMargin(plotOptions, {}, instance.font)
     : Plot.plot(plotOptions);
+  console.log(plotOptions);
 
   // Keep track of the hovered element for click events!
   if (instance.config().onClick && !instance.isServer) {
