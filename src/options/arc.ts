@@ -64,7 +64,7 @@ export class Arc extends Mark {
       ? (i: number) => scales?.color?.(this.fill(this.data[i]))
       : (i: number) => this.fill(this.data[i]);
 
-    const g = create("svg:g");
+    const g = create("svg:g").attr("class", "arc");
 
     for (let i = 0; i < this.data.length; ++i) {
       g.append("path")
