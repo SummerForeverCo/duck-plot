@@ -3,6 +3,7 @@ import { create } from "d3-selection";
 import { Mark } from "@observablehq/plot";
 import type { RenderFunction } from "@observablehq/plot";
 import { ArcOptions, PieData } from "../types";
+import { toSafeClassName } from "../helpers";
 
 export class Arc extends Mark {
   data: PieData[];
@@ -73,6 +74,7 @@ export class Arc extends Mark {
     for (let i = 0; i < this.data.length; ++i) {
       const series = this.data[i]?.series;
       const sliceId = `${this.chartId}-${series}`;
+      const className = toSafeClassName(sliceId);
       g.append("path")
         .attr("d", arcGen(i as any))
         .attr("fill", fillFn(i))
@@ -82,14 +84,14 @@ export class Arc extends Mark {
           this.parentNode?.appendChild(this);
 
           // Display the tooltip marks
-          const tipMarks = document.getElementsByClassName(`${sliceId}`);
+          const tipMarks = document.getElementsByClassName(className);
           for (let i = 0; i < tipMarks.length; i++) {
             (tipMarks[i] as HTMLElement).style.display = "block";
           }
         })
         .on("mouseleave", function () {
           // Hide tooltip marks
-          const tipMarks = document.getElementsByClassName(`${sliceId}`);
+          const tipMarks = document.getElementsByClassName(className);
           for (let i = 0; i < tipMarks.length; i++) {
             (tipMarks[i] as HTMLElement).style.display = "none";
           }

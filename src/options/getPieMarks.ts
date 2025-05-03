@@ -4,6 +4,7 @@ import { pie as d3pie } from "d3-shape";
 import { truncateLabel } from "./getTipMarks";
 import { Data, DuckPlotInstance } from "../types";
 import { Markish } from "@observablehq/plot";
+import { toSafeClassName } from "../helpers";
 
 export function getPieMarks(
   data: Data | undefined,
@@ -71,13 +72,15 @@ export function getPieMarks(
     if (next) {
       const ele = next(index, scales, channels, dimensions, context);
       const series = channels.ariaLabel;
+      const hasPointerEvents = !!channels.fill;
       if (ele) {
         let i = 0;
         for (const el of ele.children) {
+          const className = toSafeClassName(`${instance.id()}-${series?.[i]}`);
           const htmlEl = el as HTMLElement;
           htmlEl.style.display = "none";
-          htmlEl.style.pointerEvents = "none";
-          htmlEl.classList.add(`${instance.id()}-${series?.[i]}`);
+          if (!hasPointerEvents) htmlEl.style.pointerEvents = "none";
+          htmlEl.classList.add(className);
           i++;
         }
       }
