@@ -55,8 +55,7 @@ export function getPieMarks(
     innerRadius,
     outerRadius,
     fill: (d: { series: string }) => d.series,
-    chartId: instance.id(),
-    customRender: instance.config().customRender,
+    instance,
   });
 
   const hideTip = instance.isServer || instance.config()?.tip === false;

@@ -172,6 +172,5 @@ export type ArcOptions = {
   x: (d: { x: number }) => number;
   y: (d: { yPos: number }) => number;
   fill: (d: PieData) => string;
-  chartId: string;
-  customRender?: RenderFunction;
+  instance: DuckPlot;
 };

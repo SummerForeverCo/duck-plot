@@ -4,14 +4,14 @@ import { Mark } from "@observablehq/plot";
 import type { RenderFunction } from "@observablehq/plot";
 import { ArcOptions, PieData } from "../types";
 import { toSafeClassName } from "../helpers";
+import { DuckPlot } from "..";
 
 export class Arc extends Mark {
   data: PieData[];
   channels: any;
   options: ArcOptions;
   fill: (d: any) => string;
-  customRender: RenderFunction | undefined;
-  chartId: string;
+  instance: DuckPlot;
   constructor(data: PieData[], options: ArcOptions) {
     super();
     const {
@@ -22,14 +22,12 @@ export class Arc extends Mark {
       x,
       y,
       fill,
-      customRender,
-      chartId,
+      instance,
       ...rest
     } = options;
 
     this.data = data;
-    this.chartId = chartId;
-    this.customRender = customRender;
+    this.instance = instance;
     this.channels = {
       startAngle: { value: startAngle },
       endAngle: { value: endAngle },
@@ -45,8 +43,14 @@ export class Arc extends Mark {
   render: RenderFunction = (index, scales, channels, dimensions, context) => {
     // This is a bit of a workaround that supports the *side effects* of
     // customRender() functions while still rendering the mark.
-    if (this.customRender) {
-      this.customRender(index, scales, channels, dimensions, context);
+    if (this.instance.config().customRender) {
+      this.instance.config().customRender!(
+        index,
+        scales,
+        channels,
+        dimensions,
+        context
+      );
     }
     const {
       startAngle: SA,
@@ -69,11 +73,12 @@ export class Arc extends Mark {
       : (i: number) => this.fill(this.data[i]);
 
     const g = create("svg:g").attr("class", "arc");
-
+    // we lose `this` context in pointer event callbacks
+    const { data, instance } = this;
     // Display the tips on hover - custom handling
     for (let i = 0; i < this.data.length; ++i) {
       const series = this.data[i]?.series;
-      const sliceId = `${this.chartId}-${series}`;
+      const sliceId = `${this.instance.id()}-${series}`;
       const className = toSafeClassName(sliceId);
       g.append("path")
         .attr("d", arcGen(i as any))
@@ -88,6 +93,14 @@ export class Arc extends Mark {
           for (let i = 0; i < tipMarks.length; i++) {
             (tipMarks[i] as HTMLElement).style.display = "block";
           }
+
+          // Set the value of the plot object (as Plot does) for click events
+          if (instance.plotObject) {
+            instance.plotObject.value = {
+              series: data[i].series,
+              y: data[i].y,
+            };
+          }
         })
         .on("mouseleave", function (event) {
           const toElement = event.relatedTarget as HTMLElement | null;
@@ -101,6 +114,11 @@ export class Arc extends Mark {
           const tipMarks = document.getElementsByClassName(className);
           for (let i = 0; i < tipMarks.length; i++) {
             (tipMarks[i] as HTMLElement).style.display = "none";
+          }
+
+          // Unset the value of the plot object
+          if (instance.plotObject) {
+            instance.plotObject.value = null;
           }
         });
     }
