@@ -166,7 +166,7 @@ export type Sorts = {
   series?: { domain: string[] }; // TODO, color?
 };
 
-export type ArcOptions = Partial<{
+export type ArcOptions = {
   startAngle: (d: { startAngle: number }) => number;
   endAngle: (d: { endAngle: number }) => number;
   innerRadius: number;
@@ -174,5 +174,6 @@ export type ArcOptions = Partial<{
   x: (d: { x: number }) => number;
   y: (d: { yPos: number }) => number;
   fill: (d: PieData) => string;
-  customRender: RenderFunction;
-}>;
+  chartId: string;
+  customRender?: RenderFunction;
+};

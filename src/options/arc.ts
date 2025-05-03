@@ -10,7 +10,8 @@ export class Arc extends Mark {
   options: ArcOptions;
   fill: (d: any) => string;
   customRender: RenderFunction | undefined;
-  constructor(data: PieData[], options: ArcOptions = {}) {
+  chartId: string;
+  constructor(data: PieData[], options: ArcOptions) {
     super();
     const {
       startAngle,
@@ -21,10 +22,12 @@ export class Arc extends Mark {
       y,
       fill,
       customRender,
+      chartId,
       ...rest
     } = options;
 
     this.data = data;
+    this.chartId = chartId;
     this.customRender = customRender;
     this.channels = {
       startAngle: { value: startAngle },
@@ -66,11 +69,31 @@ export class Arc extends Mark {
 
     const g = create("svg:g").attr("class", "arc");
 
+    // Display the tips on hover - custom handling
     for (let i = 0; i < this.data.length; ++i) {
+      const series = this.data[i]?.series;
+      const sliceId = `${this.chartId}-${series}`;
       g.append("path")
         .attr("d", arcGen(i as any))
         .attr("fill", fillFn(i))
-        .attr("transform", `translate(${scales.x?.(0)},${scales.y?.(0)})`);
+        .attr("transform", `translate(${scales.x?.(0)},${scales.y?.(0)})`)
+        .on("mouseenter", function () {
+          // Move the arc to the top of its parent <g>
+          this.parentNode?.appendChild(this);
+
+          // Display the tooltip marks
+          const tipMarks = document.getElementsByClassName(`${sliceId}`);
+          for (let i = 0; i < tipMarks.length; i++) {
+            (tipMarks[i] as HTMLElement).style.display = "block";
+          }
+        })
+        .on("mouseleave", function () {
+          // Hide tooltip marks
+          const tipMarks = document.getElementsByClassName(`${sliceId}`);
+          for (let i = 0; i < tipMarks.length; i++) {
+            (tipMarks[i] as HTMLElement).style.display = "none";
+          }
+        });
     }
 
     return g.node() as SVGElement;

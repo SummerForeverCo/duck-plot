@@ -55,6 +55,7 @@ export function getPieMarks(
     innerRadius,
     outerRadius,
     fill: (d: { series: string }) => d.series,
+    chartId: instance.id(),
     customRender: instance.config().customRender,
   });
 
@@ -62,36 +63,61 @@ export function getPieMarks(
 
   const hideTip = instance.isServer || instance.config()?.tip === false;
   const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
+  const render: Plot.RenderFunction = (
+    index,
+    scales,
+    channels,
+    dimensions,
+    context,
+    next
+  ) => {
+    if (next) {
+      const ele = next(index, scales, channels, dimensions, context);
+      const series = channels.ariaLabel;
+      if (ele) {
+        let i = 0;
+        for (const el of ele.children) {
+          const htmlEl = el as HTMLElement;
+          htmlEl.style.display = "none";
+          htmlEl.style.pointerEvents = "none";
+          htmlEl.classList.add(`${instance.id()}-${series?.[i]}`);
+          i++;
+        }
+      }
+      return ele;
+    } else {
+      return null;
+    }
+  };
   const tipMark = hideTip
     ? null
-    : Plot.tip(
-        pieData,
-        Plot.pointer({
-          fill: "series",
-          x: (d) => d.x,
-          y: (d) => d.yPos,
-          channels: {
-            yCustom: {
-              label: truncateLabel(yLabel),
-              value: "y",
-            },
-            percent: {
-              label: "Percent",
-              value: (d) => {
-                const percent = (((d.y ?? 0) / total) * 100).toFixed(1);
-                return `${percent}%`;
-              },
+    : Plot.tip(pieData, {
+        fill: "series",
+        x: (d) => d.x,
+        y: (d) => d.yPos,
+        ariaLabel: (d) => d.series, // For toggling visibility
+        render,
+        channels: {
+          yCustom: {
+            label: truncateLabel(yLabel),
+            value: "y",
+          },
+          percent: {
+            label: "Percent",
+            value: (d) => {
+              const percent = (((d.y ?? 0) / total) * 100).toFixed(1);
+              return `${percent}%`;
             },
           },
-          format: {
-            yCustom: true,
-            percent: true,
-            color: true,
-            x: false,
-            y: false,
-          },
-        })
-      );
+        },
+        format: {
+          yCustom: true,
+          percent: true,
+          color: true,
+          x: false,
+          y: false,
+        },
+      });
 
   const labels = instance.config().pieLabels;
 
@@ -100,22 +126,22 @@ export function getPieMarks(
     : Plot.text(pieData, {
         x: (d) => d.x,
         y: (d) => d.yPos,
-        text: (d) => labels[d.series],
+        text: (d) => (((d.y ?? 0) / total) * 100).toFixed(1) + "%",
         textAnchor: "middle",
+        pointerEvents: "none",
       });
 
   // Additional tip marks
   const tipMarks = [tipMark];
   const otherMark = instance.config().tipMark;
   if (otherMark?.type) {
-    const otherTip = Plot[otherMark.type](
-      pieData,
-      Plot.pointer({
-        x: (d) => d.x,
-        y: (d) => d.yPos,
-        ...otherMark.options,
-      })
-    );
+    const otherTip = Plot[otherMark.type](pieData, {
+      x: (d) => d.x,
+      y: (d) => d.yPos,
+      ariaLabel: (d) => d.series, // For toggling visibility
+      render,
+      ...otherMark.options,
+    });
     tipMarks.push(otherTip);
   }
 
