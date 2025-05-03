@@ -72,7 +72,7 @@ export function getPieMarks(
     if (next) {
       const ele = next(index, scales, channels, dimensions, context);
       const series = channels.ariaLabel;
-      const hasPointerEvents = !!channels.fill;
+      const hasPointerEvents = !channels.fill;
       if (ele) {
         let i = 0;
         for (const el of ele.children) {

@@ -89,7 +89,14 @@ export class Arc extends Mark {
             (tipMarks[i] as HTMLElement).style.display = "block";
           }
         })
-        .on("mouseleave", function () {
+        .on("mouseleave", function (event) {
+          const toElement = event.relatedTarget as HTMLElement | null;
+
+          // If mouse is moving into the tooltip or its children, do nothing
+          if (toElement && toElement.closest(`.${className}`)) {
+            return;
+          }
+
           // Hide tooltip marks
           const tipMarks = document.getElementsByClassName(className);
           for (let i = 0; i < tipMarks.length; i++) {
