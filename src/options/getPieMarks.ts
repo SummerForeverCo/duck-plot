@@ -17,35 +17,34 @@ export function getPieMarks(
   const donut = instance.config().donut;
   const innerRadius = donut ? outerRadius / 2 : 0;
 
+  const total = data.reduce((sum, d) => sum + d.y, 0);
   const pieGen = d3pie<{ y: number; series: string }>()
     .value((d) => d.y)
     .padAngle(0.005)
     .sort(null);
 
-  const pieData = pieGen(data as { y: number; series: string }[]).map(
-    (
-      d
-    ): {
-      startAngle: number;
-      endAngle: number;
-      series: string;
-      y: number;
-      x: number;
-      yPos: number;
-    } => {
-      const angle = (d.startAngle + d.endAngle) / 2;
-      const domainExtent = donut ? 90 + 45 : 90;
-      const labelRadius = domainExtent;
-      return {
-        startAngle: d.startAngle,
-        endAngle: d.endAngle,
-        series: d.data?.series,
-        y: d.data?.y,
-        x: (Math.sin(angle) * labelRadius) / 2,
-        yPos: (Math.cos(angle) * labelRadius) / 2,
-      };
-    }
-  );
+  const pieData = pieGen(data as { y: number; series: string }[]).map((d) => {
+    const angle = (d.startAngle + d.endAngle) / 2;
+    const domainExtent = donut ? 90 + 45 : 90;
+    const labelRadius = domainExtent;
+    const x = (Math.sin(angle) * labelRadius) / 2;
+    const yPos = (Math.cos(angle) * labelRadius) / 2;
+
+    const midRadius = (innerRadius + outerRadius) / 2;
+    const arcLength = (d.endAngle - d.startAngle) * midRadius;
+    const percent = (((d.data.y ?? 0) / total) * 100).toFixed(1) + "%";
+
+    return {
+      startAngle: d.startAngle,
+      endAngle: d.endAngle,
+      series: d.data?.series,
+      y: d.data?.y,
+      x,
+      yPos,
+      arcLength,
+      percent,
+    };
+  });
 
   const slices = arc(pieData, {
     x: (d: { x: number }) => d.x,
@@ -58,8 +57,6 @@ export function getPieMarks(
     chartId: instance.id(),
     customRender: instance.config().customRender,
   });
-
-  const total = data.reduce((sum, d) => sum + d.y, 0);
 
   const hideTip = instance.isServer || instance.config()?.tip === false;
   const yLabel = instance.config().tipLabels?.y ?? plotOptions.y?.label ?? "";
@@ -104,10 +101,7 @@ export function getPieMarks(
           },
           percent: {
             label: "Percent",
-            value: (d) => {
-              const percent = (((d.y ?? 0) / total) * 100).toFixed(1);
-              return `${percent}%`;
-            },
+            value: "percent",
           },
         },
         format: {
@@ -119,17 +113,18 @@ export function getPieMarks(
         },
       });
 
-  const labels = instance.config().pieLabels;
-
-  const labelMark = !labels
-    ? null
-    : Plot.text(pieData, {
+  // Display labels where there is room for the percentage
+  const displayPercentages = instance.config().displayPiePerentages ?? true;
+  const labelMark = displayPercentages
+    ? Plot.text(pieData, {
         x: (d) => d.x,
         y: (d) => d.yPos,
-        text: (d) => (((d.y ?? 0) / total) * 100).toFixed(1) + "%",
+        filter: (d) => d.arcLength > d.percent.length * 6,
+        text: (d) => d.percent,
         textAnchor: "middle",
         pointerEvents: "none",
-      });
+      })
+    : null;
 
   // Additional tip marks
   const tipMarks = [tipMark];

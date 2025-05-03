@@ -129,9 +129,7 @@ export type Config = {
     options: MarkOptions;
   };
   // For pie chart section labels
-  pieLabels?: {
-    [key: string]: string;
-  };
+  displayPiePerentages?: boolean;
   donut?: boolean; // For pie charts
   autoMargin?: boolean; // Automatically adjust margins
   aggregate?: Aggregate;
