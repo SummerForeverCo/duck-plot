@@ -1,5 +1,5 @@
 import { arc as shapeArc } from "d3-shape";
-import { create } from "d3-selection";
+import { select } from "d3-selection";
 import { Mark } from "@observablehq/plot";
 import type { RenderFunction } from "@observablehq/plot";
 import { ArcOptions, PieData } from "../types";
@@ -73,7 +73,15 @@ export class Arc extends Mark {
       ? (i: number) => scales?.color?.(this.fill(this.data[i]))
       : (i: number) => this.fill(this.data[i]);
 
-    const g = create("svg:g").attr("class", "arc");
+    // Supporting server side rendering
+    const doc =
+      this.instance?.document ??
+      (typeof document !== "undefined" ? document : null);
+    if (!doc) return null;
+
+    const gEl = doc.createElementNS("http://www.w3.org/2000/svg", "g");
+    const g = select(gEl).attr("class", "arc");
+
     // we lose `this` context in pointer event callbacks
     const { data, instance } = this;
     // Display the tips on hover - custom handling
