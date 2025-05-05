@@ -1,7 +1,7 @@
 import { renderPlot } from "../util/renderPlotClient.js";
 // This code is both displayed in the browser and executed
 const codeString = `duckplot 
-    .query("select round(sum(Close), 1) as Close, year(Date) as year, Symbol from stocks group by year, Symbol ORDER BY Close DESC")
+    .query("select sum(Close) as Close, Symbol from stocks GROUP BY Symbol ORDER BY Close DESC")
     .table("stocks")
     .y("Close")
     .color("Symbol")

@@ -1,16 +1,18 @@
 import { arc as shapeArc } from "d3-shape";
-import { create } from "d3-selection";
+import { select } from "d3-selection";
 import { Mark } from "@observablehq/plot";
 import type { RenderFunction } from "@observablehq/plot";
 import { ArcOptions, PieData } from "../types";
+import { toSafeClassName } from "../helpers";
+import { DuckPlot } from "..";
 
 export class Arc extends Mark {
   data: PieData[];
   channels: any;
   options: ArcOptions;
   fill: (d: any) => string;
-  customRender: RenderFunction | undefined;
-  constructor(data: PieData[], options: ArcOptions = {}) {
+  instance: DuckPlot;
+  constructor(data: PieData[], options: ArcOptions) {
     super();
     const {
       startAngle,
@@ -20,12 +22,12 @@ export class Arc extends Mark {
       x,
       y,
       fill,
-      customRender,
+      instance,
       ...rest
     } = options;
 
     this.data = data;
-    this.customRender = customRender;
+    this.instance = instance;
     this.channels = {
       startAngle: { value: startAngle },
       endAngle: { value: endAngle },
@@ -41,8 +43,15 @@ export class Arc extends Mark {
   render: RenderFunction = (index, scales, channels, dimensions, context) => {
     // This is a bit of a workaround that supports the *side effects* of
     // customRender() functions while still rendering the mark.
-    if (this.customRender) {
-      this.customRender(index, scales, channels, dimensions, context);
+    if (this.instance.config().customRender) {
+      this.instance.config().customRender!.call(
+        this, // ← bind Arc instance as `this`
+        index,
+        scales,
+        channels,
+        dimensions,
+        context
+      );
     }
     const {
       startAngle: SA,
@@ -64,13 +73,81 @@ export class Arc extends Mark {
       ? (i: number) => scales?.color?.(this.fill(this.data[i]))
       : (i: number) => this.fill(this.data[i]);
 
-    const g = create("svg:g").attr("class", "arc");
+    // Supporting server side rendering
+    const doc =
+      this.instance?.document ??
+      (typeof document !== "undefined" ? document : null);
+    if (!doc) return null;
 
+    const gEl = doc.createElementNS("http://www.w3.org/2000/svg", "g");
+    const g = select(gEl).attr("class", "arc");
+
+    // we lose `this` context in pointer event callbacks
+    const { data, instance } = this;
+
+    // Track the hovered element to prevent multiple tooltips
+    let lastActiveTooltipClass: string | null = null;
+    // Display the tips on hover - custom handling
     for (let i = 0; i < this.data.length; ++i) {
+      const series = this.data[i]?.series;
+      const sliceId = `${this.instance.id()}-${series}`;
+      const className = toSafeClassName(sliceId);
       g.append("path")
         .attr("d", arcGen(i as any))
         .attr("fill", fillFn(i))
-        .attr("transform", `translate(${scales.x?.(0)},${scales.y?.(0)})`);
+        .attr("transform", `translate(${scales.x?.(0)},${scales.y?.(0)})`)
+        .on("mouseenter", function () {
+          // Move the arc to the top of its parent <g>
+          this.parentNode?.appendChild(this);
+
+          // Display the tooltip marks
+          const tipMarks = document.getElementsByClassName(className);
+          for (let i = 0; i < tipMarks.length; i++) {
+            (tipMarks[i] as HTMLElement).style.visibility = "visible";
+          }
+
+          // Hide any previous tooltips
+          if (lastActiveTooltipClass && lastActiveTooltipClass !== className) {
+            const previousTips = document.getElementsByClassName(
+              lastActiveTooltipClass
+            );
+            for (let i = 0; i < previousTips.length; i++) {
+              (previousTips[i] as HTMLElement).style.visibility = "hidden";
+            }
+          }
+
+          lastActiveTooltipClass = className;
+
+          // Set the value of the plot object (as Plot does) for click events
+          if (instance.plotObject) {
+            instance.plotObject.value = {
+              series: data[i].series,
+              y: data[i].y,
+            };
+          }
+        })
+        .on("mouseleave", function (event) {
+          const toElement = event.relatedTarget as HTMLElement | null;
+
+          // If mouse is moving into the tooltip or its children, do nothing
+          if (toElement && toElement.closest(`.${className}`)) {
+            return;
+          }
+
+          // Hide tooltip marks
+          const tipMarks = document.getElementsByClassName(className);
+          for (let i = 0; i < tipMarks.length; i++) {
+            (tipMarks[i] as HTMLElement).style.visibility = "hidden";
+          }
+
+          // Unset the value of the plot object
+          if (instance.plotObject) {
+            instance.plotObject.value = null;
+          }
+          if (lastActiveTooltipClass === className) {
+            lastActiveTooltipClass = null;
+          }
+        });
     }
 
     return g.node() as SVGElement;

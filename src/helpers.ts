@@ -267,3 +267,11 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
   if (instance.markColumn().column && instance.mark())
     throw new Error("You cannot use both a markColumn and a mark type");
 };
+
+// Used for pie chart class name assignment for custom rendering
+export function toSafeClassName(str: string) {
+  return str
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\-_]/g, "-"); // Replace non-alphanum with dashes
+}
