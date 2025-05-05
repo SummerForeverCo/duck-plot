@@ -84,6 +84,9 @@ export class Arc extends Mark {
 
     // we lose `this` context in pointer event callbacks
     const { data, instance } = this;
+
+    // Track the hovered element to prevent multiple tooltips
+    let lastActiveTooltipClass: string | null = null;
     // Display the tips on hover - custom handling
     for (let i = 0; i < this.data.length; ++i) {
       const series = this.data[i]?.series;
@@ -102,6 +105,18 @@ export class Arc extends Mark {
           for (let i = 0; i < tipMarks.length; i++) {
             (tipMarks[i] as HTMLElement).style.visibility = "visible";
           }
+
+          // Hide any previous tooltips
+          if (lastActiveTooltipClass && lastActiveTooltipClass !== className) {
+            const previousTips = document.getElementsByClassName(
+              lastActiveTooltipClass
+            );
+            for (let i = 0; i < previousTips.length; i++) {
+              (previousTips[i] as HTMLElement).style.visibility = "hidden";
+            }
+          }
+
+          lastActiveTooltipClass = className;
 
           // Set the value of the plot object (as Plot does) for click events
           if (instance.plotObject) {
@@ -128,6 +143,9 @@ export class Arc extends Mark {
           // Unset the value of the plot object
           if (instance.plotObject) {
             instance.plotObject.value = null;
+          }
+          if (lastActiveTooltipClass === className) {
+            lastActiveTooltipClass = null;
           }
         });
     }
