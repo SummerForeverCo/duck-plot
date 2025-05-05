@@ -44,7 +44,8 @@ export class Arc extends Mark {
     // This is a bit of a workaround that supports the *side effects* of
     // customRender() functions while still rendering the mark.
     if (this.instance.config().customRender) {
-      this.instance.config().customRender!(
+      this.instance.config().customRender!.call(
+        this, // ← bind Arc instance as `this`
         index,
         scales,
         channels,
@@ -91,7 +92,7 @@ export class Arc extends Mark {
           // Display the tooltip marks
           const tipMarks = document.getElementsByClassName(className);
           for (let i = 0; i < tipMarks.length; i++) {
-            (tipMarks[i] as HTMLElement).style.display = "block";
+            (tipMarks[i] as HTMLElement).style.visibility = "visible";
           }
 
           // Set the value of the plot object (as Plot does) for click events
@@ -113,7 +114,7 @@ export class Arc extends Mark {
           // Hide tooltip marks
           const tipMarks = document.getElementsByClassName(className);
           for (let i = 0; i < tipMarks.length; i++) {
-            (tipMarks[i] as HTMLElement).style.display = "none";
+            (tipMarks[i] as HTMLElement).style.visibility = "hidden";
           }
 
           // Unset the value of the plot object

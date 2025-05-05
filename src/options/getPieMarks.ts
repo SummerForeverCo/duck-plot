@@ -77,7 +77,7 @@ export function getPieMarks(
         for (const el of ele.children) {
           const className = toSafeClassName(`${instance.id()}-${series?.[i]}`);
           const htmlEl = el as HTMLElement;
-          htmlEl.style.display = "none";
+          htmlEl.style.visibility = "hidden";
           if (!hasPointerEvents) htmlEl.style.pointerEvents = "none";
           htmlEl.classList.add(className);
           i++;
