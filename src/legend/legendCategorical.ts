@@ -205,11 +205,11 @@ function updateLegendDisplay(container: HTMLDivElement, font: any): void {
     // update the text
     if (collapsedWidth + categoriesWidth > containerWidth) {
       const lastVisibleCategory = categoryDivs[visibleCount - 1];
-      lastVisibleCategory.style.display = "none"; // Hide the last visible category
+      lastVisibleCategory.style.borderRight = "none";
       collapsedCategories.textContent = `+${
         totalCategories - visibleCount + 1
       } more`;
-      collapsedCategories.appendChild(lastVisibleCategory); // Move it to the collapsed section
+      popover.appendChild(lastVisibleCategory); // Move it to the collapsed section
     }
   } else {
     collapsedCategories.style.display = "none";
