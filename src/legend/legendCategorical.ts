@@ -144,31 +144,34 @@ export async function legendCategorical(
   return legend;
 }
 
+// Measurement differes between server and client
+const getWidth = function (element: HTMLDivElement, font: any): number {
+  if (font && font.getAdvanceWidth) {
+    const width = font.getAdvanceWidth(element.textContent || "", 10) + 12 + 12;
+    return width;
+  } else {
+    const width = element.offsetWidth;
+    return width;
+  }
+};
+
 function updateLegendDisplay(container: HTMLDivElement, font: any): void {
-  // Measurement differes between server and client
-  const getWidth = function (element: HTMLDivElement): number {
-    if (font && font.getAdvanceWidth) {
-      const width =
-        font.getAdvanceWidth(element.textContent || "", 10) + 12 + 12;
-      return width;
-    } else {
-      const width = element.offsetWidth;
-      return width;
-    }
-  };
-  const categoriesDiv = container.querySelector(
+  // Select the category containers
+  const legendContainer = container.querySelector(
     ".dp-categories"
   ) as HTMLDivElement;
+
+  // Select the collapsed categories and popover
   const collapsedCategories = container.querySelector(
     ".dp-collapsed-categories"
   ) as HTMLDivElement;
   const popover = container.querySelector(".dp-popover") as HTMLDivElement;
 
   const containerWidth = +(container.style.maxWidth.replace("px", "") || 0);
-  let categoriesWidth = 0;
+  let categoriesWidth = 30; // Start with some padding
   let visibleCount = 0;
 
-  const categoryDivs = categoriesDiv.querySelectorAll(
+  const categoryDivs = legendContainer.querySelectorAll(
     ".dp-category"
   ) as NodeListOf<HTMLDivElement>;
   popover.innerHTML = ""; // Clear previous popover items
@@ -180,11 +183,9 @@ function updateLegendDisplay(container: HTMLDivElement, font: any): void {
 
   // Calculate how many categories can fit
   categoryDivs.forEach((category, i) => {
-    categoriesWidth += getWidth(category) + 10; // Adding gap
+    categoriesWidth += getWidth(category, font);
     if (categoriesWidth > containerWidth) {
-      // category.style.display = "none";
-
-      // Add to popover
+      // Move element to popover
       category.style.borderRight = "none";
       popover.appendChild(category);
     } else {
@@ -196,7 +197,20 @@ function updateLegendDisplay(container: HTMLDivElement, font: any): void {
   const totalCategories = categoryDivs.length;
   if (visibleCount < totalCategories) {
     collapsedCategories.style.display = "flex";
+    collapsedCategories.style.whiteSpace = "nowrap";
     collapsedCategories.textContent = `+${totalCategories - visibleCount} more`;
+    // Check to see if the collapsed category now exceeds the width
+    const collapsedWidth = getWidth(collapsedCategories, font);
+    // If it does, move the last visible category to the collapsed section and
+    // update the text
+    if (collapsedWidth + categoriesWidth > containerWidth) {
+      const lastVisibleCategory = categoryDivs[visibleCount - 1];
+      lastVisibleCategory.style.borderRight = "none";
+      collapsedCategories.textContent = `+${
+        totalCategories - visibleCount + 1
+      } more`;
+      popover.appendChild(lastVisibleCategory); // Move it to the collapsed section
+    }
   } else {
     collapsedCategories.style.display = "none";
   }

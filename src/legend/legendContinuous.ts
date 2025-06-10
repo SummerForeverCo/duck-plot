@@ -18,18 +18,20 @@ export async function legendContinuous(
   // Create a div container
   const container = document.createElement("div");
   container.style.position = "relative";
-  container.style.width = "300px";
   const options = await instance.derivePlotOptions();
+  const maxWidth = 300;
+  const optionWidth = options.width || 0;
+  const width = optionWidth > maxWidth ? maxWidth : optionWidth;
   const label = options.color?.label ?? instance.data().labels?.series;
   const plotLegend = Plot.legend({
     color,
     label,
+    width,
     ...(instance.isServer ? { document: instance.document } : {}),
   }) as HTMLDivElement & Plot.Plot;
   container.appendChild(plotLegend);
 
   if (onBrush !== null) {
-    const width = 240;
     const height = 50;
     const svg = d3
       .select(container)
