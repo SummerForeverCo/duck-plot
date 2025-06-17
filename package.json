@@ -50,8 +50,12 @@
     "registry": "https://npm.pkg.github.com"
   },
   "main": "dist/index.cjs",
-  "module": "dist/index.es",
+  "module": "dist/index.es.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    "import": "./dist/index.es.js",
+    "require": "./dist/index.cjs"
+  },
   "files": [
     "dist"
   ],
