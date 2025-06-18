@@ -312,7 +312,7 @@ export function getOrder(
       type === "barY" && groupBy.includes("fx") ? ["series", "x"] : ["series"];
     orderBy = [...groupBy].filter((d) => !exclude.includes(d)).join(", "); // Remove series from the ordering
     let caseStatements = orderByArray
-      .map((item, index) => `WHEN series like '${item}%' THEN ${index + 1}`)
+      .map((item, index) => `WHEN series = '${item}' THEN ${index + 1}`)
       .join("\n");
 
     orderBy += `, CASE 
