@@ -301,7 +301,7 @@ describe("getFinalQuery", () => {
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
     const expectedQueryString = `
-      CREATE OR REPLACE TABLE chart_${plot.id()} AS
+      CREATE OR REPLACE TABLE chart_${plot.id()} AS (
       WITH aggregated AS (
         SELECT y, sum(x::FLOAT) as x
         FROM reshaped
@@ -309,7 +309,7 @@ describe("getFinalQuery", () => {
       )
       SELECT y, x
       FROM aggregated
-    `;
+  )`;
 
     plot.mark("barX");
     expect(
@@ -327,7 +327,7 @@ describe("getFinalQuery", () => {
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
     const expectedQueryString = `
-      CREATE OR REPLACE TABLE chart_${plot.id()} AS
+      CREATE OR REPLACE TABLE chart_${plot.id()} AS (
       WITH aggregated AS (
         SELECT x, sum(y::FLOAT) as y
         FROM reshaped
@@ -335,7 +335,7 @@ describe("getFinalQuery", () => {
       )
       SELECT x, y
       FROM aggregated
-    `;
+  )`;
     plot.mark("barY");
 
     expect(
@@ -353,7 +353,7 @@ describe("getFinalQuery", () => {
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
     const expectedQueryString = `
-      CREATE OR REPLACE TABLE chart_${plot.id()} AS
+      CREATE OR REPLACE TABLE chart_${plot.id()} AS (
       WITH aggregated AS (
         SELECT y, avg(x::FLOAT) as x
         FROM reshaped
@@ -361,7 +361,7 @@ describe("getFinalQuery", () => {
       )
       SELECT y, x
       FROM aggregated
-    `;
+  )`;
 
     plot.mark("barX").config({ percent: false });
     expect(
@@ -380,7 +380,7 @@ describe("getFinalQuery", () => {
     const reshapedName = "reshaped";
     plot.mark("barX").config({ percent: true });
     const expectedQueryString = `
-      CREATE OR REPLACE TABLE chart_${plot.id()} AS
+      CREATE OR REPLACE TABLE chart_${plot.id()} AS (
       WITH aggregated AS (
         SELECT y, sum(x::FLOAT) as x
         FROM reshaped
@@ -388,7 +388,7 @@ describe("getFinalQuery", () => {
       )
       SELECT y, (x / (SUM(x) OVER (PARTITION BY y))) * 100 as x
       FROM aggregated
-    `;
+  )`;
 
     plot.mark("barX").config({ percent: true });
     expect(
@@ -407,7 +407,7 @@ describe("getFinalQuery", () => {
     const reshapedName = "reshaped";
 
     const expectedQueryString = `
-      CREATE OR REPLACE TABLE chart_${plot.id()} AS
+      CREATE OR REPLACE TABLE chart_${plot.id()} AS (
       WITH aggregated AS (
         SELECT x, avg(y::FLOAT) as y
         FROM reshaped
@@ -415,7 +415,7 @@ describe("getFinalQuery", () => {
       )
       SELECT x, (y / (SUM(y) OVER (PARTITION BY x))) * 100 as y
       FROM aggregated
-    `;
+  )`;
 
     plot.mark("barY").config({ percent: true });
     expect(
@@ -433,9 +433,9 @@ describe("getFinalQuery", () => {
     const columns = ["x", "y"];
     const reshapedName = "reshaped";
     const expectedQueryString = `
-    CREATE OR REPLACE TABLE chart_${plot.id()} AS
+    CREATE OR REPLACE TABLE chart_${plot.id()} AS (
     WITH aggregated AS (SELECT * FROM reshaped) 
-    SELECT y, x FROM aggregated`;
+    SELECT y, x FROM aggregated)`;
 
     plot.mark("barX");
     expect(
@@ -513,40 +513,40 @@ describe("getOrder", () => {
   it("should remove 'series' from orderBy when 'series' is included and conditions are met", () => {
     const result = getOrder(["series", "groupA"], "barX", ["x1", "x2"], []);
     const expected = removeSpacesAndBreaks(`groupA, CASE 
-    WHEN series like 'x1%' THEN 1
-    WHEN series like 'x2%' THEN 2
+    WHEN series = 'x1' THEN 1
+    WHEN series = 'x2' THEN 2
     ELSE 3 
-END;`);
+END`);
     expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 
   it("should add CASE statement for 'barX' type with multiple x values", () => {
     const result = getOrder(["groupA", "series"], "barX", ["x1", "x2"], []);
     const expected = removeSpacesAndBreaks(`groupA, CASE 
-    WHEN series like 'x1%' THEN 1
-    WHEN series like 'x2%' THEN 2
+    WHEN series = 'x1' THEN 1
+    WHEN series = 'x2' THEN 2
     ELSE 3 
-END;`);
+END`);
     expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 
   it("should add CASE statement for non-'barX' type with multiple y values", () => {
     const result = getOrder(["groupA", "series"], "barY", [], ["y1", "y2"]);
     const expected = removeSpacesAndBreaks(`groupA, CASE 
-    WHEN series like 'y1%' THEN 1
-    WHEN series like 'y2%' THEN 2
+    WHEN series = 'y1' THEN 1
+    WHEN series = 'y2' THEN 2
     ELSE 3 
-END;`);
+END`);
     expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 
   it("should remove both 'series' and 'x' from orderBy when 'fx' is in groupBy and conditions are met", () => {
     const result = getOrder(["fx", "series", "x"], "barY", [], ["y1", "y2"]);
     const expected = removeSpacesAndBreaks(`fx, CASE 
-    WHEN series like 'y1%' THEN 1
-    WHEN series like 'y2%' THEN 2
+    WHEN series = 'y1' THEN 1
+    WHEN series = 'y2' THEN 2
     ELSE 3 
-END;`);
+END`);
     expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 
