@@ -245,7 +245,7 @@ export function getPlotOptions(instance: DuckPlot) {
       : {}),
     // This is based on the assumption that fx comes from a groupedBar chart
     ...(currentColumns.includes("fx")
-      ? { fx: { label: options.x?.label } }
+      ? { fx: { ...sorts?.fx, label: options.x?.label } }
       : {}),
   } as PlotOptions;
 }
