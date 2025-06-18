@@ -516,7 +516,7 @@ describe("getOrder", () => {
     WHEN series = 'x1' THEN 1
     WHEN series = 'x2' THEN 2
     ELSE 3 
-END;`);
+END`);
     expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 
@@ -526,7 +526,7 @@ END;`);
     WHEN series = 'x1' THEN 1
     WHEN series = 'x2' THEN 2
     ELSE 3 
-END;`);
+END`);
     expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 
@@ -536,7 +536,7 @@ END;`);
     WHEN series = 'y1' THEN 1
     WHEN series = 'y2' THEN 2
     ELSE 3 
-END;`);
+END`);
     expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 
@@ -546,7 +546,7 @@ END;`);
     WHEN series = 'y1' THEN 1
     WHEN series = 'y2' THEN 2
     ELSE 3 
-END;`);
+END`);
     expect(removeSpacesAndBreaks(result)).toEqual(expected);
   });
 

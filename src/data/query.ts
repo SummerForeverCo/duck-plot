@@ -318,7 +318,7 @@ export function getOrder(
     orderBy += `, CASE 
     ${caseStatements}
     ELSE ${orderByArray.length + 1} 
-END;`;
+END`;
   } else {
     orderBy = "";
   }
