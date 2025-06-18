@@ -270,7 +270,7 @@ export function getFinalQuery(
 
   // Use the subquery to aggregate the values
   const queryString = `
-  CREATE OR REPLACE TABLE chart_${instance.id()} AS
+  CREATE OR REPLACE TABLE chart_${instance.id()} AS (
   WITH aggregated AS (${subquery})
   SELECT ${[...groupBy, aggregateColumn].filter(Boolean).join(", ")}
   FROM aggregated
@@ -281,7 +281,7 @@ export function getFinalQuery(
       ? `ORDER BY ${orderBy}`
       : ""
   }
-`;
+)`;
 
   return {
     queryString,
