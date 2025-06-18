@@ -168,15 +168,26 @@ export function getTransformQuery(
 ) {
   // Detect what type of query we need to construct
   const transformType = getTransformType(type, omit(config, ["fy"]));
+  function formatColumnString(cols?: ColumnType) {
+    if (!cols || !cols.length) return "";
+    return Array.isArray(cols) ? cols.filter((d) => d).join(", ") : cols;
+  }
 
   // Return the constructed query
   if (transformType === "unPivotWithSeries") {
     const transformColumns = isHorizontalX(type) ? config.x : config.y;
-    description.value += `The columns ${transformColumns} were unpivoted and then concatenated with ${config.series}, creating colors for each column-series.\n`;
+    description.value += `The columns ${formatColumnString(
+      transformColumns
+    )} were unpivoted and then concatenated with ${
+      config.series
+    }, creating colors for each column-series.\n`;
     return getUnpivotWithSeriesQuery(type, config, tableName, intoTable);
   } else if (transformType === "unPivot") {
     const transformColumns = isHorizontalX(type) ? config.x : config.y;
-    description.value += `The columns ${transformColumns} were unpivoted, creating colors for each series.\n`;
+    description.value += `The columns ${formatColumnString(
+      transformColumns
+    )} were unpivoted, creating colors for each series.\n`;
+    console.log({ description });
     return getUnpivotQuery(type, config, tableName, intoTable);
   } else {
     return getStandardTransformQuery(type, config, tableName, intoTable);
