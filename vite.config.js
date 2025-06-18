@@ -24,7 +24,8 @@ export default defineConfig(({ command, mode }) => {
           entry: path.resolve(__dirname, "src/index.ts"),
           name: "DuckPlot",
           formats: ["cjs", "es"],
-          fileName: (format) => `index.${format}`,
+          fileName: (format) =>
+            format === "es" ? `index.${format}.js` : `index.${format}`,
         },
         minify: false,
         emptyOutDir: true,
