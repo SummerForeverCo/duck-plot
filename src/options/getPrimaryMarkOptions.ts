@@ -33,14 +33,20 @@ export function getPrimaryMarkOptions(
       ? { sort: (d: any) => d.x }
       : {};
 
-  // If this is a rect mark with a date value axis, compute the interval
+  // Compute interval for rect marks with a continuous axis (avoid Plot's default binning)
   let interval;
+  const isRectYWithContinuousX =
+    markType === "rectY" && ["date", "number"].includes(types?.x || "");
+  const isRectXWithContinuousY =
+    markType === "rectX" && ["date", "number"].includes(types?.y || "");
+
   if (
-    ((markType === "rectY" && types?.x === "date") ||
-      (markType === "rectX" && types?.y === "date")) &&
-    userOptions?.interval === undefined // Note, there's no way to just say "no default"
+    (isRectYWithContinuousX || isRectXWithContinuousY) &&
+    userOptions?.interval === undefined
   ) {
-    interval = computeInterval(data, markType === "rectY" ? "x" : "y");
+    const axis = markType === "rectY" ? "x" : "y";
+    const isDate = types?.[axis] === "date";
+    interval = computeInterval(data, axis, isDate);
   }
 
   return {

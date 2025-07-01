@@ -187,7 +187,6 @@ export function getTransformQuery(
     description.value += `The columns ${formatColumnString(
       transformColumns
     )} were unpivoted, creating colors for each series.\n`;
-    console.log({ description });
     return getUnpivotQuery(type, config, tableName, intoTable);
   } else {
     return getStandardTransformQuery(type, config, tableName, intoTable);
