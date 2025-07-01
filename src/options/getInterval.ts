@@ -14,12 +14,18 @@ import { min, pairs } from "d3-array";
 
 import { Data } from "../types";
 
-export function computeInterval(data: Data, column: string = "x") {
-  // Handle empty data
-  if (data.length === 0) {
-    return undefined;
-  }
+export function computeInterval(
+  data: Data,
+  column: string = "x",
+  isDate: boolean = true
+): any {
+  if (data.length === 0) return undefined;
+  return isDate
+    ? computeDateInterval(data, column)
+    : computeNumericInterval(data, column);
+}
 
+export function computeDateInterval(data: Data, column: string = "x") {
   // Sort distinct values (assumes they are repeated for colors / faceting)
   const sortedData = Array.from(
     new Set(data.map((d) => +(d[column] as number)))
@@ -70,4 +76,19 @@ export function computeInterval(data: Data, column: string = "x") {
   } else {
     return utcYear.every(100); // Centuries
   }
+}
+
+export function computeNumericInterval(
+  data: Data,
+  column: string = "x"
+): number | undefined {
+  // Sort and deduplicate
+  const sorted = Array.from(
+    new Set(data.map((d) => +(d[column] as number)))
+  ).sort((a, b) => a - b);
+
+  if (sorted.length < 2) return undefined;
+
+  const differences = pairs(sorted).map(([a, b]) => b - a);
+  return min(differences);
 }

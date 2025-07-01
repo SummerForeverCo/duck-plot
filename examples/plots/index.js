@@ -17,6 +17,8 @@ export * from "./groupedBarMultiY.js";
 export * from "./groupedBarMultiYReorder.js";
 export * from "./groupedBarSeries.js";
 export * from "./groupedBarSeriesAndY.js";
+export * from "./histogram.js";
+export * from "./histogramX.js";
 export * from "./horizontalAverage.js";
 export * from "./implicitAggregation.js";
 export * from "./line.js";
