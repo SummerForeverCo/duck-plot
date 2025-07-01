@@ -3,7 +3,7 @@ import { DuckPlot } from "..";
 import { isColor } from "./getPlotOptions";
 import { defaultColors } from "../helpers";
 import { ChartType } from "../types";
-import { computeInterval, computeNumericInterval } from "./getInterval";
+import { computeInterval } from "./getInterval";
 
 // Get options for a specific mark (e.g., the line or area marks)
 export function getPrimaryMarkOptions(
