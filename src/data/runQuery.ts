@@ -1,4 +1,5 @@
 import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
+import { formatResults } from "../helpers";
 
 export const runQuery = async (
   db: AsyncDuckDB,
@@ -8,6 +9,7 @@ export const runQuery = async (
   const conn = await db.connect();
   try {
     const arrow = await conn.query(sql);
+    console.log(toPlainObjects(arrow.toArray()));
     return arrow.toArray();
   } catch (error) {
     console.error("Error executing query:", error);
@@ -16,3 +18,25 @@ export const runQuery = async (
     await conn.close();
   }
 };
+
+export function toPlainObjects(result) {
+  if (!result) return [];
+
+  // Use toArray if available
+  const rows =
+    typeof result.toArray === "function"
+      ? result.toArray()
+      : Array.isArray(result)
+      ? result
+      : [];
+
+  // Build schema object
+
+  return rows.map((row) => {
+    const obj = {};
+    for (const key of Object.keys(row)) {
+      obj[key] = row[key];
+    }
+    return obj;
+  });
+}
