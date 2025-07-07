@@ -21,12 +21,11 @@ export const createDbClient = async (fileName, catalog = "") => {
 
   await db.registerFileText(`data.csv`, csvData);
   const schema = "main";
-  const catalogName = catalog || "main";
 
   // Attach and use catalog if specified
   if (catalog) {
-    await conn.query(`ATTACH ':memory:' AS ${catalogName}`);
-    await conn.query(`USE ${catalogName}`);
+    await conn.query(`ATTACH ':memory:' AS ${catalog}`);
+    await conn.query(`USE ${catalog}`);
   }
 
   const activeCatalog = await conn.query("PRAGMA database_list");

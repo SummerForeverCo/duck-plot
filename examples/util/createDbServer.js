@@ -12,7 +12,7 @@ const require = createRequire(import.meta.url);
 const duckdbWasmPath = require.resolve("@duckdb/duckdb-wasm");
 const DUCKDB_DIST = path.dirname(duckdbWasmPath);
 
-export const createDbServer = async (fileName) => {
+export const createDbServer = async (fileName, catalog) => {
   const tableName = fileName.replace(".csv", "").replace("-", "");
   const csvPath = path.join(__dirname, "..", "data", fileName);
 
@@ -28,6 +28,12 @@ export const createDbServer = async (fileName) => {
   const db = new duckdb.AsyncDuckDB(logger, worker);
   await db.instantiate(DUCKDB_CONFIG.mainModule, DUCKDB_CONFIG.pthreadWorker);
   const conn = await db.connect();
+
+  // Attach and use catalog if specified
+  if (catalog) {
+    await conn.query(`ATTACH ':memory:' AS ${catalog}`);
+    await conn.query(`USE ${catalog}`);
+  }
 
   const csvData = await readFile(csvPath, "utf-8");
   await db.registerFileText("data.csv", csvData);
