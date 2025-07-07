@@ -181,14 +181,7 @@ export async function prepareData(
   await runQuery(instance.ddb, `drop table if exists "${reshapeTableName}"`);
   if (preQueryTableName)
     await runQuery(instance.ddb, `drop table if exists "${preQueryTableName}"`);
-  const tables = formatResults(
-    await runQuery(instance.ddb, "SHOW TABLES"),
-    await runQuery(instance.ddb, "DESCRIBE (SHOW TABLES)")
-  );
-  console.log(
-    "Tables that exist",
-    tables.map((d) => d.name)
-  );
+
   return {
     data: formatted,
     description:

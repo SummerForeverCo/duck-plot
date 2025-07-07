@@ -20,41 +20,58 @@ export const createDbClient = async (fileName, catalog = "") => {
   const csvData = await response.text();
 
   await db.registerFileText(`data.csv`, csvData);
-  const CATALOG_NAME = catalog ? catalog : "main";
+  const schema = "main";
+  const catalogName = catalog || "main";
 
-  await conn.query(`ATTACH ':memory:' AS ${CATALOG_NAME}`);
-  await conn.query(`USE ${CATALOG_NAME}`);
+  // Attach and use catalog if specified
+  if (catalog) {
+    await conn.query(`ATTACH ':memory:' AS ${catalogName}`);
+    await conn.query(`USE ${catalogName}`);
+  }
 
-  const name = catalog ? `${catalog}.${tableName}` : tableName;
-  // const name = tableName;
-  console.log({ name });
+  const activeCatalog = await conn.query("PRAGMA database_list");
+  console.log("Active catalogs:", toPlainObjects(activeCatalog.toArray()));
+  await conn.query(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
+
+  // Use only the table name, not dot notation
   await conn.insertCSVFromPath("data.csv", {
-    name,
+    schema,
+    name: tableName,
     detect: true,
     header: true,
     delimiter: ",",
   });
 
-  const result = await conn.query("SHOW TABLES");
-  console.log({ result });
+  // Query visible tables
+  const result = await conn.query("SELECT * FROM duckdb_tables()");
+  console.log({ duckdb_tables: toPlainObjects(result) });
 
-  // Safe conversion using the result schema
-  const columns = result.schema.fields.map((f) => f.name);
-  const rows = [];
-
-  for (let i = 0; i < result.length; i++) {
-    const row = {};
-    for (const col of columns) {
-      row[col] = result.get(i, col);
-    }
-    rows.push(row);
-  }
-
-  console.log("Tables in DB:", rows);
-
-  const describe = await conn.query(`DESCRIBE ${name}`);
-  console.log("test2");
-  console.log(`DESCRIBE ${name}:`, describe.toArray());
+  // Use DESCRIBE with schema.tableName
+  const describeQuery = `DESCRIBE ${catalog}.${schema}.${tableName}`;
+  const describe = await conn.query(describeQuery);
+  console.log(describeQuery, toPlainObjects(describe.toArray()));
 
   return db;
 };
+
+export function toPlainObjects(result) {
+  if (!result) return [];
+
+  // Use toArray if available
+  const rows =
+    typeof result.toArray === "function"
+      ? result.toArray()
+      : Array.isArray(result)
+      ? result
+      : [];
+
+  // Build schema object
+
+  return rows.map((row) => {
+    const obj = {};
+    for (const key of Object.keys(row)) {
+      obj[key] = row[key];
+    }
+    return obj;
+  });
+}
