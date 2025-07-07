@@ -1,4 +1,5 @@
 export * from "./area.js";
+export * from "./areaCatalog.js";
 export * from "./avgAggregate.js";
 export * from "./axisRight.js";
 export * from "./barX.js";

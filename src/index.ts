@@ -30,6 +30,7 @@ const emptyProp = { column: "", options: {} };
 export class DuckPlot {
   private _ddb: AsyncDuckDB | undefined | null = null;
   private _table: string | null = null;
+  private _catalog: string | null = null;
   private _x: PlotProperty<"x"> = { ...emptyProp };
   private _y: PlotProperty<"y"> = { ...emptyProp };
   private _fy: PlotProperty<"fy"> = { ...emptyProp };
@@ -93,6 +94,20 @@ export class DuckPlot {
       return this;
     }
     return this._table!;
+  }
+
+  // Set the catalog to query against and create into (OPTIONAL)
+  catalog(): string;
+  catalog(catalog: string): this;
+  catalog(catalog?: string): string | this {
+    if (catalog) {
+      if (catalog !== this._catalog) {
+        this._catalog = catalog;
+        this._newDataProps = true; // when changed, we need to requery the data
+      }
+      return this;
+    }
+    return this._catalog!;
   }
 
   // Method to run arbitrary sql BEFORE transforming the data

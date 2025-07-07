@@ -2,7 +2,7 @@ import * as duckdb from "@duckdb/duckdb-wasm";
 import mvp_worker from "@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url";
 import duckdb_wasm from "@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url";
 
-export const createDbClient = async (fileName) => {
+export const createDbClient = async (fileName, catalog = "") => {
   const tableName = fileName.replace(".csv", "").replace("-", "");
 
   const bundle = await duckdb.selectBundle({
@@ -20,9 +20,17 @@ export const createDbClient = async (fileName) => {
   const csvData = await response.text();
 
   await db.registerFileText(`data.csv`, csvData);
+  const schema = "main";
 
+  // Attach and use catalog if specified
+  if (catalog) {
+    await conn.query(`ATTACH ':memory:' AS ${catalog}`);
+    await conn.query(`USE ${catalog}`);
+  }
+
+  // Use only the table name, not dot notation
   await conn.insertCSVFromPath("data.csv", {
-    schema: "main",
+    schema,
     name: tableName,
     detect: true,
     header: true,
