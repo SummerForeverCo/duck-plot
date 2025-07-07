@@ -39,7 +39,7 @@ export async function prepareData(
   let queryString: string;
   let labels: Data["labels"] = {};
   let preQueryTableName = "";
-  const catalogPrefix = instance.catalog() ? `${instance.catalog()}.main.` : "";
+  const catalogPrefix = instance.catalog() ? `${instance.catalog()}.` : "";
   const reshapeTableName = `${catalogPrefix}${getUniqueName()}`;
   const type = instance.mark().type;
 

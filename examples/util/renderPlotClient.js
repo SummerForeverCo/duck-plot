@@ -17,7 +17,7 @@ export async function renderPlot(
   constructorOptions,
   onClick,
   customRender,
-  catalog = "main"
+  catalog
 ) {
   try {
     const db = await createDb(fileName, catalog);

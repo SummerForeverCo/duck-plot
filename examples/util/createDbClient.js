@@ -28,10 +28,6 @@ export const createDbClient = async (fileName, catalog = "") => {
     await conn.query(`USE ${catalog}`);
   }
 
-  const activeCatalog = await conn.query("PRAGMA database_list");
-  console.log("Active catalogs:", toPlainObjects(activeCatalog.toArray()));
-  await conn.query(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
-
   // Use only the table name, not dot notation
   await conn.insertCSVFromPath("data.csv", {
     schema,
@@ -41,36 +37,5 @@ export const createDbClient = async (fileName, catalog = "") => {
     delimiter: ",",
   });
 
-  // Query visible tables
-  const result = await conn.query("SELECT * FROM duckdb_tables()");
-  console.log({ duckdb_tables: toPlainObjects(result) });
-
-  // Use DESCRIBE with schema.tableName
-  const describeQuery = `DESCRIBE ${catalog}.${schema}.${tableName}`;
-  const describe = await conn.query(describeQuery);
-  console.log(describeQuery, toPlainObjects(describe.toArray()));
-
   return db;
 };
-
-export function toPlainObjects(result) {
-  if (!result) return [];
-
-  // Use toArray if available
-  const rows =
-    typeof result.toArray === "function"
-      ? result.toArray()
-      : Array.isArray(result)
-      ? result
-      : [];
-
-  // Build schema object
-
-  return rows.map((row) => {
-    const obj = {};
-    for (const key of Object.keys(row)) {
-      obj[key] = row[key];
-    }
-    return obj;
-  });
-}
