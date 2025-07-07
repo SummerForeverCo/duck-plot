@@ -7,8 +7,8 @@ duckplot
   .y("Open")
   .color("Symbol")
   .mark("areaY")
-  .catalog("testCatalog")
+  .catalog("testcatalog")
 `;
 
 export const area = (options) =>
-  renderPlot("stocks.csv", codeString, options, null, null, "testCatalog");
+  renderPlot("stocks.csv", codeString, options, null, null, "testcatalog");

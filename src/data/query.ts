@@ -279,7 +279,7 @@ export function getFinalQuery(
   }
 
   // Use the subquery to aggregate the values
-  const catalogPrefix = instance.catalog() ? `${instance.catalog()}.` : "";
+  const catalogPrefix = instance.catalog() ? `${instance.catalog()}.main.` : "";
   const chartTableName = `${catalogPrefix}chart_${instance.id()}`;
   const queryString = `
   CREATE OR REPLACE TABLE ${chartTableName} AS (

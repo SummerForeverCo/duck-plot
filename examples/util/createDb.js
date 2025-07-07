@@ -2,7 +2,7 @@ export const createDb = (fileName) => {
   if (typeof window !== "undefined") {
     // Client-side
     return import("./createDbClient.js").then((module) =>
-      module.createDbClient(fileName, "testCatalog")
+      module.createDbClient(fileName, "testcatalog")
     );
   } else {
     // Server-side
