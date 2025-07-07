@@ -2,7 +2,6 @@
 import { createDb } from "./createDb.js";
 import * as Plot from "@observablehq/plot";
 import * as d3 from "d3";
-// import { DuckPlot } from "../../src/index.ts";
 let DuckPlot;
 
 if (typeof window !== "undefined") {
@@ -17,10 +16,11 @@ export async function renderPlot(
   codeString,
   constructorOptions,
   onClick,
-  customRender
+  customRender,
+  catalog = "main"
 ) {
   try {
-    const db = await createDb(fileName);
+    const db = await createDb(fileName, catalog);
     const duckplot = constructorOptions
       ? new DuckPlot(db, constructorOptions)
       : new DuckPlot(db);

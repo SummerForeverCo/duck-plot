@@ -39,7 +39,8 @@ export async function prepareData(
   let queryString: string;
   let labels: Data["labels"] = {};
   let preQueryTableName = "";
-  const reshapeTableName = getUniqueName();
+  const catalogPrefix = instance.catalog() ? `${instance.catalog()}.` : "";
+  const reshapeTableName = `${catalogPrefix}${getUniqueName()}`;
   const type = instance.mark().type;
 
   // Identify the columns present in the config:
@@ -61,13 +62,15 @@ export async function prepareData(
   // If someone wants to run some arbitary sql first, store that in a temp table
   const preQuery = instance.query();
   if (preQuery) {
-    preQueryTableName = getUniqueName();
+    preQueryTableName = `${catalogPrefix}${getUniqueName()}`;
     const createStatement = `CREATE TABLE ${preQueryTableName} as ${preQuery}`;
     description.value += `The provided sql query was run.\n`;
     queries["preQuery"] = createStatement;
     await runQuery(instance.ddb, createStatement);
   }
-  let transformTableFrom = preQuery ? preQueryTableName : instance.table();
+  let transformTableFrom = preQuery
+    ? preQueryTableName
+    : `${catalogPrefix}${instance.table()}`;
 
   // Make sure that the columns are in the schema
   const initialSchema = await runQuery(
@@ -157,8 +160,9 @@ export async function prepareData(
   // This query will *generate* the final table, which we then need to
   // separately select from
   await runQuery(instance.ddb, queryString);
-  data = await runQuery(instance.ddb, `SELECT * FROM chart_${instance.id()}`);
-  schema = await runQuery(instance.ddb, `DESCRIBE chart_${instance.id()}`);
+  const chartTableName = `${catalogPrefix}chart_${instance.id()}`;
+  data = await runQuery(instance.ddb, `SELECT * FROM ${chartTableName}`);
+  schema = await runQuery(instance.ddb, `DESCRIBE ${chartTableName}`);
   // Format data as an array of objects
   let formatted: Data = formatResults(data, schema);
 
@@ -177,6 +181,14 @@ export async function prepareData(
   await runQuery(instance.ddb, `drop table if exists "${reshapeTableName}"`);
   if (preQueryTableName)
     await runQuery(instance.ddb, `drop table if exists "${preQueryTableName}"`);
+  const tables = formatResults(
+    await runQuery(instance.ddb, "SHOW TABLES"),
+    await runQuery(instance.ddb, "DESCRIBE (SHOW TABLES)")
+  );
+  console.log(
+    "Tables that exist",
+    tables.map((d) => d.name)
+  );
   return {
     data: formatted,
     description:

@@ -4,6 +4,7 @@ export const runQuery = async (
   db: AsyncDuckDB,
   sql: string
 ): Promise<any[]> => {
+  console.log("Running query:", sql);
   const conn = await db.connect();
   try {
     const arrow = await conn.query(sql);

@@ -1,8 +1,8 @@
-export const createDb = (fileName, csvFile) => {
+export const createDb = (fileName) => {
   if (typeof window !== "undefined") {
     // Client-side
     return import("./createDbClient.js").then((module) =>
-      module.createDbClient(fileName, csvFile)
+      module.createDbClient(fileName, "testCatalog")
     );
   } else {
     // Server-side
