@@ -56,9 +56,7 @@ export const columnTypes = async (
   // Now use information_schema.columns — scoped to current catalog
   const types = await runQuery(
     db,
-    `SELECT column_name, data_type
-   FROM information_schema.columns
-   WHERE table_name = '${table}'`
+    `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '${table}'`
   );
 
   const columns = new Map<string, string>();
@@ -71,11 +69,11 @@ export const columnTypes = async (
 
 export function formatResults(
   data: Indexable[],
-  schema?: DescribeSchema
+  schema: DescribeSchema
 ): Record<string, any>[] {
   // Get types for each column
   let types: TypesObject = {};
-  schema?.forEach(
+  schema.forEach(
     (d) => (types[d.column_name] = getTypeCategory(d.column_type))
   );
   const selected = data;

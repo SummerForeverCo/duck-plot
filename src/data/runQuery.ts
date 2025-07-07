@@ -1,5 +1,4 @@
 import type { AsyncDuckDB } from "@duckdb/duckdb-wasm";
-import { formatResults } from "../helpers";
 
 export const runQuery = async (
   db: AsyncDuckDB,
