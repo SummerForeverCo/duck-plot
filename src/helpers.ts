@@ -47,15 +47,25 @@ export const columnTypes = async (
   db: AsyncDuckDB,
   name: string
 ): Promise<Map<string, string>> => {
+  const [catalog, schema, table] = name.split(".");
+
+  // Switch context (required for PRAGMA and information_schema to work)
+  await runQuery(db, `USE ${catalog}`);
+
+  // Now use information_schema.columns — scoped to current catalog
   const types = await runQuery(
     db,
-    `select column_name, data_type from information_schema.columns where table_name = '${name}'`
+    `SELECT column_name, data_type
+   FROM information_schema.columns
+   WHERE table_schema = '${schema}'
+     AND table_name = '${table}'`
   );
 
   const columns = new Map<string, string>();
   types.forEach((type: { column_name: string; data_type: string }) => {
     columns.set(type.column_name, type.data_type);
   });
+  console.log("Column types:", columns);
 
   return columns;
 };
