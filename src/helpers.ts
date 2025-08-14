@@ -11,6 +11,7 @@ import {
   TypesObject,
 } from "./types";
 import { DuckPlot } from ".";
+import { isColor } from "./options/getPlotOptions";
 
 export async function checkDistinct(
   duckDB: AsyncDuckDB,
@@ -158,8 +159,11 @@ export function processRawData(instance: DuckPlot): Data {
   if (!rawData || !rawData.types) return [];
 
   // Helper function to determine if a column defined
-  const colIsDefined = (col?: ColumnType): boolean =>
-    col !== "" && col !== undefined && typeof col === "string";
+  const colIsDefined = (key: string, col?: ColumnType): boolean =>
+    !(key === "series" && isColor(col)) &&
+    col !== "" &&
+    col !== undefined &&
+    typeof col === "string";
 
   // Define column mappings for data, types, and labels
   // TODO: if we rename series to color this should get simpler
@@ -178,7 +182,7 @@ export function processRawData(instance: DuckPlot): Data {
   const dataArray: Data = rawData.map((d) =>
     Object.fromEntries(
       columnMappings
-        .filter(({ column }) => colIsDefined(column))
+        .filter(({ key, column }) => colIsDefined(key, column))
         .map(({ key, column }) => [key, d[column as string]])
     )
   );
@@ -186,7 +190,7 @@ export function processRawData(instance: DuckPlot): Data {
   // Extract types based on the defined columns
   const dataTypes = Object.fromEntries(
     columnMappings
-      .filter(({ column }) => colIsDefined(column))
+      .filter(({ key, column }) => colIsDefined(key, column))
       .map(({ key, column }) => [key, rawData?.types?.[column as string]])
   );
 
