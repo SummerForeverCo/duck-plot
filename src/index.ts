@@ -46,7 +46,7 @@ export class DuckPlot {
   private _document: Document;
   private _newDataProps: boolean = true;
   private _data: Data = [];
-  private _rawData: Data = [];
+  private _rawData: Data | undefined = undefined;
   private _markColumn: MarkColumnProperty = {};
   private _config: Config = {};
   private _query: string = "";
@@ -243,13 +243,14 @@ export class DuckPlot {
   rawData(
     data?: Data,
     types?: { [key: string]: BasicColumnType }
-  ): Data | this {
-    if (data && types) {
+  ): Data | undefined | this {
+    if (data) {
       data.types = types;
       this._newDataProps = true;
       this._rawData = data;
       return this;
     }
+
     return this._rawData;
   }
 
@@ -275,6 +276,7 @@ export class DuckPlot {
   async prepareData(): Promise<Data> {
     // If no new data properties, return the data
     if (!this._newDataProps) return this._data;
+    checkForConfigErrors(this); // Will throw any errors
 
     // If there is raw data rather than a database, extract chart data from it
     if (this._rawData && this._rawData.types) {
@@ -285,7 +287,6 @@ export class DuckPlot {
       return this._data;
     }
 
-    checkForConfigErrors(this); // Will throw any errors
     this._newDataProps = false;
     this.visibleSeries = []; // reset visible series
     this.seriesDomain = []; // reset domain

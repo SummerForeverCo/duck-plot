@@ -37,6 +37,7 @@ export * from "./percentageBarY.js";
 export * from "./percentageFacet.js";
 export * from "./pie.js";
 export * from "./rawData.js";
+export * from "./rawDataColor.js";
 export * from "./rawDataMultiChart.js";
 export * from "./rectX.js";
 export * from "./rectXfacet.js";
