@@ -234,8 +234,14 @@ export const borderOptions = {
 };
 
 export const checkForConfigErrors = (instance: DuckPlot) => {
-  if (!instance.ddb) throw new Error("Database not set");
-  if (!instance.table()) throw new Error("Table not set");
+  const rawData = instance.rawData();
+  if (rawData && !rawData.types) {
+    throw new Error(
+      "You must include column types when specifying .rawData(data, types)"
+    );
+  }
+  if (!instance.ddb && !rawData) throw new Error("Database not set");
+  if (!instance.table() && !rawData) throw new Error("Table not set");
   const type = instance.mark().type;
   if (!type && !instance.markColumn().column)
     throw new Error("Mark type or mark column not set");
@@ -275,7 +281,7 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
   // Using rawData and/or markColumn checks
   if (instance.markColumn().column && instance.rawData().length === 0)
     throw new Error("You must supply rawData to use markColumn");
-  if (instance.markColumn().column && instance.mark())
+  if (instance.markColumn().column && Object.keys(instance.mark()).length)
     throw new Error("You cannot use both a markColumn and a mark type");
 };
 
