@@ -279,7 +279,7 @@ export const checkForConfigErrors = (instance: DuckPlot) => {
   }
 
   // Using rawData and/or markColumn checks
-  if (instance.markColumn().column && instance.rawData().length === 0)
+  if (instance.markColumn().column && !instance.rawData())
     throw new Error("You must supply rawData to use markColumn");
   if (instance.markColumn().column && Object.keys(instance.mark()).length)
     throw new Error("You cannot use both a markColumn and a mark type");

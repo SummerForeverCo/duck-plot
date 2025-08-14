@@ -58,7 +58,7 @@ describe("getSorts", () => {
 
   beforeEach(async () => {
     jsdom = new JSDOM();
-    plot = new DuckPlot(null, { jsdom, font: fakeFont });
+    plot = new DuckPlot(null, { jsdom, font: fakeFont }).mark("barX");
   });
   it("should return an empty object if currentColumns is an empty array", async () => {
     const data = [
